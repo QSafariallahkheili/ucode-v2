@@ -1,16 +1,17 @@
+const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
 const map = {
     namespaced: true,
     state: {
         map: null,
         center: {
-            lng: 13.745704,
-            lat: 51.063003
+            lng: 13.748784,
+            lat: 51.068561
         },
-        zoom: 16,
+        zoom: 15,
         minZoom: 4,
         maxZoom: 23,
         maxPitch: 85,
-        style: 'https://api.maptiler.com/maps/streets/style.json?key=XgdreUwN4V3uEHHZHsWO'
+        style: `https://api.maptiler.com/maps/pastel/style.json?key=${apiKey}`
     },
     mutations:{
 

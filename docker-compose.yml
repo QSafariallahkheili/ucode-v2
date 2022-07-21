@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+
+  backend:
+    build: ./backend
+    environment:
+      - DB_PASSWORD=XXX_POSTGRES_PASSWORD_XXX
+      - DB_HOST=database
+      - DB_NAME=ucode
+      - DB_USER=postgres
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+  database:
+    image: pgrouting/pgrouting
+    container_name: db_ucode
+    volumes:
+      - ./database/dumps:/var/lib/postgresql/dumps
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=XXX_POSTGRES_PASSWORD_XXX
+      - POSTGRES_DB=ucode
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/frontend'
+    ports:
+      - '8080:8080'

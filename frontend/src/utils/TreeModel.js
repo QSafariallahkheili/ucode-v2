@@ -1,7 +1,6 @@
 import maplibregl from 'maplibre-gl'
 import * as THREE from 'three'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js'
-let scene ;
 export const TreeModel = (lng, lat, id)=> {
   const modelAltitude = 0;
   const modelRotate = [Math.PI / 2, 0, 0];
@@ -34,25 +33,27 @@ export const TreeModel = (lng, lat, id)=> {
     renderingMode: '3d',
       onAdd: function (map, gl) {
         this.camera = new THREE.Camera();
-        scene = new THREE.Scene();
+        this.scene = new THREE.Scene();
  
         // create two three.js lights to illuminate the model
         const directionalLight = new THREE.DirectionalLight(0xffffff);
         directionalLight.position.set(0, -70, 100).normalize();
-        scene.add(directionalLight);
+        this.scene.add(directionalLight);
  
         const directionalLight2 = new THREE.DirectionalLight(0xffffff);
         directionalLight2.position.set(0, 70, 100).normalize();
-        scene.add(directionalLight2);
+        this.scene.add(directionalLight2);
  
         // use the three.js GLTF loader to add the 3D model to the three.js scene
         const loader = new GLTFLoader();
         loader.crossOrigin = true;
         
         loader.load(
-            "https://raw.githubusercontent.com/QSafariallahkheili/ligfinder_refactor/master/GenericNewTree.glb",
+          "https://raw.githubusercontent.com/QSafariallahkheili/ligfinder_refactor/master/GenericNewTree.glb",
           (gltf) => {
-            scene.add(gltf.scene);
+            console.log(gltf)
+            this.scene.add(gltf.scene);
+            
           }
         );
 
@@ -92,9 +93,9 @@ export const TreeModel = (lng, lat, id)=> {
         )
         .scale(
           new THREE.Vector3(
-            modelTransform.scale*5,
-            -modelTransform.scale*5,
-            modelTransform.scale*5
+            modelTransform.scale*50,
+            -modelTransform.scale*50,
+            modelTransform.scale*50
           )
         )
         .multiply(rotationX)
@@ -104,7 +105,7 @@ export const TreeModel = (lng, lat, id)=> {
         this.camera.projectionMatrix = m.multiply(l);
         //this.renderer.state.reset();
         this.renderer.resetState();
-        this.renderer.render(scene, this.camera);
+        this.renderer.render(this.scene, this.camera);
         this.map.triggerRepaint();
       }
   };

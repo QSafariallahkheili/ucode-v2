@@ -1,30 +1,9 @@
 <template>
-  <MyMap  /> 
- 
+  <RouterView />
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import MyButton from '@/components/Button.vue'
-import MyMap from '@/components/MyMap.vue'
-import {useStore} from "vuex";
-
-const store = useStore();
-
-const name = ref('ucode')
-const age = ref(4)
-
-const changeState = () =>{
-  name.value = 'ucodeeee'
-  age.value= 2
-}
-
-const clcikEvent = (val, namee)=>{
-    name.value = store.state.product.name
-  //name.value = namee
-  age.value= val
-}
-
+import { RouterView } from "vue-router";
 </script>
 
 <style >
