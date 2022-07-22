@@ -1,5 +1,5 @@
 https://v2.urban-codesign.com {  
-  reverse_proxy frontend:8080
+  reverse_proxy frontend:80
 }
 
 https://api.v2.urban-codesign.com {  
