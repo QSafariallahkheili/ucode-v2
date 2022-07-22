@@ -19,7 +19,7 @@ services:
     image: pgrouting/pgrouting
     container_name: db_ucode
     volumes:
-      - ./database/dumps:/var/lib/postgresql/dumps
+      - database_dumps:/var/lib/postgresql/dumps
     ports:
       - 5432:5432
     environment:
@@ -45,3 +45,4 @@ services:
       - caddy_config:/config
 volumes:
   caddy_config:
+  database_dumps:
