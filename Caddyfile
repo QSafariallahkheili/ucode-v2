@@ -1,0 +1,7 @@
+https://v2.urban-codesign.com {  
+  reverse_proxy frontend:8080
+}
+
+https://api.v2.urban-codesign.com {  
+  reverse_proxy backend:8000
+}

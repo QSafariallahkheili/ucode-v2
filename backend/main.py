@@ -5,8 +5,7 @@ from db import get_table_names
 
 app = FastAPI()
 origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
+    "https://v2.urban-codesign.com",
     "http://localhost",
     "http://localhost:8080"
 ]
