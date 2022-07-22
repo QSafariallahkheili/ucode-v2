@@ -1,14 +1,18 @@
-FROM node:lts-alpine
+# Declare the base image
+FROM node:lts-alpine3.14
+
+RUN mkdir /frontend
+
+COPY package*.json /frontend
 
 WORKDIR /frontend
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN npm ci
 
-ADD . .
+COPY . .
 
-RUN npm install
-
-ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE 8080
 
 CMD ["npm", "run", "dev"]
+
+COPY . .
