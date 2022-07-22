@@ -1,0 +1,30 @@
+name: "ucode ci/cd pipeline"
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, linux, ucode]
+
+    steps:
+      - name: List currently running containers
+        run: docker compose ps
+
+      - name: Stop running containers and delete volumes
+        run: docker compose down --volumes
+
+      - uses: actions/checkout@v3
+
+      - name: (Re)build containers
+        run: docker compose build
+
+      - name: Start newly built containers in detached mode
+        run: docker compose up --detach
