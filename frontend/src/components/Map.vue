@@ -22,6 +22,8 @@
         </v-btn>
       </v-row>
 
+
+      <AOI />
     </div>
   </div>
 </template>
@@ -34,6 +36,7 @@ import { HTTP } from '../utils/http-common';
 import {TreeModel} from '../utils/TreeModel';
 import {MapboxLayer} from '@deck.gl/mapbox';
 import {ScenegraphLayer} from '@deck.gl/mesh-layers';
+import AOI from './AOI.vue';
 
 
 
