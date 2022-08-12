@@ -7,7 +7,8 @@ from db import get_table_names, get_buildings_from_osm, init_building_table, get
 
 app = FastAPI()
 origins = [
-    "https://*.urban-codesign.com",
+    "https://api.v2.urban-codesign.com",
+    "https://v2.urban-codesign.com",
     "http://localhost",
     "http://localhost:8080"
 ]
