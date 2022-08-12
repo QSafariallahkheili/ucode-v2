@@ -24,6 +24,8 @@
 
 
       <AOI />
+      <Contribution />
+     
     </div>
   </div>
 </template>
@@ -37,6 +39,7 @@ import {TreeModel} from '../utils/TreeModel';
 import {MapboxLayer} from '@deck.gl/mapbox';
 import {ScenegraphLayer} from '@deck.gl/mesh-layers';
 import AOI from './AOI.vue';
+import Contribution from './Contribution.vue';
 
 
 

@@ -73,4 +73,19 @@ def get_buildings_from_db():
   connection.close()
   return building
 
+def add_comment(comment, lng, lat):
+  connection = connect()
+  cursor = connection.cursor()
+  
+  insert_query_comment= '''
+    INSERT INTO comment (comment, geom) VALUES (%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326));
+
+  '''
+  cursor.execute(insert_query_comment, (comment, lng, lat,))
+
+  connection.commit()
+  cursor.close()
+  connection.close()
+  return "ok"
+
 

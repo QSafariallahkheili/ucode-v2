@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import requests
-from db import get_table_names, get_buildings_from_osm, init_building_table, get_buildings_from_db
+from db import get_table_names, get_buildings_from_osm, init_building_table, get_buildings_from_db, add_comment
 
 app = FastAPI()
 origins = [
@@ -17,7 +17,8 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 
@@ -101,3 +102,10 @@ async def get_buildings_from_osm_api(request: Request):
 @app.get("/get-buildings-from-db")
 async def get_buildings_from_db_api():
     return get_buildings_from_db()
+
+@app.post("/add-comment")
+async def add_comment_api(request: Request):
+    data = await request.json()
+
+    add_comment(data["comment"], float(data["position"][0]), float(data["position"][1]))
+    return "added"
