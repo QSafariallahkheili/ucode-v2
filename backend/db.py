@@ -97,7 +97,7 @@ def init_greenery_table():
   connection.close()
   return "ok"
 
-def get_greenery_from_osm(greentag, geom):
+def store_greenery_from_osm(greentag, geom):
   connection = connect()
   cursor = connection.cursor()
   insert_query_greenery= '''

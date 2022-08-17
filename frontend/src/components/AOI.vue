@@ -27,22 +27,35 @@
 
 <script setup>
 import { useStore } from "vuex";
+import {
+  getbuildingsFromDB,
+  getbuildingsFromOSM,
+  storeGreeneryFromOSM,
+  getGreeneryFromDB,
+} from "../service/backend.service";
 const store = useStore();
 
-const sendBuildingRequest = (e) => {
-  if (e == "get") {
-    store.dispatch("aoi/getbuildingsFromOSM");
+const emit = defineEmits(["addLayer"]);
+
+const sendBuildingRequest = async (mode) => {
+  if (mode == "get") {
     store.dispatch("aoi/setDataIsLoading");
+    await getbuildingsFromOSM(store.state.aoi.bbox);
   } else {
-    store.dispatch("aoi/getbuildingsFromDB");
+    const newLayer = await getbuildingsFromDB();
+    emit("addLayer", newLayer);
   }
 };
-const sendGreeneryRequest = (e) => {
-  if (e == "get") {
-    store.dispatch("aoi/getGreeneryFromOSM");
+const sendGreeneryRequest = async (mode) => {
+  if (mode == "get") {
     store.dispatch("aoi/setDataIsLoading");
+    await storeGreeneryFromOSM(
+      store.state.aoi.bbox,
+      store.state.aoi.usedTagsForGreenery
+    );
   } else {
-    store.dispatch("aoi/getGreeneryFromDB");
+    const newLayer = await getGreeneryFromDB();
+    emit("addLayer", newLayer);
   }
 };
 </script>
