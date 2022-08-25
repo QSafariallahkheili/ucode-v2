@@ -12,6 +12,7 @@
 
       <AOI @addLayer="addLayerToMap" @addImage="addImageToMap" />
       <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine" @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl" :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
+      <Comment />
     </div>
   </div>
 </template>
@@ -26,6 +27,8 @@ import { HTTP } from "../utils/http-common";
 import { TreeModel } from "../utils/TreeModel";
 import AOI from "./AOI.vue";
 import Contribution from "./Contribution.vue";
+import {getCommentsFromDB} from "../service/backend.service";
+import Comment from "./Comment.vue";
 
 const store = useStore();
 
@@ -55,6 +58,8 @@ onMounted(() => {
     HTTP.get("").then((response) => {
       console.log(response);
     });
+    getCommentData()
+    
   });
   map.on('click', function (mapClick) {
     mapClicks.clickedCoordinates = [mapClick.lngLat.lng, mapClick.lngLat.lat]
@@ -63,6 +68,10 @@ onMounted(() => {
   map.on('draw.create', ()=> {
       lineDrawCreated.value = 1
   })
+
+ 
+
+
   unsubscribeFromStore = store.subscribe((mutation, state) => {
     if (mutation.type === "map/addLayer") {
       state.map.layers?.slice(-1).map(addLayerToMap)
@@ -72,6 +81,8 @@ onMounted(() => {
     }
   });
 });
+
+
 
 // threejs layer
 const addThreejsShape = () => {
@@ -124,7 +135,10 @@ const addImageToMap = (ImgUrl) => {
   });
 };
 
-
+const getCommentData = async () => {
+  const commentLayer = await getCommentsFromDB()
+  addLayerToMap(commentLayer)
+};
 // deckgl layder
 const addDeckglShape = () => {
   const myDeckLayer = new MapboxLayer({
@@ -164,6 +178,9 @@ const removeDrawControl= (draw, drawnPathlayerId)=>{
   lineDrawCreated.value = 0
   map.removeControl(draw)
 }
+
+
+
 onUnmounted(() => {
   map?.remove();
 });
