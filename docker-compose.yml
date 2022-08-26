@@ -48,3 +48,8 @@ volumes:
   caddy_config:
   database_dumps:
   database_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: "$PWD/database/container-data"
+      o: bind

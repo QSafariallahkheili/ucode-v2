@@ -45,14 +45,18 @@ jobs:
     runs-on: [self-hosted, linux, ucode]
     if: ${{ github.event_name != 'pull_request' }}
     needs: build
+    
     steps:
       - name: List currently running containers
         run: docker compose ps
 
-      - name: Stop running containers and delete volumes
-        run: docker compose down --volumes
+      - name: Stop running containers
+        run: docker compose down
 
       - uses: actions/checkout@v3
+        
+      - name: Create symbolic link to persisted volume location
+        run: ln -s /opt/container-data/ $PWD/database/container-data
 
       - name: (Re)build containers
         run: docker compose build
