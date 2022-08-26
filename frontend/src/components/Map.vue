@@ -100,8 +100,12 @@ const addLayerToMap = (layer) => {
   
   const buildinglayer = map.getLayer("overpass_buildings")
   const greenerylayer = map.getLayer("overpass_greenery")
+  const commenlayer = map.getLayer("comments")
   if(typeof buildinglayer !== 'undefined' && typeof greenerylayer !== 'undefined'){
     map?.moveLayer("overpass_greenery", "overpass_buildings" )
+  }
+  if(typeof commenlayer !== 'undefined' && typeof greenerylayer !== 'undefined'){
+    map?.moveLayer("overpass_greenery", "comments" )
   }
 
    
