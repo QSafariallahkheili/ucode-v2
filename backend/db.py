@@ -78,6 +78,8 @@ def add_comment(comment, lng, lat):
   cursor = connection.cursor()
   
   insert_query_comment= '''
+
+    create table if not exists comment (id SERIAL NOT NULL PRIMARY KEY, comment TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), likes integer DEFAULT 0, dislikes integer DEFAULT 0, geom geometry(Point, 4326));
     INSERT INTO comment (comment, geom) VALUES (%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326));
 
   '''
