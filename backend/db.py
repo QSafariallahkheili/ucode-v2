@@ -32,7 +32,7 @@ def init_building_table():
   cursor = connection.cursor()
   create_building_table_query =''' 
         drop table if exists building;
-        create table building (id SERIAL PRIMARY KEY, wallcolor CHAR(7), wallmaterial VARCHAR(20), roofcolor CHAR(7), roofmaterial VARCHAR(20), roofshape VARCHAR(20), roofheight FLOAT(4), height FLOAT(4), floors FLOAT, estimatedheight FLOAT(4), geom geometry(Geometry, 4326));
+        create table building (id SERIAL PRIMARY KEY, wallcolor CHAR(70), wallmaterial VARCHAR(20), roofcolor CHAR(70), roofmaterial VARCHAR(20), roofshape VARCHAR(20), roofheight FLOAT(4), height FLOAT(4), floors FLOAT, estimatedheight FLOAT(4), geom geometry(Geometry, 4326));
   '''
   cursor.execute(create_building_table_query)
 
