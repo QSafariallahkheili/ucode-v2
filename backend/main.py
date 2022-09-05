@@ -20,7 +20,6 @@ from db import (
     dislike_comment,
     undislike_comment,
     unlike_comment,
-    init_driving_lane_table,
     get_driving_lane_from_db,
     get_driving_lane_polygon_from_db
 )
@@ -361,7 +360,6 @@ async def undislike_comment_api(request: Request):
 
 @app.post("/get-driving-lane-from-osm")
 async def get_driving_lane_from_osm_api(request: Request):
-    init_driving_lane_table()
     data = await request.json()
     xmin = data['bbox']["xmin"]
     ymin = data['bbox']["ymin"]
