@@ -22,13 +22,16 @@ from db import (
     unlike_comment,
     get_driving_lane_from_db,
     get_driving_lane_polygon_from_db,
+    add_fulfillment,
+    get_quests_from_db,
+    get_driving_lane_polygon_from_db,
     drop_greenery_table,
     drop_building_table,
     drop_tree_table,
     drop_driving_lane_table
+
 )
 from db_migrations import run_database_migrations
-
 try:
     run_database_migrations()
 except Exception as err:
@@ -69,7 +72,13 @@ async def root():
         print(f"Unexpected {err=}, {type(err)=}")
         raise HTTPException(status_code=500, detail=f"Something went wrong: {err}")
 
-
+   # TH: Hier empfängt das Backend den Request aus dem Frontend, den Wert für die Quest-ID X um einen Zähler hochzusetzen 
+@app.post("/add-quest-fulfillment")
+async def add_fulfillment_api(request: Request):
+    data = await request.json()
+    add_fulfillment(data["questid"])
+    return "fulfillment has been updated"
+    
 @app.post("/store-greenery-from-osm")
 async def store_greenery_from_osm_api(request: Request):
     drop_greenery_table()
@@ -136,7 +145,6 @@ async def store_greenery_from_osm_api(request: Request):
     connection.close()
     return "gg"
 
-
 @app.get("/get-greenery-from-db")
 async def get_greenery_from_db_api():
     return get_greenery_from_db()
@@ -199,7 +207,6 @@ async def get_buildings_from_osm_api(request: Request):
         f["geometry"]["coordinates"] = [f["geometry"]["coordinates"]]
 
     for f in data_building["elements"]:
-
         wallcolor = None
         if "building:colour" in f["tags"]:
             wallcolor = f["tags"]["building:colour"]
@@ -265,6 +272,9 @@ async def get_buildings_from_osm_api(request: Request):
 async def get_buildings_from_db_api():
     return get_buildings_from_db()
 
+@app.get("/get-quests-from-db")
+async def get_quests_from_db_api():
+    return get_quests_from_db()
 
 @app.post("/get-trees-from-osm")
 async def get_trees_from_osm_api(request: Request):
