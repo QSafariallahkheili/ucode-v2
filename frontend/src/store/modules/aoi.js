@@ -13,6 +13,7 @@ const aoi = {
         overpassGreenery: null,
         dataIsLoaded: false,
         dataIsLoading: false,
+        mapIsPopulated: false
 
     },
     mutations: {
@@ -26,6 +27,9 @@ const aoi = {
         },
         setDataIsLoading({state}){
             state.dataIsLoading = true;
+        },
+        setMapIsPopulated({state}){
+            state.mapIsPopulated = true;
         },
     },
     getters: {
