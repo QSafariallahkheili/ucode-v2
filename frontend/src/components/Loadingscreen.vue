@@ -16,15 +16,13 @@
 <script setup>
 import { ref } from 'vue';
 
-const Loadingtexts = ["Gebäude hochziehen...", "Bäume pflanzen...", "Grünflächen anlegen...", "Straßen einziehen..."]
+const Loadingtexts = ["Bäume pflanzen...", "Grünflächen anlegen...", "Gebäude hochziehen...", "Straßen einziehen..."]
 let curLoadingText = ref("Karte wird befüllt...")
 let i = 0
 const showLoading = ref(true)
 async function animate() {
   setInterval(function () {
     curLoadingText.value = Loadingtexts[i]
-    // console.log(curLoadingText.value)
-    // console.log(showLoading.value)
     
     if (showLoading.value == false) {
       i++
@@ -66,33 +64,6 @@ animate();
   min-height: 50px;
   margin-bottom: 50px;
 }
-
-.loading-enter-from {
-  opacity: 0;
-  /* transform: translateY(60px); */
-}
-
-.loading-enter-to {
-  opacity: 1;
-  /* transform: translate(0px); */
-}
-
-.loading-enter-active {
-  transition: all 1s ease;
-}
-
-.loading-leave-from {
-  opacity: 1;
-}
-
-.loading-leave-to {
-  opacity: 0;
-}
-
-.loading.leave-active {
-  transition: all 1s ease;
-}
-
 .fade-enter-active {
   transition: all .3s ease-in;
 }
