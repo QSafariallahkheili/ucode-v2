@@ -255,10 +255,5 @@ onUnmounted(() => {
   margin: auto;
 }
 
-.watermark {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  z-index: 999;
-}
+
 </style>
