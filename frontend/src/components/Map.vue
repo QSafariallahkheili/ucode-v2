@@ -67,7 +67,8 @@ onMounted(() => {
     maxZoom: store.state.map.maxZoom,
     maxPitch: store.state.map.maxPitch,
   });
-  map.on("load", function () {
+  map.on("render", function () {
+    map.resize();
     HTTP.get("").then((response) => {
       // console.log(response);
     })
