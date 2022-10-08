@@ -58,6 +58,7 @@ onUnmounted(() => {
 })
 
 onMounted(() => {
+  document.getElementsByClassName("map-wrap")[0].style.height = 'window.innerHeight'
   map = new Map({
     container: mapContainer.value,
     style: store.state.map.style,
@@ -288,4 +289,7 @@ onUnmounted(() => {
   background-color: darkgray;
   margin: auto;
 }
+
+
+
 </style>
