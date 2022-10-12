@@ -24,7 +24,7 @@
 
 
 <script lang="ts" setup>
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, watch } from "vue";
 import { useStore } from "vuex";
 import bbox from "@turf/bbox";
 import {
@@ -34,7 +34,8 @@ import {
 
 const store = useStore();
 
-const emit = defineEmits(["activateSelectedPlanningIdea", "planningData"])
+const emit = defineEmits(["activateSelectedPlanningIdea", "navigateToPlanningIdea"])
+
 let planningData = reactive ({ routes: [] })
 
 const addRouteToMap = async () => {
@@ -91,16 +92,23 @@ const sendRouteRequest = async () => {
       }
     })
 
-    const planningIdeaBBOX = bbox(routeData.data);
-    emit("planningData", planningIdeaBBOX)
-
-
 };
 
 const activateSelectedPlanningIdea = (route)=>{
   
   emit("activateSelectedPlanningIdea", route)
 }
+
+
+watch(store.state.ui, function (state) {
+  if (state.aoiMapPopulated ==true && state.projectsLoaded ==true){
+    const planningIdeaBBOX = bbox(planningData.routes);
+    emit("navigateToPlanningIdea", planningIdeaBBOX)
+  }
+});
+
+
+
 
 </script>
 
