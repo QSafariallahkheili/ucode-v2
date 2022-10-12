@@ -271,7 +271,7 @@ const removePulseLayerFromMap = (layerid) => {
 const activateSelectedPlanningIdeaInMap = (selectedFeature)=>{
 
   let bounds = turf.bbox(selectedFeature);
-  map.fitBounds(bounds);
+  map.fitBounds(bounds, {padding: 20});
 
   if (selectedFeature.type== 'FeatureCollection'){
 
