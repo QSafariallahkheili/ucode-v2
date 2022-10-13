@@ -14,7 +14,7 @@
         </v-btn>
       </v-row>
       <AOI @addLayer="addLayerToMap" @addImage="addImageToMap" />
-      <PlanningIdeas @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap" @navigateToPlanningIdea="navigateToPlanningIdea" />
+      <PlanningIdeas v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap" @navigateToPlanningIdea="navigateToPlanningIdea" />
 
       <Quests />
       <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
@@ -50,7 +50,7 @@ const mapContainer = shallowRef(null);
 let map = {};
 const mapClicks = reactive({ clickedCoordinates: [] })
 let lineDrawCreated = ref(0)
-
+let mapStyleLoaded = ref(false)
 
 let unsubscribeFromStore = () => { };
 
@@ -81,6 +81,8 @@ onMounted(() => {
   
   
   map.on("load", function () {
+
+    mapStyleLoaded.value = true
 
     unsubscribeFromStore = store.subscribe((mutation, state) => {
       if (mutation.type === "map/addLayer") {
