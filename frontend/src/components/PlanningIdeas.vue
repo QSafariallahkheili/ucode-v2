@@ -2,7 +2,7 @@
 
   <v-sheet
       class="mx-auto planning-ideas-options"
-      max-width="500"
+      
   >
     <v-btn :key="100"
       size="small" 
@@ -134,7 +134,8 @@ watch(store.state.ui, function (state) {
 <style scoped>
 .planning-ideas-options {
   position:relative;
-  top: 95%;
+  margin-top: 5px;
+  padding: 5px;
   z-index: 999;
   display: flex;
   flex-direction: row;
