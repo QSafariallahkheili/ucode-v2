@@ -75,6 +75,10 @@ const loadAllProjectObjectsFromOSM = async (mode) => {
 const sendBuildingRequest = async (mode) => {
   if (mode == "get") {
     store.dispatch("aoi/setDataIsLoading");
+    getbuildingsFromOSM(
+    store.state.aoi.projectSpecification.bbox,
+    store.state.aoi.projectSpecification.project_id
+  );
   } else {
     const newLayer = await getbuildingsFromDB(
       store.state.aoi.projectSpecification.project_id
