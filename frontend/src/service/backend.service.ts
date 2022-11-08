@@ -15,7 +15,7 @@ export async function getQuestsFromDB(projectId: string) {
 export async function getbuildingsFromDB(projectId: string) {
   const response = await HTTP.post("get-buildings-from-db", projectId);
   // @ts-ignore
-  const emptygeom = (d:Feature) => d.geometry.coordinates.length == 1;
+  const emptygeom = (d:Feature) => d?.geometry?.coordinates?.length == 1;
   const nonEmptyFeatures = response.data.features.filter(emptygeom);
   //const colorPalette = [[123, 222, 242, 255], [178, 247, 239, 255],[239, 247, 246,255], [247, 214, 224, 255], [242, 181, 211,255]];
   //const colorPalette = [[232, 222, 197, 255], [237, 236, 221, 255], [255, 241, 230, 255], [235, 237, 232, 255], [237, 220, 210, 255], [235, 238, 240, 255]];
