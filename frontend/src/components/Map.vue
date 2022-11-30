@@ -1,32 +1,32 @@
 <template>
-  <div class="map-wrap" ref="mapContainer">
-    <div class="map" id="map">
-      <v-row v-if="devMode" style="position: absolute; right: 20px; top: 20px; z-index: 999">
-        <v-btn color="success" class="ml-2" @click="getCommentData">
-          Show comments
-        </v-btn>
-        <v-btn color="error" class="ml-2" @click="addThreejsShape">
-          Threejs
-        </v-btn>
-        <v-btn color="success" class="ml-2" @click="addDeckglShape">
-          Deckgl
-        </v-btn>
-      </v-row>
-      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
-      <Quests />
-
-      <PlanningIdeas v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-        @navigateToPlanningIdea="navigateToPlanningIdea" />
-      <FreeComment @deleteCommentLayer="deleteCommentLayer" @centerMapOnLocation="centerMapOnLocation"
-        @addComment="addCommentToMap" @getCenterOnMap="getMapCenter"
-        :clickedCoordinates="commentClicks.commentCoordinates" @updateSourceData="updateSourceData" />
-      <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
-        @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
-        :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
-      <Comment @removePulseLayer="removePulseLayerFromMap" />
-
+    <div class="map-wrap" ref="mapContainer">
+      <div class="map" id="map">
+        <v-row v-if="devMode" style="position: absolute; right: 20px; top: 20px; z-index: 999">
+          <v-btn color="success" class="ml-2" @click="getCommentData">
+            Show comments
+          </v-btn>
+          <v-btn color="error" class="ml-2" @click="addThreejsShape">
+            Threejs
+          </v-btn>
+          <v-btn color="success" class="ml-2" @click="addDeckglShape">
+            Deckgl
+          </v-btn>
+        </v-row>
+        <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+        <Quests v-if="devMode"/>
+        <PlanningIdeas v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+            @navigateToPlanningIdea="navigateToPlanningIdea" />
+        <FreeComment :showCommentDialog="showCommentDialog" @deleteCommentLayer="deleteCommentLayer" @centerMapOnLocation="centerMapOnLocation"
+          @addComment="addCommentToMap" @getCenterOnMap="getMapCenter"
+          :clickedCoordinates="commentClicks.commentCoordinates" @updateSourceData="updateSourceData" @closeCommentDialog="closeCommentDialog"/>
+        <CommentView :show="tabIndex=='discussion'"/>
+        <BottomNavigation @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
+        <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
+          @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
+          :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
+        <Comment @removePulseLayer="removePulseLayerFromMap" />
+      </div>
     </div>
-  </div>
 </template>
 
 
@@ -37,6 +37,8 @@ import Contribution from "@/components/Contribution.vue";
 import PlanningIdeas from "@/components/PlanningIdeas.vue";
 import Quests from "@/components/Quests.vue";
 import FreeComment from "@/components/FreeComment.vue";
+import BottomNavigation from "@/components/BottomNavigation.vue";
+import CommentView from "@/components/CommentView.vue";
 import { getCommentsFromDB } from "@/service/backend.service";
 import type { ProjectSpecification } from "@/store/modules/aoi";
 import { HTTP } from "@/utils/http-common";
@@ -60,6 +62,8 @@ const mapClicks = reactive({ clickedCoordinates: [] })
 const commentClicks = reactive<{ commentCoordinates: number[] }>({ commentCoordinates: [] })
 let lineDrawCreated = ref(0)
 let mapStyleLoaded = ref(false)
+let tabIndex = ref("planning")
+let showCommentDialog = ref(false)
 //let activeMarker = reactive<any>({});
 
 
@@ -191,6 +195,8 @@ function deleteOwnComment() {
 }
 
 const addCommentToMap = (source: any, layer: any) => {
+
+  showCommentDialog.value = true
 
   // if (map.getSource(source.id) !== undefined) {
   //   // console.log("already in use")
@@ -475,7 +481,14 @@ const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
       curve: 4,
     });
   }, 2000);
+}
 
+const switchView = (newTabIndex: string) => {
+  tabIndex.value = newTabIndex
+}
+
+const closeCommentDialog = () => {
+  showCommentDialog.value = false
 }
 
 
@@ -493,7 +506,6 @@ onUnmounted(() => {
 }
 
 .map {
-
   height: 100%;
   width: 100%;
   position: absolute;
@@ -504,6 +516,5 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-
 }
 </style>

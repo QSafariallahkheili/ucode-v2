@@ -1,36 +1,33 @@
 <template>
-
-  <v-sheet
-      class="mx-auto planning-ideas-options"
-      
-  >
-    <v-btn v-if = "store.state.ui.planningIdeasLoaded" :key="100"
-      size="small" 
-      :color="activeBtn==100 ? 'grey': 'white'" 
-      rounded 
-      flat 
-      @click="activateSelectedPlanningIdea( planningData.routes); setActiveBtn(100)"
+    <v-sheet
+        class="mx-auto planning-ideas-options"
     >
-          All
-    </v-btn>
-    <div v-for="route in planningData.routes.features" :key="route.properties.id">
-      
-      <v-btn 
-        size="small"
-        class="ml-2" 
+      <v-btn v-if = "store.state.ui.planningIdeasLoaded" :key="100"
+        size="small" 
+        :color="activeBtn==100 ? 'grey': 'white'" 
         rounded 
         flat 
-        @click="activateSelectedPlanningIdea(route); setActiveBtn(route.properties.id)" 
-        :color="activeBtn==route.properties.id ? 'grey': 'white'"
+        @click="activateSelectedPlanningIdea( planningData.routes); setActiveBtn(100)"
       >
-        <v-icon :color="route.properties.color">
-          mdi-checkbox-blank-circle
-        </v-icon>
-        route {{route.properties.id}}
+            All
       </v-btn>
-    </div>
-  </v-sheet>
-
+      <div v-for="route in planningData.routes.features" :key="route.properties.id">
+        
+        <v-btn 
+          size="small"
+          class="ml-2" 
+          rounded 
+          flat 
+          @click="activateSelectedPlanningIdea(route); setActiveBtn(route.properties.id)" 
+          :color="activeBtn==route.properties.id ? 'grey': 'white'"
+        >
+          <v-icon :color="route.properties.color">
+            mdi-checkbox-blank-circle
+          </v-icon>
+          route {{route.properties.id}}
+        </v-btn>
+      </div>
+    </v-sheet>
 </template>
 
 
@@ -174,7 +171,8 @@ watch(store.state.ui, function (state) {
 
 <style scoped>
 .planning-ideas-options {
-  position:relative;
+  position:sticky;
+  bottom: 56px;
   margin-top: 5px;
   padding: 5px;
   z-index: 999;
@@ -183,17 +181,16 @@ watch(store.state.ui, function (state) {
   align-items: center;
   justify-content: center;
   background: red;
-  width: fit-content;
+  width: 100%;
   background: rgba(255,255,255,0.4);
   backdrop-filter: blur(5px);
-
 }
+
 .col
 {
   color: #df4947;
   color: #82e139;
   color: #225de6;
 }
-
 
 </style>
