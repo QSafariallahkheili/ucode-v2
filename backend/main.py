@@ -39,7 +39,10 @@ from db import (
     drop_tram_line_table,
     get_tram_line_from_db,
     drop_water_table,
-    get_water_from_db
+    get_water_from_db,
+    drop_sidewalk_table,
+    drop_sidewalk_polygon,
+    get_sidewalk_from_db
 
 )
 from db_migrations import run_database_migrations
@@ -852,3 +855,82 @@ async def get_tram_line_from_db_api(request: Request):
     projectId = await request.json()
     print(projectId)
     return get_tram_line_from_db(projectId)
+
+@app.post("/get-side-walk-from-osm")
+async def get_side_walk_from_osm_api(request: Request):
+    data = await request.json()
+    
+    projectId = data["projectId"]
+    drop_sidewalk_table(projectId)
+    drop_sidewalk_polygon(projectId)
+    xmin = sure_float(data['bbox']["xmin"])
+    ymin = sure_float(data['bbox']["ymin"])
+    xmax = sure_float(data['bbox']["xmax"])
+    ymax = sure_float(data['bbox']["ymax"]) 
+    custom_walk = ('["highway"="footway"]{}').format(ox.settings.default_access)
+
+    G = ox.graph_from_bbox(ymin, ymax, xmin, xmax, network_type='walk')
+    gdf = ox.graph_to_gdfs(G, nodes=False, edges=True)
+    walk = json.loads(gdf.to_json())
+
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    insert_query_sidewalk= '''
+        INSERT INTO sidewalk (project_id, highway, geom) VALUES (%s, %s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
+    '''
+    for f in walk['features']:
+
+        geom = json.dumps(f['geometry'])
+        highway=None
+        if 'highway' in f['properties']: highway =f['properties']['highway']
+        cursor.execute(insert_query_sidewalk, (projectId,highway, geom,))
+    
+    
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    connection = connect()
+    cursor = connection.cursor()
+    
+    delete_query_sidewalk_if_are_inside_main_road= '''
+
+        delete FROM sidewalk where highway SIMILAR TO %s;
+
+        delete FROM sidewalk AS a
+        USING driving_lane_polygon AS b
+        WHERE a.project_id=%s AND st_contains(b.geom, a.geom);
+    '''
+    
+    cursor.execute(delete_query_sidewalk_if_are_inside_main_road, ('%%secondary%%|%%tertiary%%|%%unclassified%%|%%corridor%%|%%trunk_link%%|%%elevato%r%|%%pedestrian%%|%%residential%%|%%primary%%|%%living_street%%', projectId, ))
+    
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    insert_query_driving_lane_polygon= '''
+        
+        INSERT INTO sidewalk_polygon(project_id, geom)
+        SELECT project_id, st_buffer(
+            ST_SetSRID(geom, 4326)::geography,
+            1 ,
+            'endcap=round join=round')::geometry FROM sidewalk where project_id=%s;
+    '''
+    
+    cursor.execute(insert_query_driving_lane_polygon, (projectId, ))
+    
+    connection.commit()
+    cursor.close()
+    connection.close()
+    
+    return "okk"
+
+@app.post("/get-sidewalk-from-db")
+async def get_sidewalk_from_db_api(request: Request):
+    projectId = await request.json()
+    return get_sidewalk_from_db(projectId)

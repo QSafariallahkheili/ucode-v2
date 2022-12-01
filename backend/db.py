@@ -369,6 +369,21 @@ def drop_water_table(projectId):
   cursor = connection.cursor()
   drop_water_table_query =f''' delete from water where project_id='{projectId}';'''
   cursor.execute(drop_water_table_query)
+
+def drop_sidewalk_table(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  drop_sidewalk_table_query =f''' delete from sidewalk where project_id='{projectId}';'''
+  cursor.execute(drop_sidewalk_table_query)
+  connection.commit()
+  cursor.close()
+  connection.close()
+
+def drop_sidewalk_polygon(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  drop_sidewalk_polygon_query =f''' delete from sidewalk_polygon where project_id='{projectId}';'''
+  cursor.execute(drop_sidewalk_polygon_query)
   connection.commit()
   cursor.close()
   connection.close()
@@ -451,3 +466,20 @@ def get_water_from_db(projectId):
   cursor.close()
   connection.close()
   return routes
+
+def get_sidewalk_from_db(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  get_sidewalk_query = f''' select json_build_object(
+        'type', 'FeatureCollection',
+        'features', json_agg(ST_AsGeoJSON(sidewalk_polygon.*)::json)
+        )
+        from sidewalk_polygon
+        where project_id = '{projectId}'
+      ;
+  '''
+  cursor.execute(get_sidewalk_query)
+  sidewalk = cursor.fetchall()[0][0]
+  cursor.close()
+  connection.close()
+  return sidewalk
