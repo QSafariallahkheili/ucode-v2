@@ -42,7 +42,11 @@ from db import (
     get_water_from_db,
     drop_sidewalk_table,
     drop_sidewalk_polygon,
-    get_sidewalk_from_db
+    get_sidewalk_from_db,
+    drop_bike_table,
+    drop_bike_polygon_table,
+    get_bike_from_db,
+    get_bike_lane_from_db
 
 )
 from db_migrations import run_database_migrations
@@ -862,7 +866,9 @@ async def get_side_walk_from_osm_api(request: Request):
     
     projectId = data["projectId"]
     drop_sidewalk_table(projectId)
+
     drop_sidewalk_polygon(projectId)
+
     xmin = sure_float(data['bbox']["xmin"])
     ymin = sure_float(data['bbox']["ymin"])
     xmax = sure_float(data['bbox']["xmax"])
@@ -873,7 +879,6 @@ async def get_side_walk_from_osm_api(request: Request):
     gdf = ox.graph_to_gdfs(G, nodes=False, edges=True)
     walk = json.loads(gdf.to_json())
 
-
     connection = connect()
     cursor = connection.cursor()
 
@@ -881,17 +886,16 @@ async def get_side_walk_from_osm_api(request: Request):
         INSERT INTO sidewalk (project_id, highway, geom) VALUES (%s, %s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
     '''
     for f in walk['features']:
-
         geom = json.dumps(f['geometry'])
         highway=None
         if 'highway' in f['properties']: highway =f['properties']['highway']
         cursor.execute(insert_query_sidewalk, (projectId,highway, geom,))
     
-    
     connection.commit()
     cursor.close()
     connection.close()
 
+    
     connection = connect()
     cursor = connection.cursor()
     
@@ -930,7 +934,88 @@ async def get_side_walk_from_osm_api(request: Request):
     
     return "okk"
 
+@app.post("/get-bike-from-osm")
+async def get_bike_from_osm_api(request: Request):
+    data = await request.json()
+    projectId = data["projectId"]
+    drop_bike_table(projectId)
+    drop_bike_polygon_table(projectId)
+    xmin = sure_float(data['bbox']["xmin"])
+    ymin = sure_float(data['bbox']["ymin"])
+    xmax = sure_float(data['bbox']["xmax"])
+    ymax = sure_float(data['bbox']["ymax"]) 
+
+    overpass_url = "http://overpass-api.de/api/interpreter"
+    overpass_query_bike = """
+         [out:json];
+            way["bicycle"="designated"](%s,%s,%s,%s);
+            convert item ::=::,::geom=geom(),_osm_type=type();
+            out geom;
+     """ % (
+        ymin,
+        xmin,
+        ymax,
+        xmax,
+    )
+
+    response_bike = requests.get(overpass_url, params={"data": overpass_query_bike})
+
+    data_bike = response_bike.json()
+    
+    connection = connect()
+    cursor = connection.cursor()
+
+    insert_query_bike= '''
+        INSERT INTO bike (project_id,oneway,highway,service_type,lanes, geom) VALUES (%s,%s,%s,%s,%s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
+
+    '''
+
+    for elem in data_bike["elements"]:
+       
+        oneway=None
+        if 'oneway' in elem["tags"]: oneway = elem["tags"]['oneway']
+        highway=None
+        if 'highway' in elem["tags"]: highway = elem["tags"]['highway']
+        service_type=None
+        if 'service_type' in elem["tags"]: service_type = elem["tags"]['service_type']
+        lanes=None
+        if 'lanes' in elem["tags"]: lanes = elem["tags"]['lanes']
+        geom= json.dumps(elem['geometry'])
+       
+        cursor.execute(insert_query_bike, (projectId,oneway,highway,service_type,lanes, geom,))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    insert_query_bike_polygon= '''
+    
+        INSERT INTO bike_polygon(project_id, geom)
+        SELECT project_id, st_buffer(
+            ST_SetSRID(geom, 4326)::geography,
+            0.5 ,
+            'endcap=round join=round')::geometry FROM bike where project_id=%s;
+
+    '''
+        
+    cursor.execute(insert_query_bike_polygon, (projectId, ))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return "okk"
+
 @app.post("/get-sidewalk-from-db")
 async def get_sidewalk_from_db_api(request: Request):
     projectId = await request.json()
     return get_sidewalk_from_db(projectId)
+
+@app.post("/get-bike-from-db")
+async def get_bike_from_db_api(request: Request):
+    projectId = await request.json()
+    bike_poly = get_bike_from_db(projectId)
+    return bike_poly
+
