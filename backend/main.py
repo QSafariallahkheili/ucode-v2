@@ -178,23 +178,17 @@ async def get_buildings_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     drop_building_table(projectId)
-    xmin = data["bbox"]["xmin"]
-    ymin = data["bbox"]["ymin"]
-    xmax = data["bbox"]["xmax"]
-    ymax = data["bbox"]["ymax"]
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+    
     overpass_url = "http://overpass-api.de/api/interpreter"
-    # overpass_query_building = """
-    #     [out:json];
-    #     way["building"](%s,%s,%s,%s);
-    #     convert item ::=::,::geom=geom(),_osm_type=type();
-    #     out geom;
-    # """ % ( ymin, xmin, ymax ,xmax )
-    overpass_query_building_parts = """
+    
+
+    overpass_query_building_parts = f"""
         [out:json];
         (
             (
-                way[building](%s,%s,%s,%s);
-                way["building:part"](%s,%s,%s,%s);
+                way[building]({bbox});
+                way["building:part"]({bbox});
             );
             -
             (
@@ -204,16 +198,7 @@ async def get_buildings_from_osm_api(request: Request):
         );
         convert item ::=::,::geom=geom(),_osm_type=type();
         out geom;
-    """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-    )
+    """
     response_building = requests.get(
         overpass_url, params={"data": overpass_query_building_parts}
     )
@@ -221,34 +206,34 @@ async def get_buildings_from_osm_api(request: Request):
     data_building = response_building.json()
 
     ###############
-    overpass_query_building_with_hole = """
+    overpass_query_building_with_hole = f"""
         [out:json];
            
                 (
-                    way["building"](%s,%s,%s,%s);
-                    relation["building"](%s,%s,%s,%s);
+                    rel["building"]({bbox});
                    
                 );
                 
             (._;>;);
             out geom;
 
-        """ % (
-            ymin,
-            xmin,
-            ymax,
-            xmax,
-            ymin,
-            xmin,
-            ymax,
-            xmax,
-           
-        )
+        """
     response_building_with_hole = requests.get(
         overpass_url, params={"data": overpass_query_building_with_hole}
     )
-    bhole = osmtogeojson.process_osm_json(response_building_with_hole.json())
-    
+    results = response_building_with_hole.json()
+    for f in results["elements"]:
+        if "type" in f and f["type"] == "relation":
+            if(f["members"][0]["role"] != "outer"):
+                i = 0
+                for x in f["members"]:
+                    if x["role"] == "outer":
+                        f["members"][0], f["members"][i] = f["members"][i],f["members"][0]
+                        break
+                    i += 1
+                
+    bhole = osmtogeojson.process_osm_json(results)
+    # print(bhole)
     connectionn = connect()
     cursorr = connectionn.cursor()
     insert_query_buildingg = """
@@ -257,7 +242,7 @@ async def get_buildings_from_osm_api(request: Request):
     for f in bhole["features"]:
         
         if "type" in f["properties"] and f["properties"]["type"] == "multipolygon":
-              
+            
             wallcolor = None
             if "building:colour" in f["properties"]:
                 wallcolor = f["properties"]["building:colour"]
@@ -872,7 +857,7 @@ async def get_tram_lines_from_osm_api(request: Request):
 @app.post("/get-tram-line-from-db")
 async def get_tram_line_from_db_api(request: Request):
     projectId = await request.json()
-    print(projectId)
+    # print(projectId)
     return get_tram_line_from_db(projectId)
 
 @app.post("/get-side-walk-from-osm")
