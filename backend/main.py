@@ -917,9 +917,9 @@ async def get_side_walk_from_osm_api(request: Request):
 
         delete FROM sidewalk where highway SIMILAR TO %s;
 
-        delete FROM sidewalk AS a
-        USING driving_lane_polygon AS b
-        WHERE a.project_id=%s AND st_contains(b.geom, a.geom);
+        DELETE FROM sidewalk a
+            USING sidewalk b 
+            WHERE a.project_id=%s and a.id > b.id AND st_equals(a.geom, b.geom);
     '''
     
     cursor.execute(delete_query_sidewalk_if_are_inside_main_road, ('%%secondary%%|%%tertiary%%|%%unclassified%%|%%corridor%%|%%trunk_link%%|%%elevato%r%|%%pedestrian%%|%%residential%%|%%primary%%|%%living_street%%', projectId, ))
