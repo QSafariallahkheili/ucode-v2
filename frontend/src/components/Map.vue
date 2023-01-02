@@ -83,7 +83,8 @@ onMounted(() => {
     minZoom: store.state.map.minZoom,
     maxZoom: store.state.map.maxZoom,
     maxPitch: store.state.map.maxPitch,
-    attributionControl: false
+    attributionControl: false,
+    antialias: true
   });
 
   
