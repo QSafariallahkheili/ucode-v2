@@ -24,7 +24,8 @@ import {
   getAmenities,
   getAmenityDataFromDB,
   getSidewalkFromDB,
-  getBikeFromDB
+  getBikeFromDB,
+  getBikeLaneDataFromDB
 
 } from "../service/backend.service";
 import type { FeatureCollection } from "@turf/helpers";
@@ -37,7 +38,7 @@ const emit = defineEmits(["addLayer", "addImage", "triggerRepaint"]);
 const populateMap = async () => {
   // await sendBuildingRequest();
   await createEmptyThreeJsScene();
-
+  await sendBikeLaneIconRequest()
   await sendBuildingRequestTHREE()
   // await sendGreeneryRequest();
   await addAmenities();
@@ -55,7 +56,8 @@ const populateMap = async () => {
   emit("addLayer", threeJsSceneFlat.layer, "routes")
   await sendSidewalkRequest();
   await sendBikeRequest()
-
+  
+ 
   store.dispatch("aoi/setMapIsPopulated");
   store.commit("ui/aoiMapPopulated", true);
 }
@@ -368,6 +370,48 @@ const sendBikeRequest = async () =>{
     extrude: 0.32
   })  
    
+}
+
+const sendBikeLaneIconRequest = async () => {
+
+  const bikelane = await getBikeLaneDataFromDB(store.state.aoi.projectSpecification.project_id);
+  
+  let baseWidth = 0.0011
+  let baseZoomm = 15
+  store.commit("map/addSource", {
+    id: "bike-icon",
+    geojson: {
+      type: "geojson",
+      data: bikelane.data,
+    },
+  });
+  store.commit("map/addLayer", {
+    id: "bike-icon",
+    type: "symbol",
+    source: "bike-icon",
+    
+    layout: {
+      'symbol-placement': "line",
+      'symbol-spacing': 1,
+      'icon-allow-overlap': true,     
+      'icon-ignore-placement': false,
+      'icon-image': 'bike.png',
+      'icon-size': {
+              'type': 'exponential',
+              'base': 2,
+              'stops': [
+                  [0, baseWidth * Math.pow(2, (0 - baseZoomm))],
+                  [22, baseWidth * Math.pow(2, (22 - baseZoomm))]
+              ]
+          },
+      'visibility': 'visible',
+      'icon-rotate': 90,
+    },
+    paint: {
+      'icon-opacity': 0.7,
+      'icon-color': '#ffffff'
+    }
+  });
 }
 </script>
 

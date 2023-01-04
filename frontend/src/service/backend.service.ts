@@ -461,3 +461,8 @@ export async function getBikeFromDB(projectId: string) {
   const response = await HTTP.post("get-bike-from-db", projectId);
   return response;
 }
+
+export async function getBikeLaneDataFromDB(projectId: string) {
+  const response = await HTTP.post("get-bike-lanes-from-db", projectId);
+  return response;
+}

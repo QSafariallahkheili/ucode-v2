@@ -1121,3 +1121,9 @@ async def clear_cache():
     }
 #    print(result)
     return result
+
+@app.post("/get-bike-lanes-from-db")
+async def get_bike_lanes_from_db_api(request: Request):
+    projectId = await request.json()
+    bike_lanes = get_bike_lane_from_db(projectId)
+    return bike_lanes
