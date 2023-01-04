@@ -929,52 +929,49 @@ async def get_side_walk_from_osm_api(request: Request):
     drop_sidewalk_table(projectId)
 
     drop_sidewalk_polygon(projectId)
+    
+    ##### ############## overpass ###################
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+    
+    overpass_url = "http://overpass-api.de/api/interpreter"
+    overpass_query_walk = f"""
+        [out:json];
+            (
+                
+                way["highway"="path"]( {bbox});
+                way["highway"="footway"]( {bbox});
+                way["highway"="pedestrian"]( {bbox});
+                relation["highway"="path"]( {bbox});
+                relation["highway"="footway"]( {bbox});
+                relation["highway"="pedestrian"]( {bbox});
+            );
+            (._;>;);
+        out geom;
+    """
 
-    xmin = sure_float(data['bbox']["xmin"])
-    ymin = sure_float(data['bbox']["ymin"])
-    xmax = sure_float(data['bbox']["xmax"])
-    ymax = sure_float(data['bbox']["ymax"]) 
-    custom_walk = ('["highway"="footway"]{}').format(ox.settings.default_access)
+    response_walk = requests.get(overpass_url, params={"data": overpass_query_walk})
 
-    G = ox.graph_from_bbox(ymin, ymax, xmin, xmax, network_type='walk')
-    gdf = ox.graph_to_gdfs(G, nodes=False, edges=True)
-    walk = json.loads(gdf.to_json())
-
+    data_walk_osm = response_walk.json()
+    data_walk_geojson = osmtogeojson.process_osm_json(data_walk_osm)
+    
     connection = connect()
     cursor = connection.cursor()
 
     insert_query_sidewalk= '''
         INSERT INTO sidewalk (project_id, highway, geom) VALUES (%s, %s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
     '''
-    for f in walk['features']:
-        geom = json.dumps(f['geometry'])
-        highway=None
-        if 'highway' in f['properties']: highway =f['properties']['highway']
-        cursor.execute(insert_query_sidewalk, (projectId,highway, geom,))
     
+    for f in data_walk_geojson["features"]:
+        if f["geometry"]['type'] == "LineString":
+            highway=None
+            if 'highway' in f['properties']: highway =f['properties']['highway']
+            geom = json.dumps(f['geometry'])
+            cursor.execute(insert_query_sidewalk, (projectId,highway, geom,))
+            
     connection.commit()
     cursor.close()
     connection.close()
-
     
-    connection = connect()
-    cursor = connection.cursor()
-    
-    delete_query_sidewalk_if_are_inside_main_road= '''
-
-        delete FROM sidewalk where highway SIMILAR TO %s;
-
-        DELETE FROM sidewalk a
-            USING sidewalk b 
-            WHERE a.project_id=%s and a.id > b.id AND st_equals(a.geom, b.geom);
-    '''
-    
-    cursor.execute(delete_query_sidewalk_if_are_inside_main_road, ('%%secondary%%|%%tertiary%%|%%unclassified%%|%%corridor%%|%%trunk_link%%|%%elevato%r%|%%pedestrian%%|%%residential%%|%%primary%%|%%living_street%%', projectId, ))
-    
-    connection.commit()
-    cursor.close()
-    connection.close()
-
     connection = connect()
     cursor = connection.cursor()
 
