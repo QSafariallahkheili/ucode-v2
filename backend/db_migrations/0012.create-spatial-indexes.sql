@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_building_geom ON building USING gist (geom);

@@ -388,6 +388,40 @@ async def get_buildings_from_osm_api(request: Request):
     cursor.close()
     connection.close()
 
+    # building refinement: identifing and deleting duplicated buildings and small overlapping building geometries
+    
+    connection = connect()
+    cursor = connection.cursor()
+    
+    refinement_building_query = f"""
+        with buildingone as (select * from building where project_id = '{projectId}' and st_isvalid(geom))
+
+        delete from building where id in (
+            select building.id from building, buildingone
+            where building.project_id = '{projectId}' 
+                and st_isvalid(building.geom) 
+                and st_equals(building.geom, buildingone.geom) 
+                and building.id <> buildingone.id
+        );
+
+        with buildingone as (select * from building where project_id = '{projectId}' and st_isvalid(geom))
+            
+        delete from building where id in (
+            select building.id from building, buildingone 
+            where building.project_id = '{projectId}' 
+                and st_isvalid(building.geom) 
+                and st_within(building.geom, buildingone.geom) 
+                and building.id <> buildingone.id 
+                and buildingone.estimatedheight >=building.estimatedheight);
+
+    """
+    
+    cursor.execute(refinement_building_query)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    
+
     return "fine"
 
 
