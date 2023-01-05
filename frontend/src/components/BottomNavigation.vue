@@ -1,7 +1,10 @@
 <template>
     <v-bottom-navigation grow mode="shift" :elevation="6" color="secondary" :model-value="tabIndex" @update:modelValue="handleValueChange">
         <v-btn value="planning" >
-            <v-icon>mdi-message-draw</v-icon>
+            <v-icon v-if="projectType == 'transportation_planning'">mdi-road-variant</v-icon>
+            <v-icon v-else-if="projectType == 'city_planning'">mdi-city-variant</v-icon>
+            <v-icon v-else>mdi-message-draw</v-icon>
+            
             <span>Planung</span>
         </v-btn>
         <v-btn value="discussion">
@@ -13,6 +16,13 @@
 </template>
 
 <script setup>
+    import { onMounted, ref } from "vue";
+    import { useStore } from "vuex";
+
+    const store = useStore()
+
+    let projectType = ref (null)
+
     const props = defineProps({
         tabIndex: {
             type: String,
@@ -27,6 +37,10 @@
             emit('tabIndexChanged', newValue)
         }
     }
+
+    onMounted(() => {
+        projectType.value = store.state.aoi.projectSpecification.project_type
+    })
 </script>
 
 <style scoped>
