@@ -641,7 +641,47 @@ async def get_driving_lane_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
-    
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+    overpass_url = "http://overpass-api.de/api/interpreter"
+    overpass_query_serviceroad = f"""
+        [out:json];
+            (
+                
+                way["highway"="service"]( {bbox});
+                relation["highway"="service"]( {bbox});
+            );
+            (._;>;);
+        out geom;
+    """
+
+    response_serviceroad = requests.get(overpass_url, params={"data": overpass_query_serviceroad})
+
+    data_serviceroad_osm = response_serviceroad.json()
+    data_serviceroad_geojson = osmtogeojson.process_osm_json(data_serviceroad_osm)
+    for f in data_serviceroad_geojson["features"]:
+
+        if f["geometry"]['type'] == "LineString":
+           
+            lanes=None
+            if 'lanes' in f['properties']: lanes =f['properties']['lanes']
+            length=None
+            if 'length' in f['properties']: length =f['properties']['length']
+            maxspeed=None
+            if 'maxspeed' in f['properties']: maxspeed =f['properties']['maxspeed']
+            highway=None
+            if 'highway' in f['properties']: highway =f['properties']['highway']
+            width = 2
+            geom = json.dumps(f['geometry'])
+            cursor.execute(insert_query_driving_lane_polygon, (projectId,lanes,length,maxspeed,width,highway, geom, width))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
     return "true"
 
 @app.post("/get-driving-lane-from-db")
