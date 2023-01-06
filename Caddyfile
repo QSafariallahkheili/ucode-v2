@@ -10,5 +10,5 @@ https://api.v2.urban-codesign.com {
 
 https://tileserv.v2.urban-codesign.com {  
   encode gzip
-  reverse_proxy cache:8011
+  reverse_proxy cache:80
 }
