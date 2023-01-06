@@ -53,6 +53,18 @@ services:
       database:
         condition: service_healthy
 
+  cache:
+    image: varnish:fresh-alpine
+    volumes:
+      - $PWD/cache/default.vcl:/etc/varnish/default.vcl:ro
+    ports:
+      - '8011:80'
+    environment:
+      - VARNISH_SIZE=2G 
+    command: "-p default_ttl=1800"
+    depends_on:
+      - tileserv
+
   reverse-proxy:
     image: caddy:2.5.2-alpine
     restart: unless-stopped
