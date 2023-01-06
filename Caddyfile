@@ -7,3 +7,8 @@ https://api.v2.urban-codesign.com {
   encode gzip
   reverse_proxy backend:8000
 }
+
+https://tileserv.v2.urban-codesign.com {  
+  encode gzip
+  reverse_proxy tileserv:7800
+}
