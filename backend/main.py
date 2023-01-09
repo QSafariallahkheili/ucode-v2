@@ -455,17 +455,14 @@ async def get_trees_from_osm_api(request: Request):
     xmax = data["bbox"]["xmax"]
     ymax = data["bbox"]["ymax"]
     overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_trees = """
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+
+    overpass_query_trees = f"""
          [out:json];
-         node["natural"="tree"](%s,%s,%s,%s);
+         node["natural"="tree"]({bbox});
          convert item ::=::,::geom=geom(),_osm_type=type();
          out geom;
-     """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-    )
+     """
 
     response_tree = requests.get(overpass_url, params={"data": overpass_query_trees})
 
@@ -480,6 +477,32 @@ async def get_trees_from_osm_api(request: Request):
 
         geom = json.dumps(f["geometry"])
         cursor.execute(insert_query_tree, (projectId,geom,))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    overpass_query_tree_row = f"""
+         [out:json];
+         way["natural"="tree_row"]({bbox});
+         convert item ::=::,::geom=geom(),_osm_type=type();
+         out geom;
+     """ 
+
+    response_tree_row = requests.get(overpass_url, params={"data": overpass_query_tree_row})
+
+    data_tree_row = response_tree_row.json()
+
+    connection = connect()
+    cursor = connection.cursor()
+    insert_query_tree_row = """
+        INSERT INTO tree (project_id,geom) VALUES (%s, st_setsrid((ST_DumpPoints(ST_AsText(ST_Segmentize(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)::geography, 10)))).geom,4326) );
+
+    """
+    for f in data_tree_row["elements"]:
+
+        geom = json.dumps(f["geometry"])
+        cursor.execute(insert_query_tree_row, (projectId,geom,))
 
     connection.commit()
     cursor.close()
