@@ -626,7 +626,7 @@ async def get_driving_lane_from_osm_api(request: Request):
         st_buffer(
             ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)::geography,
             (%s::double precision)/2 ,
-            'endcap=round join=round')::geometry
+            'endcap=round join=round quad_segs=2')::geometry
         );
         
 
@@ -1044,7 +1044,7 @@ async def get_side_walk_from_osm_api(request: Request):
         SELECT project_id, st_buffer(
             ST_SetSRID(geom, 4326)::geography,
             1 ,
-            'endcap=round join=round')::geometry FROM sidewalk where project_id=%s;
+            'endcap=round join=round quad_segs=2')::geometry FROM sidewalk where project_id=%s;
     '''
     
     cursor.execute(insert_query_driving_lane_polygon, (projectId, ))
@@ -1117,7 +1117,7 @@ async def get_bike_from_osm_api(request: Request):
         SELECT project_id, st_buffer(
             ST_SetSRID(geom, 4326)::geography,
             0.5 ,
-            'endcap=round join=round')::geometry FROM bike where project_id=%s;
+            'endcap=round join=round quad_segs=2')::geometry FROM bike where project_id=%s;
 
     '''
         
