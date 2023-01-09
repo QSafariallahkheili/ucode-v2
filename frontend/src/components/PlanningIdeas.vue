@@ -157,7 +157,7 @@ const activateSelectedPlanningIdea = (route: Feature)=>{
 
 
 watch(store.state.ui, function (state) {
-  if (state.aoiMapPopulated ==true && state.projectsLoaded ==true && state.planningIdeasLoaded == true){
+  if (state.aoiMapPopulated ==true && state.projectsLoaded ==true && state.planningIdeasLoaded == true && state.intro == false){
     const planningIdeaBBOX = bbox(planningData.routes);
     emit("navigateToPlanningIdea", planningIdeaBBOX)
   }

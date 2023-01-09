@@ -3,17 +3,18 @@
       <div class="map" id="map">
         <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
         <Quests v-if="devMode"/>
-        <PlanningIdeas v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
             @navigateToPlanningIdea="navigateToPlanningIdea" />
         <FreeComment :showCommentDialog="showCommentDialog" @deleteCommentLayer="deleteCommentLayer" @centerMapOnLocation="centerMapOnLocation"
           @addComment="addCommentToMap" @getCenterOnMap="getMapCenter"
           :clickedCoordinates="commentClicks.commentCoordinates" @updateSourceData="updateSourceData" @closeCommentDialog="closeCommentDialog"/>
         <CommentGallery :show="tabIndex=='discussion'"/>
-        <BottomNavigation @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
+        <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
         <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
           @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
           :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
         <Comment @removePulseLayer="removePulseLayerFromMap" />
+        <Intro  v-show="store.state.ui.intro"/>
       </div>
     </div>
 </template>
@@ -28,6 +29,7 @@ import Quests from "@/components/Quests.vue";
 import FreeComment from "@/components/FreeComment.vue";
 import BottomNavigation from "@/components/BottomNavigation.vue";
 import CommentGallery from "@/components/CommentGallery.vue";
+import Intro from "@/components/Intro.vue";
 import { getCommentsFromDB } from "@/service/backend.service";
 import { getFilteredCommentsFromDB } from "@/service/backend.service";
 import type { ProjectSpecification } from "@/store/modules/aoi";
@@ -493,7 +495,7 @@ const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
       duration: 3000,
       curve: 4,
     });
-  }, 2000);
+  }, 1000);
 }
 
 const switchView = (newTabIndex: string) => {

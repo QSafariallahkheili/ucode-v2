@@ -12,6 +12,7 @@ export default {
     devMode: false,
     aoiMapPopulated: false,
     planningIdeasLoaded:false,
+    intro: true
   },
   mutations: {
     loadedProjects(state: UiState, payload: boolean) {
