@@ -161,10 +161,39 @@ def get_comments(projectId):
       ;
   '''
   cursor.execute(get_comment_query)
-  comments = cursor.fetchall()[0][0]
+  comments = cursor.fetchall()[0][0]  
   cursor.close()
   connection.close
   return comments
+
+
+def get_filtered_comments_with_status(projectId,userId):
+  connection = connect()
+  cursor = connection.cursor()
+
+  get_comment_query =f''' 
+  select json_build_object('type', 'FeatureCollection','features', json_agg(ST_AsGeoJSON(r.*)::json)) FROM 
+  (SELECT  comment.*, comment_voting.voting_status 
+  FROM comment 
+  LEFT JOIN comment_voting
+  ON comment.id = comment_voting.comment_id AND comment.project_id='{projectId}' AND comment_voting.user_id='{userId}'
+  ) r;
+  '''
+  cursor.execute(get_comment_query)
+  comments = cursor.fetchall()[0][0]
+  
+  for f in comments["features"]:
+      author = f["properties"]["user_id"]
+      if userId != author:
+        f["properties"]["user_id"] = "anonymous"
+      voting_status = f["properties"]["voting_status"]
+      if voting_status == None:
+        f["properties"]["voting_status"] = "undefined"
+        
+  cursor.close()
+  connection.close()
+  return comments
+
 
 def get_filtered_comments(projectId,userId):
   connection = connect()
@@ -179,7 +208,6 @@ def get_filtered_comments(projectId,userId):
   cursor.execute(get_comment_query)
   comments = cursor.fetchall()[0][0]
 
-  # rename all usernames with "anonymous" when not the current user
   for f in comments["features"]:
         currentUser = f["properties"]["user_id"]
         if str(userId) != str(currentUser):
@@ -190,10 +218,156 @@ def get_filtered_comments(projectId,userId):
   return comments
 
 
-def like_comment(commentid, projectId):
+def update_comment_voting(comment_id, user_id, voting_status):
+  
   connection = connect()
   cursor = connection.cursor()
-  add_like_query =f''' UPDATE comment SET likes = likes + 1 where id = {commentid} and project_id='{projectId}';'''
+
+  ## check, ob es überhaupt schon ein Voting zu diesem Kommentare gibt. wenn nicht, wird ein neuer erstellt, wenn ja, dann update
+
+  get_votings_for_comment_query=f'''
+    SELECT COUNT(voting_status) FROM comment_voting where comment_id = {comment_id} and user_id='{user_id}';
+  '''
+  cursor.execute(get_votings_for_comment_query)
+  votings_for_comment_tuple = cursor.fetchall()
+  votings_for_comment = int(votings_for_comment_tuple[0][0]) 
+  if votings_for_comment < 1:
+    set_voting_status_query =f''' INSERT INTO comment_voting (comment_id, user_id,voting_status) VALUES ('{comment_id}', '{user_id}','{voting_status}');'''
+  else:
+    set_voting_status_query =f''' UPDATE comment_voting SET voting_status = '{voting_status}' where comment_id = {comment_id} and user_id='{user_id}';'''
+    
+  cursor.execute(set_voting_status_query)
+  connection.commit()
+  cursor.close()
+  connection.close()  
+
+
+def update_voting_status(comment_id, user_id, action):
+
+  ## check, which previous state the user has for the comment_id 
+
+  connection = connect()
+  cursor = connection.cursor()
+
+  ## check, ob es überhaupt schon ein Voting zu diesem Kommentare gibt. wenn nicht, wird ein neuer erstellt, wenn ja, dann update
+
+  get_previous_state_for_comment_query=f'''
+    SELECT voting_status FROM comment_voting where comment_id = {comment_id} and user_id='{user_id}';
+  '''
+  cursor.execute(get_previous_state_for_comment_query)
+  previous_state = cursor.fetchall()
+  if len(previous_state) == 0: #TH# if there is no voting up to now, set the voting status to "undefined"
+    previous_state = "undefined"
+  else:
+    previous_state = previous_state[0][0] 
+
+
+  if previous_state == "undefined":
+    
+    if action == "like":
+      result = {"status" : "like", "like" : 1, "dislike" : 0}
+      like_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "like")
+
+    elif action == "dislike":
+      result = {"status" : "dislike", "like" : 0, "dislike" : 1}
+      dislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "dislike")
+    else:
+      result = "Error"
+
+  elif previous_state == "like":
+	  
+    if action == "like":
+      result = {"status" : "undefined", "like" : -1, "dislike" : 0}
+      unlike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "undefined")
+
+    elif action == "dislike":
+      result = {"status" : "dislike", "like" : -1, "dislike" : 1}
+      dislike_comment(comment_id)
+      unlike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "dislike")
+    else:
+      result = "Error"
+	 
+  elif previous_state == "dislike":
+	
+    if action == "like":
+      result = {"status" : "like", "like" : 1, "dislike" : -1}
+      like_comment(comment_id)
+      undislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "like")
+
+      
+    elif action == "dislike":
+      result = {"status" : "undefined", "like" : 0, "dislike" : -1}
+      undislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "undefined")
+
+    else:
+      result = "Error"
+  else:
+    result = "Error"
+   
+  return result
+
+def update_voting_status_v1(comment_id, user_id, action, previous_state):
+
+  if previous_state == "undefined":
+    
+    if action == "like":
+      result = {"status" : "like", "like" : 1, "dislike" : 0}
+      like_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "like")
+
+    elif action == "dislike":
+      result = {"status" : "dislike", "like" : 0, "dislike" : 1}
+      dislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "dislike")
+    else:
+      result = "Error"
+
+  elif previous_state == "like":
+	  
+    if action == "like":
+      result = {"status" : "undefined", "like" : -1, "dislike" : 0}
+      unlike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "undefined")
+
+    elif action == "dislike":
+      result = {"status" : "dislike", "like" : -1, "dislike" : 1}
+      dislike_comment(comment_id)
+      unlike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "dislike")
+    else:
+      result = "Error"
+	 
+  elif previous_state == "dislike":
+	
+    if action == "like":
+      result = {"status" : "like", "like" : 1, "dislike" : -1}
+      like_comment(comment_id)
+      undislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "like")
+
+      
+    elif action == "dislike":
+      result = {"status" : "undefined", "like" : 0, "dislike" : -1}
+      undislike_comment(comment_id)
+      update_comment_voting(comment_id, user_id, "undefined")
+
+    else:
+      result = "Error"
+  else:
+    result = "Error"
+   
+  return result
+
+def like_comment(commentid):
+  connection = connect()
+  cursor = connection.cursor()
+  add_like_query =f''' UPDATE comment SET likes = likes + 1 where id = {commentid};'''
   cursor.execute(add_like_query, ())
   
   connection.commit()
@@ -201,10 +375,10 @@ def like_comment(commentid, projectId):
   connection.close()
   return "ok"
 
-def unlike_comment(commentid, projectId):
+def unlike_comment(commentid):
   connection = connect()
   cursor = connection.cursor()
-  add_unlike_query =f''' UPDATE comment SET likes = likes - 1 where id = {commentid} and project_id='{projectId}';'''
+  add_unlike_query =f''' UPDATE comment SET likes = likes - 1 where id = {commentid};'''
   cursor.execute(add_unlike_query, ())
   
   connection.commit()
@@ -212,10 +386,10 @@ def unlike_comment(commentid, projectId):
   connection.close()
   return "ok"
 
-def dislike_comment(commentid, projectId):
+def dislike_comment(commentid):
   connection = connect()
   cursor = connection.cursor()
-  add_dislike_query =f''' UPDATE comment SET dislikes = dislikes + 1 where id = {commentid} and project_id='{projectId}';'''
+  add_dislike_query =f''' UPDATE comment SET dislikes = dislikes + 1 where id = {commentid};'''
   cursor.execute(add_dislike_query, ())
   
   connection.commit()
@@ -223,10 +397,10 @@ def dislike_comment(commentid, projectId):
   connection.close()
   return "ok"
 
-def undislike_comment(commentid, projectId):
+def undislike_comment(commentid):
   connection = connect()
   cursor = connection.cursor()
-  add_undislike_query =f''' UPDATE comment SET dislikes = dislikes - 1 where id = {commentid} and project_id='{projectId}';'''
+  add_undislike_query =f''' UPDATE comment SET dislikes = dislikes - 1 where id = {commentid};'''
   cursor.execute(add_undislike_query, ())
   
   connection.commit()

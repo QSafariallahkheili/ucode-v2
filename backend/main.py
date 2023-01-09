@@ -12,11 +12,13 @@ from db import (
     add_comment,
     add_drawn_line,
     dislike_comment,
+    update_voting_status,
     get_buildings_from_db,
     connect,
     delete_comments,
     get_comments,
     get_filtered_comments,
+    get_filtered_comments_with_status,
     get_greenery_from_db,
     get_table_names,
     get_trees_from_db,
@@ -550,6 +552,11 @@ async def get_comments_api(request: Request):
 async def get_comments_api(projectId: str):
     return get_comments(projectId)
 
+@app.get("/get-filtered-comments-with-status")
+async def get_filtered_comments_with_status_api(projectId: str, userId:str):
+    commentDataWithStatus = get_filtered_comments_with_status(projectId,userId)
+    return commentDataWithStatus
+
 @app.get("/get-filtered-comments")
 async def get_filtered_comments_api(projectId: str, userId: str):
         return get_filtered_comments(projectId,userId)
@@ -561,6 +568,12 @@ async def get_filtered_comments_api(request: Request):
     projectId = data["projectId"]
     userId = data["userId"]
     return get_filtered_comments(projectId,userId)
+
+
+@app.get("/update-voting-status")
+async def update_voting_status_api(commentId: str, userId:str, action:str):
+    response = update_voting_status(commentId, userId, action)
+    return response
 
 @app.post("/like-comment")
 async def like_comment_api(request: Request):

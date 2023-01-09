@@ -221,7 +221,7 @@ export async function deleteComments(projectId: string){
 }
 
 export async function getFilteredCommentsFromDB(projectId: string, userId: string) {
-  const response = await  HTTP.get("get-filtered-comments", {
+  const response = await  HTTP.get("get-filtered-comments-with-status", {
     params: {
       projectId: projectId,
       userId: userId}

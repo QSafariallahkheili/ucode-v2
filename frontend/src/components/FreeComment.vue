@@ -164,7 +164,7 @@ watch(commentText, function () {
     
     let input = document.getElementById('ta-input')
     let card = document.getElementById('card')
-    console.log(has_scrollbar(input))
+    // console.log(has_scrollbar(input))
     
     if(has_scrollbar(input)){
         input?.classList.remove('ta-not-scroll');

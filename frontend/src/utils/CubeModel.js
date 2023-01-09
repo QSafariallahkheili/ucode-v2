@@ -123,6 +123,4 @@ export const CubeModel = (lng, lat, id)=> {
     customLayer
   )
  
- 
-
 }
