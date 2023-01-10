@@ -1,17 +1,17 @@
 <template>
-  <div>
+  <div class="intro">
 
 
     <v-card
         theme="light"
         flat
         rounded="5"
-        class="intro"
+        
         style="border-radius: 18px 18px 0px 0px"
 
         
     >
-        <v-window v-model="onboarding">
+        <v-window v-model="onboarding" style="width: 100%" >
         <v-window-item
             v-for="n in sectionsLength"
             :key="`card-${n}`"
