@@ -1,16 +1,16 @@
+import maplibregl from "maplibre-gl"
+
 export interface freecommentState{
     moveComment: Boolean
 }
 const freecomment = {
     namespaced: true,
     state: {
-        moveComment: false
+        moveableCommentMarker: new maplibregl.Marker({draggable: true, color: '#0089B5', scale: 1.5})
+
         
     },
     mutations: {
-        setMoveComment(state : freecommentState, toggle: boolean){
-            state.moveComment = toggle
-        }
        
     },
     actions: {

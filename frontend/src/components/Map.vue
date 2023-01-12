@@ -1,22 +1,21 @@
 <template>
-    <div class="map-wrap" ref="mapContainer">
-      <div class="map" id="map">
-        <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
-        <Quests v-if="devMode"/>
-        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-            @navigateToPlanningIdea="navigateToPlanningIdea" />
-        <FreeComment :showCommentDialog="showCommentDialog" @deleteCommentLayer="deleteCommentLayer" @centerMapOnLocation="centerMapOnLocation"
-          @addComment="addCommentToMap" @getCenterOnMap="getMapCenter"
-          :clickedCoordinates="commentClicks.commentCoordinates" @updateSourceData="updateSourceData" @closeCommentDialog="closeCommentDialog"/>
-        <CommentGallery :show="tabIndex=='discussion'"/>
-        <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
-        <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
-          @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
-          :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
-        <Comment @removePulseLayer="removePulseLayerFromMap" />
-        <Intro  v-show="store.state.ui.intro"/>
-      </div>
+  <div class="map-wrap" ref="mapContainer">
+    <div class="map" id="map">
+      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+      <Quests v-if="devMode" />
+      <PlanningIdeas v-show="store.state.ui.intro == false" v-if="mapStyleLoaded"
+        @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+        @navigateToPlanningIdea="navigateToPlanningIdea" />
+      <FreeComment :showCommentDialog="showCommentDialog" @addComment="addCommentToMap" @placeComment="placeComment" @closeCommentDialog="closeCommentDialog" />
+      <CommentGallery :show="tabIndex == 'discussion'" />
+      <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" :tabIndex="tabIndex" />
+      <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
+        @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
+        :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
+      <Comment @removePulseLayer="removePulseLayerFromMap" />
+      <Intro v-show="store.state.ui.intro" />
     </div>
+  </div>
 </template>
 
 
@@ -38,7 +37,7 @@ import { pulseLayer } from "@/utils/pulseLayer";
 import { MapboxLayer } from "@deck.gl/mapbox/typed";
 import { ScenegraphLayer } from "@deck.gl/mesh-layers/typed";
 import * as turf from '@turf/turf';
-import { Map, type CustomLayerInterface, type Feature, type IControl, type LayerSpecification, type LngLatBoundsLike, type LngLatLike, type Popup } from "maplibre-gl";
+import { Map, type CustomLayerInterface, type Feature, type IControl, type LayerSpecification, type LngLatBoundsLike, type LngLatLike, type Popup, Marker } from "maplibre-gl";
 import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
 import { useStore } from "vuex";
 import { deckLightingEffect } from "@/utils/deckLighting";
@@ -89,7 +88,7 @@ onMounted(() => {
     antialias: true
   });
 
-  
+
   map.on("load", function () {
     mapStyleLoaded.value = true
     addImageToMap("bike.png")
@@ -131,73 +130,24 @@ onMounted(() => {
     lineDrawCreated.value = 1
   })
 
-
-  map.on('mousedown', 'ownComments', (e) => {
-    // Prevent the default map drag behavior.
-    if (!store.state.freecomment.moveComment) {
-      return
-    }
-    e.preventDefault();
-    map.on('mousemove', onMoveComment);
-    map.once('mouseup', onUp);
-  });
-
-  map.on('touchstart', 'ownComments', (e) => {
-    if (e.points.length !== 1) return;
-    if (!store.state.freecomment.moveComment) {
-      return
-    }
-    e.preventDefault();
-    map.on('touchmove', onMoveComment);
-    map.once('touchend', onUp);
-
-  })
 });
-function updateSourceData(sourceId: string, data: any) {
-  map.getSource(sourceId)?.setData(data)
-}
-function onUp() {
-  map.off('mousemove', onMoveComment);
-  map.off('touchmove', onMoveComment);
-}
-function onMoveComment(e: { lngLat: { lng: number; lat: number; }; }) { commentClicks.commentCoordinates = [e.lngLat.lng, e.lngLat.lat]; }
 
-function centerMapOnLocation(location: LngLatLike) { map.panTo(location); }
-
-function getMapCenter() { commentClicks.commentCoordinates = ([map.getCenter().lng, map.getCenter().lat]); }
-
-function deleteCommentLayer() {
-  map.removeLayer('ownComments')
-  map.removeSource('ownComments')
-  map.removeImage('comment.png')
-}
 const triggerRepaint = () => {
   map.triggerRepaint()
 }
 // threejs layer
 const addThreejsShape = () => {
-  //TODO type treemodel 
   // @ts-ignore
   addLayerToMap(TreeModel(13.74647, 51.068646, 100));
   map.triggerRepaint()
 }
-function deleteOwnComment() {
-  map.removeLayer('ownComments')
-  map.removeSource('ownComments')
-  map.removeImage('comment.png')
-}
-
-const addCommentToMap = (source: any, layer: any) => {
-
+const placeComment = () => {
   showCommentDialog.value = true
-
-  // if (map.getSource(source.id) !== undefined) {
-  //   // console.log("already in use")
-  //   addSourceToMap(source)
-  //   //@ts-ignore TODO Dobo help
-  //   activeMarker = map.getSource('ownComments')._data;
-  //   return
-  // }
+  store.state.freecomment.moveableCommentMarker
+    .setLngLat([map.getCenter().lng, map.getCenter().lat])
+    .addTo(map);
+}
+const addCommentToMap = (source: any, layer: any) => {
   addSourceToMap(source)
   if (!map.hasImage('comment.png')) {
     map?.loadImage('comment.png', (error, image) => {
@@ -206,27 +156,7 @@ const addCommentToMap = (source: any, layer: any) => {
       addLayerToMap(layer)
     });
   }
-  //@ts-ignore TODO Dobo help
-  //activeMarker = map.getSource('ownComments')._data;
 }
-
-store.commit("map/addLayer", {
-  'id': "ownComments",
-  'type': 'symbol',
-  'source': "ownComments",
-  'layout': {
-    'icon-image': 'comment.png', // reference the image
-    'icon-size': 1,
-    'icon-offset': [130, 25],
-    'icon-anchor': "bottom",
-    'icon-allow-overlap': true,
-    // 'icon-ignore-placement': true
-  },
-  'paint': {
-    // 'fadeDuration': 0
-  }
-})
-
 
 const addLayerToMap = (layer: LayerSpecification | CustomLayerInterface, beforeLayer?: string) => {
   // console.log(layer.id)
@@ -244,10 +174,10 @@ const addLayerToMap = (layer: LayerSpecification | CustomLayerInterface, beforeL
       addImageToMap(layer.paint["fill-pattern"]);
     }
   }
-  if(beforeLayer && map.getLayer(beforeLayer) == undefined){
-    beforeLayer=""
+  if (beforeLayer && map.getLayer(beforeLayer) == undefined) {
+    beforeLayer = ""
   }
-  map?.addLayer(layer,beforeLayer? beforeLayer: "");
+  map?.addLayer(layer, beforeLayer ? beforeLayer : "");
   const layerHirarchy: any[] = []// = reactive<[{layer: any, orderId: Number}]>([{}])
 
   const buildinglayer = map.getLayer("overpass_buildings")
@@ -297,7 +227,7 @@ const addLayerToMap = (layer: LayerSpecification | CustomLayerInterface, beforeL
   }
   const ThreeJsScene3d = map.getLayer("threeJsScene3d")
   if (typeof ThreeJsScene3d !== 'undefined') {
-    layerHirarchy.push({ layer: ThreeJsScene3d, orderId:  2})
+    layerHirarchy.push({ layer: ThreeJsScene3d, orderId: 2 })
   }
   const ThreeJsSceneFlat = map.getLayer("threeJsSceneFlat")
   if (typeof ThreeJsSceneFlat !== 'undefined') {
@@ -411,7 +341,7 @@ const getFilteredCommentData = async () => {
   const commentLayer = await getFilteredCommentsFromDB(store.state.aoi.projectId, store.state.aoi.userId);
   console.log(commentLayer)
   addLayerToMap(commentLayer as unknown as CustomLayerInterface)
-  
+
 };
 
 
@@ -516,7 +446,7 @@ onUnmounted(() => {
 .map-wrap {
   position: relative;
   width: 100%;
-  height: 100%; 
+  height: 100%;
   /* height: calc(var(--vh, 1vh) * 100); */
 }
 

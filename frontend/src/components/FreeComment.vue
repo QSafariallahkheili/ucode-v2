@@ -1,7 +1,7 @@
 <template>
     <div class="comment-container">
         <v-btn id="comment-btn" size="large" height="48px" rounded="pill" color="primary"
-            @touchstart="emit('getCenterOnMap')" @mousedown="emit('getCenterOnMap')" @click="createComment">
+            @click="placeComment">
             Kommentieren
         </v-btn>
         <transition name="slide">
@@ -35,8 +35,6 @@ import { useStore } from 'vuex';
 import { HTTP } from '@/utils/http-common';
 import { onMounted, reactive, ref, watch } from 'vue';
 import type { FeatureCollection } from 'geojson';
-import type internal from 'stream';
-import comment from '@/store/modules/comment';
 const store = useStore()
 let commentText = ref<string>("")
 let isFocused = ref<boolean>(false)
@@ -44,55 +42,33 @@ let allMarker = reactive<FeatureCollection>({ type: "FeatureCollection", feature
 let taLineCount = ref<number>(1)
 
 const props = defineProps({
-    clickedCoordinates: Array<Number>,
     showCommentDialog: {
         type: Boolean,
         default: false
     }
 })
-
-const emit = defineEmits(["addComment", "getCenterOnMap", "centerMapOnLocation", "deleteCommentLayer", "updateSourceData", "closeCommentDialog"])
+const emit = defineEmits(["addComment", "closeCommentDialog", "placeComment"])
 function cancelComment() {
-    store.commit('freecomment/setMoveComment', false)
+    // store.commit('freecomment/setMoveComment', false)
     commentText.value = ""
-
-    if (allMarker.features.length > 1) {
-       
-        allMarker.features.pop()
-        
-        emit('updateSourceData', 'ownComments', allMarker)
-    }
-    else {
-        emit('deleteCommentLayer')
-        allMarker.features.splice(allMarker.features.length - 1, 1)
-    }
+    store.state.freecomment.moveableCommentMarker.remove()
     emit('closeCommentDialog')
 }
 
-watch(()=> props.clickedCoordinates? props.clickedCoordinates : null, changePositionOfLastMarker)
-
-function changePositionOfLastMarker(){
-    if(!store.state.freecomment.moveComment){return}
-    //console.log("changePosition")
-    //@ts-ignore
-    
-    allMarker.features[allMarker.features.length-1].geometry.coordinates = props.clickedCoordinates
-    emit('updateSourceData', 'ownComments', allMarker)
+function placeComment(){
+    emit('placeComment')
 }
-
-function createComment() {
-    store.commit('freecomment/setMoveComment', true)
+function createComment(){
+    const coords = store.state.freecomment.moveableCommentMarker.getLngLat()
     let marker = {
         type: "Feature",
         geometry: {
             type: "Point",
-            coordinates: props.clickedCoordinates
+            coordinates: [coords.lng, coords.lat]
         }
     }
     //@ts-ignore
     allMarker.features.push(marker)
-    
-
     let mapsource = {
         id: "ownComments",
         geojson: {
@@ -106,32 +82,31 @@ function createComment() {
         'source': "ownComments",
         'layout': {
             'icon-image': 'comment.png', // reference the image
-            'icon-size': 0.25,
-            'icon-offset': [65, 13],
+            'icon-size': 0.15,
+            'icon-offset': [65, 50],
             'icon-anchor': "bottom",
             'icon-allow-overlap': true,
-            // 'icon-ignore-placement': true
-        },
-        'paint': {
-            // 'fadeDuration': 0
         }
     }
     emit('addComment', mapsource, ownCommentLayer)
+    store.state.freecomment.moveableCommentMarker.remove()
 }
 
 const saveComment = () => {
+    createComment()
     const submitComment = () => {
         HTTP
             .post('add-comment', {
                 projectId: store.state.aoi.projectSpecification.project_id,
                 comment: commentText.value,
-                position: props.clickedCoordinates,
+                //@ts-ignore
+                position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
                 userId: store.state.aoi.userId
             })
     }
     submitComment()
     commentText.value = ""
-    store.commit('freecomment/setMoveComment', false)
+    // store.commit('freecomment/setMoveComment', false)
 
     emit('closeCommentDialog')
 }
