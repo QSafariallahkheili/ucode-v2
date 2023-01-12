@@ -9,7 +9,7 @@
             <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-up-outline">{{ props.likes }}</v-chip>
             <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-down-outline" class="last-chip">{{ props.dislikes }}</v-chip>
             <v-btn
-                v-if="props.user_id === userId && (likes === 0 && dislikes === 0)"
+                v-if="(props.user_id === userId && (likes === 0 && dislikes === 0) && false)"
                 class="btn-end"
                 variant="plain"
                 size="small"
