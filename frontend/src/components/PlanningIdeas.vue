@@ -182,6 +182,7 @@ watch(store.state.ui, function (state) {
   -webkit-backdrop-filter: blur(5px);
   -moz-backdrop-filter: blur(5px);
   -ms-backdrop-filter: blur(5px);
+  overflow-x: scroll;
 }
 
 .col
