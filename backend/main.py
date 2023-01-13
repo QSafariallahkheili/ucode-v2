@@ -51,7 +51,8 @@ from db import (
     drop_bike_table,
     drop_bike_polygon_table,
     get_bike_from_db,
-    get_bike_lane_from_db
+    get_bike_lane_from_db,
+    delete_comment_by_id
 
 )
 from db_migrations import run_database_migrations
@@ -1200,3 +1201,10 @@ async def get_bike_lanes_from_db_api(request: Request):
     projectId = await request.json()
     bike_lanes = get_bike_lane_from_db(projectId)
     return bike_lanes
+
+@app.post("/delete-comment-by-id")
+async def delete_comment_by_id_api(request: Request):
+    data = await request.json()
+    delete_comment_by_id(data["commentId"])
+    return "comment deleted"
+

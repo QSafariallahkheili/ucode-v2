@@ -7,6 +7,7 @@ const comment = {
         commentData: {},
         likedCommentIds: [],
         unlikedCommentIds: [],
+        deletedComments: []
     },
     mutations: {
         setCommentToggle(state) {

@@ -1,5 +1,10 @@
 <template>
     <div class="comment-gallery-wrapper">
+        <DeletingDialog
+           :deleteDialog="deleteDialog"
+           @cnacelDeleteDialog="cnacelDeleteDialog"
+           @confirmDeleteCommentDialog="confirmDeleteCommentDialog"
+        />
         <transition name="card">
             <div v-if="(commentsAreLoaded && props.show)" className="comment-list"> 
                 <CommentCard 
@@ -11,6 +16,8 @@
                     :likes="comment.properties.likes"
                     :dislikes="comment.properties.dislikes"
                     :voting_status="comment.properties.voting_status"
+                    :key="comment.id"
+                    @deleteComment="deleteComment"
                 />
             </div>
         </transition>
@@ -25,15 +32,21 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, watch } from 'vue';
+    import { onMounted, ref, watch, reactive } from 'vue';
     import { useStore } from "vuex";
     import { getFilteredCommentsFromDB } from "../service/backend.service";
     import CardSkeleton from "@/components/CardSkeleton.vue";
     import CommentCard from "@/components/CommentCard.vue"
+    import DeletingDialog from "@/components/DeletingDialog.vue"
+    import { HTTP } from "@/utils/http-common.js";
+
 
     const store = useStore(); 
+    const emit = defineEmits(["deleteQuestCommentFromSource"]);
     const projectId = store.state.aoi.projectSpecification.project_id;
     const userId = store.state.aoi.userId;
+    let deleteDialog = ref(false)
+    let deleteCommentId = ref()
 
     const props = defineProps({
         show: {
@@ -78,6 +91,41 @@
             await delay(300 - loadingTime)
         }
         commentsAreLoaded.value = true; 
+    }
+    const deleteComment = (id)=>{
+        deleteCommentId.value = id
+        deleteDialog.value = true
+    }
+    const cnacelDeleteDialog = ()=>{
+        deleteDialog.value = false
+    }
+    const confirmDeleteCommentDialog = ()=>{
+        deleteDialog.value = false
+        let commentInstance = null
+        
+        commentInstance = commentList.value.map(comment =>comment.properties.id).indexOf(deleteCommentId.value)
+        
+        for (var i = 0; i < commentList.value.length; i++){
+            if (commentList.value[i].properties.id == deleteCommentId.value){
+                let marker = {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: commentList.value[i].geometry.coordinates
+                    }
+                }
+                
+                store.state.comment.deletedComments.push(marker)
+            }
+        }
+        commentList.value.splice(commentInstance, 1);
+        
+        HTTP.post("delete-comment-by-id",{
+            commentId: deleteCommentId.value,
+        })
+
+        emit("deleteQuestCommentFromSource", store.state.comment.deletedComments)
+
     }
 
     onMounted(() => {

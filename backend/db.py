@@ -794,3 +794,15 @@ def get_bike_lane_from_db(projectId):
   cursor.close()
   connection.close()
   return lane
+
+def delete_comment_by_id(comment_id):
+  connection = connect()
+  cursor = connection.cursor()
+  delete_comment = f''' delete from comment where id= '{comment_id}'
+      ;
+  '''
+  cursor.execute(delete_comment)
+  connection.commit()
+  cursor.close()
+  connection.close()
+  return "ok"

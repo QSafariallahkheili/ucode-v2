@@ -1,20 +1,21 @@
 <template>
-  <div class="map-wrap" ref="mapContainer">
-    <div class="map" id="map">
-      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
-      <Quests v-if="devMode" />
-      <PlanningIdeas v-show="store.state.ui.intro == false" v-if="mapStyleLoaded"
-        @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-        @navigateToPlanningIdea="navigateToPlanningIdea" />
-      <FreeComment :showCommentDialog="showCommentDialog" @addComment="addCommentToMap" @placeComment="placeComment" @closeCommentDialog="closeCommentDialog" />
-      <CommentGallery :show="tabIndex == 'discussion'" />
-      <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" :tabIndex="tabIndex" />
-      <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
-        @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
-        :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
-      <Comment @removePulseLayer="removePulseLayerFromMap" />
-      <Intro v-show="store.state.ui.intro" />
-    </div>
+    <div class="map-wrap" ref="mapContainer">
+      <div class="map" id="map">
+        <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+        <Quests v-if="devMode"/>
+        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+            @navigateToPlanningIdea="navigateToPlanningIdea" />
+        <FreeComment @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
+          @closeCommentDialog="closeCommentDialog"/>
+        <CommentGallery :show="tabIndex=='discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource" />
+        <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
+        <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
+          @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
+          :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
+        <Comment @removePulseLayer="removePulseLayerFromMap" />
+        <Intro  v-show="store.state.ui.intro"/>
+      </div>
+
   </div>
 </template>
 
@@ -434,6 +435,24 @@ const switchView = (newTabIndex: string) => {
 
 const closeCommentDialog = () => {
   showCommentDialog.value = false
+}
+
+const deleteQuestCommentFromSource = (deletedComment: Feature[])=>{
+  const ownCommentLayer = map.getLayer("ownComments")
+  if (typeof ownCommentLayer !== 'undefined') {
+    //@ts-ignore
+    let comments = map.getSource("ownComments")?._data
+    for (let i=0; i<comments.features.length; i++){
+      for (let j=0; j<deletedComment?.length; j++){
+        //@ts-ignore
+        if (Number(comments.features[i]?.geometry?.coordinates[0])?.toFixed(5)==Number(deletedComment[j]?.geometry?.coordinates[0])?.toFixed(5) && Number(comments.features[i]?.geometry?.coordinates[1])?.toFixed(5)==Number(deletedComment[j]?.geometry?.coordinates[1])?.toFixed(5)){
+            comments.features.splice(i, 1);
+            //@ts-ignore
+            map.getSource("ownComments")?.setData(comments);
+        }
+      }
+    }
+  }
 }
 
 

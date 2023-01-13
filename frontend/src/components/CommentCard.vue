@@ -21,6 +21,7 @@
                 variant="plain"
                 size="small"
                 icon="mdi-delete"
+                @click="deleteComment(props.id)"
             ></v-btn> 
 
             <v-btn-toggle
@@ -57,6 +58,7 @@ import { HTTP } from "@/utils/http-common.js";
 
 const store = useStore(); 
 const userId = store.state.aoi.userId;
+const emit = defineEmits(["deleteComment"]);
 
 const props = defineProps({
     id: {
@@ -153,6 +155,10 @@ const dislike = async () => {
     }
     })
     // console.log(response)
+}
+
+const deleteComment = (id)=>{
+    emit("deleteComment", id)
 }
 </script>
 
