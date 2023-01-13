@@ -16,6 +16,7 @@
                     :likes="comment.properties.likes"
                     :dislikes="comment.properties.dislikes"
                     :voting_status="comment.properties.voting_status"
+                    :color="comment.properties.color"
                     :key="comment.id"
                     @deleteComment="deleteComment"
                 />

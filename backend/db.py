@@ -180,10 +180,11 @@ def get_filtered_comments_with_status(projectId,userId):
 
   get_comment_query =f''' 
   select json_build_object('type', 'FeatureCollection','features', json_agg(ST_AsGeoJSON(r.*)::json)) FROM 
-  (SELECT  comment.*, comment_voting.voting_status 
+  (SELECT  comment.*, comment_voting.voting_status, routes.color 
   FROM comment 
   LEFT JOIN comment_voting
   ON comment.id = comment_voting.comment_id AND comment.project_id='{projectId}' AND comment_voting.user_id='{userId}'
+  LEFT JOIN routes ON routes.id=comment.route_id
   ) r;
   '''
   cursor.execute(get_comment_query)

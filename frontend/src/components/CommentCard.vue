@@ -1,6 +1,7 @@
 <template>
     <v-card
         elevation="3"
+        :style="{'--borderColor': props.color?props.color: '#ffffff'}"
     >
         <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
         <div class="comment-text text-body-1">{{props.comment}}</div>
@@ -87,12 +88,16 @@ const props = defineProps({
     voting_status: {
         type: String,
         default: undefined
+    },
+    color: {
+        type: String,
+        default: "#FFFFFF"
     }
 })
 let voting_status = ref(props.voting_status==="undefined"?undefined:props.voting_status)
 let likes = ref(voting_status.value!=='like' || props.user_id === userId?props.likes:props.likes-1)
 let dislikes = ref(voting_status.value!=='dislike' || props.user_id === userId?props.dislikes:props.dislikes-1)
-
+let borderColor =  ref('red')
 
 const getRelativeTime = (timestamp) => {
     let today = new Date();
@@ -209,5 +214,16 @@ const deleteComment = (id)=>{
 }
 .v-divider{
     height: 1rem;
+}
+.v-card:after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 25%;
+  height: 50%;
+  border-left: 10px solid;
+  border-left-color: var(--borderColor);
+  border-radius: 4px;
+ 
 }
 </style>
