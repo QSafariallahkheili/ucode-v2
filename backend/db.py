@@ -61,37 +61,44 @@ def get_buildings_from_db(projectId):
   connection.close()
   return building
 
-def add_comment(userId, projectId, comment, lng, lat):
+
+def add_comment(userId, projectId, comment, lng, lat, questId,routeId):
+
   connection = connect()
   cursor = connection.cursor()
   
-  insert_query_comment= '''
-    INSERT INTO comment (user_id,project_id,comment, geom) VALUES (%s,%s,%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326));
+  insert_query_comment= f'''
+    INSERT INTO comment (user_id,project_id,comment, geom, quest_id,route_id) VALUES ('{userId}','{projectId}','{comment}', ST_SetSRID(ST_MakePoint({lng}, {lat}), 4326),'{questId}',{routeId});
 
   '''
-  cursor.execute(insert_query_comment, (userId, projectId, comment, lng, lat,))
+  cursor.execute(insert_query_comment)
   connection.commit()
   cursor.close()
   connection.close()
+
+  if int(questId) > 0:
+    return add_fulfillment(questId, userId)
+
 
 def add_fulfillment(questId, userId):
   connection = connect()
   cursor = connection.cursor()
   insert_query_quests_fulfillment= f'''  
-    update quests_user set fulfillment = fulfillment + 1 where quest_id={questId} and user_id='{userId}';
+    update quests_user set fulfillment = fulfillment + 1 where quest_id='{questId}' and user_id='{userId}';
   '''
-  cursor.execute(insert_query_quests_fulfillment, ())
+  cursor.execute(insert_query_quests_fulfillment)
 
   get_fulfillment_value = f'''  
-    select fulfillment from quests_user where quest_id={questId} and user_id='{userId}';
+    select fulfillment from quests_user where quest_id='{questId}' and user_id='{userId}';
   '''
   cursor.execute(get_fulfillment_value)
   updated_fulfillment_tuple = cursor.fetchall()
-  updated_fulfillment =  int(updated_fulfillment_tuple[0][0]) 
   connection.commit()
   cursor.close()
-  connection.close()
+  connection.close()  
+  updated_fulfillment =  updated_fulfillment_tuple[0][0]
   return updated_fulfillment
+
 
 @lru_cache
 def get_greenery_from_db(projectId):

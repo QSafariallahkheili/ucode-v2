@@ -2,7 +2,9 @@
     <div class="map-wrap" ref="mapContainer">
       <div class="map" id="map">
         <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
-        <Quests v-if="devMode"/>
+        <Suspense>
+          <Quests/>
+        </Suspense>
         <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
             @navigateToPlanningIdea="navigateToPlanningIdea" />
         <FreeComment @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
@@ -400,6 +402,7 @@ const removePulseLayerFromMap = (layerid: string) => {
 
 
 const activateSelectedPlanningIdeaInMap = (selectedFeature: Feature) => {
+  store.state.quests.selectedRouteId = null
   const currentBearing = map.getBearing();
   let bounds = turf.bbox(selectedFeature) as LngLatBoundsLike;
   map.fitBounds(bounds, { pitch: 40, bearing: currentBearing, padding: 40 });
@@ -410,6 +413,7 @@ const activateSelectedPlanningIdeaInMap = (selectedFeature: Feature) => {
 
     map.setPaintProperty('routes', 'line-color', ['get', 'color']);
   } else {
+    store.state.quests.selectedRouteId = selectedFeature.properties.id
     map.setPaintProperty(
       'routes',
       'line-color',

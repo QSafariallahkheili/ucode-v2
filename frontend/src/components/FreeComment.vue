@@ -8,6 +8,7 @@
             <v-card v-show="props.showCommentDialog" id="card" elevation="20">
                 <v-btn @click="cancelComment" icon="mdi-close" variant="plain" id="close-btn"/>
                 <p class="font-weight-bold text-body-1 call-to-action" >Platziere deinen Kommentar</p>
+                <p v-if="store.state.quests.selectedRouteId" class="text-body-2 text-medium-emphasis call-to-action" >an der Route {{store.state.quests.selectedRouteId}}</p>
                 <div class="comment-text-area">
                     <v-textarea 
                         id="ta-input"
@@ -101,7 +102,9 @@ const saveComment = () => {
                 comment: commentText.value,
                 //@ts-ignore
                 position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
-                userId: store.state.aoi.userId
+                userId: store.state.aoi.userId,
+                routeId: store.state.quests.selectedRouteId,
+                questId: 1
             })
     }
     submitComment()

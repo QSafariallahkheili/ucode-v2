@@ -1,6 +1,8 @@
 const quests = {
   namespaced: true,
-  state: {},
+  state: {
+    selectedRouteId: null
+  },
   mutations: {},
   actions: {},
   getters: {},

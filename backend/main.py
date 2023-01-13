@@ -522,9 +522,21 @@ async def get_trees_from_db_api(request: Request):
 @app.post("/add-comment")
 async def add_comment_api(request: Request):
     data = await request.json()
-    add_comment(data["userId"],data["projectId"],data["comment"], sure_float(data["position"][0]), sure_float(data["position"][1]))
-    return "added"
-
+    userId = data["userId"]
+    projectId = data["projectId"]
+    comment = data["comment"]
+    questId = data["questId"]
+    
+    routeId = None
+    if data["routeId"] != None:
+        routeId = data["routeId"]
+    else: 
+        routeId = "NULL"
+    print(routeId)
+    lng = sure_float(data["position"][0])
+    lat = sure_float(data["position"][1])
+    response = add_comment(userId,projectId,comment,lng,lat,questId,routeId)
+    return response
 
 @app.post("/add-drawn-line")
 async def add_drawn_line_api(request: Request):
@@ -541,7 +553,6 @@ async def add_drawn_line_api(request: Request):
 #delete-comments
 @app.get("/delete-comments")
 async def delete_comments_api(projectId: str):
-    print(projectId)
     return delete_comments(projectId)
 
 @app.post("/get-comments")
