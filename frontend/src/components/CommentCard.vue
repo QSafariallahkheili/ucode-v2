@@ -3,8 +3,11 @@
         elevation="3"
         :style="{'--borderColor': props.color?props.color: '#ffffff'}"
     >
-        <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
-        <div class="comment-text text-body-1">{{props.comment}}</div>
+        <div @click="() => {isExtended = !isExtended}">
+            <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
+            <div :id="props.id" :class="isExtended?'comment-text text-body-1 is-extended':'comment-text text-body-1'">{{props.comment}}</div>
+            <div class="text-body-2 text-disabled show-more">{{contentIsOverflowing && !isExtended?'mehr Anzeigen':''}}</div>
+        </div>
         <div class="action-area">
             <v-chip v-if="props.user_id === userId" variant="elevated" size="small" color="primary" >Mein</v-chip>
             <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-up-outline">{{ props.likes }}</v-chip>
@@ -54,7 +57,7 @@
 
 <script setup>
 import { useStore } from "vuex";
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { HTTP } from "@/utils/http-common.js";
 
 const store = useStore(); 
@@ -98,6 +101,8 @@ let voting_status = ref(props.voting_status==="undefined"?undefined:props.voting
 let likes = ref(voting_status.value!=='like' || props.user_id === userId?props.likes:props.likes-1)
 let dislikes = ref(voting_status.value!=='dislike' || props.user_id === userId?props.dislikes:props.dislikes-1)
 let borderColor =  ref('red')
+const isExtended = ref(false)
+const contentIsOverflowing = ref(false)
 
 const getRelativeTime = (timestamp) => {
     let today = new Date();
@@ -165,6 +170,11 @@ const dislike = async () => {
 const deleteComment = (id)=>{
     emit("deleteComment", id)
 }
+
+onMounted(() => {
+    const el = document.getElementById(props.id)
+    contentIsOverflowing.value = el.offsetHeight < el.scrollHeight?true:false
+})
 </script>
 
 <style scoped>
@@ -183,14 +193,22 @@ const deleteComment = (id)=>{
 
 .comment-text{
     min-height: 4.5rem;
+    max-height: 4.5rem;
     white-space: pre-line;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    transition: max-height 0.3s ease-in-out;
+    
+}
+.is-extended{
+    max-height: 20rem;
+    
+}
+
+.show-more{
+    min-height: 20px;
 }
 .action-area{
-    margin-top: 2rem;
+    margin-top: 1rem;
     display: flex;
     justify-content: flex-end;
     align-items: center;

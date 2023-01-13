@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, watch, reactive } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useStore } from "vuex";
     import { getFilteredCommentsFromDB } from "../service/backend.service";
     import CardSkeleton from "@/components/CardSkeleton.vue";
