@@ -174,7 +174,7 @@ watch(store.state.ui, function (state) {
   z-index: 999;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
   background: rgba(255,255,255,0.4);
@@ -183,6 +183,10 @@ watch(store.state.ui, function (state) {
   -moz-backdrop-filter: blur(5px);
   -ms-backdrop-filter: blur(5px);
   overflow-x: scroll;
+  scrollbar-width: none !important;
+}
+.planning-ideas-options::-webkit-scrollbar {
+  display: none !important;
 }
 
 .col

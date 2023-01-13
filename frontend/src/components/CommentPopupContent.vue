@@ -27,9 +27,7 @@ const submitComment = () => {
     userId: store.state.aoi.userId,
     projectId: store.state.aoi.projectSpecification.project_id,
     comment: commentText.value,
-    position: props.clickedCoordinates,
-    questId: 1, //TH: example values for testing. Replace with store-reference
-    routeId: 1 //TH: example values for testing. Replace with store-reference
+    position: props.clickedCoordinates
   })
   console.log("User: " + store.state.aoi.userId + " Projekt: " + store.state.aoi.projectSpecification.project_id)
   store.state.contribution.commentToggle = false

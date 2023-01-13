@@ -188,17 +188,18 @@ def get_filtered_comments_with_status(projectId,userId):
   '''
   cursor.execute(get_comment_query)
   comments = cursor.fetchall()[0][0]
-  
-  for f in comments["features"]:
-      author = f["properties"]["user_id"]
-      if userId != author:
-        f["properties"]["user_id"] = "anonymous"
-      voting_status = f["properties"]["voting_status"]
-      if voting_status == None:
-        f["properties"]["voting_status"] = "undefined"
-        
   cursor.close()
   connection.close()
+
+  if comments["features"] != None:  ## check, if there are comments
+    for f in comments["features"]:
+        author = f["properties"]["user_id"]
+        if userId != author:
+          f["properties"]["user_id"] = "anonymous"
+        voting_status = f["properties"]["voting_status"]
+        if voting_status == None:
+          f["properties"]["voting_status"] = "undefined"
+        
   return comments
 
 
@@ -533,7 +534,7 @@ def get_quests_from_db(projectId):
   connection.close()
   return quests
 
-#  Returns a JSON with the combined descritions of the quests for the cuurent project and the fulfillemt values for the current user
+#  Returns a JSON with the combined descritions of the quests for the current project and the fulfillemt values for the current user
 # This is important for creating a UI qwhich shows the user, how many quests his still has to do 
 def get_quests_and_fulfillment_from_db(projectId,userId):
   connection = connect()
@@ -543,22 +544,23 @@ def get_quests_and_fulfillment_from_db(projectId,userId):
   '''
   cursor.execute(get_quests_from_db_query)
   quests = cursor.fetchall()
-
   get_fulfillment_query=f'''
     select quest_id,fulfillment from quests_user where user_id = '{userId}' and project_id='{projectId}';
     '''
   cursor.execute(get_fulfillment_query)
   fulfillment_tuple = cursor.fetchall()
-  fulfillment_dict= dict(fulfillment_tuple)
   cursor.close()
   connection.close()
+
+  fulfillment_dict= dict(fulfillment_tuple)
+  
   counter = 0
   quest_with_fulfillment = {} 
   for f in quests:
     quest_entry= f[0]
     quest_with_fulfillment[counter] = quest_entry
-    quest_id = quest_with_fulfillment[counter]["quest_id"]
-    fulfillment_value = fulfillment_dict[quest_id]
+    quest_id = int(quest_with_fulfillment[counter]["quest_id"])
+    fulfillment_value = fulfillment_dict[quest_id] 
     quest_with_fulfillment[counter]["fulfillment"] = fulfillment_value
     counter = counter + 1
 
@@ -805,11 +807,30 @@ def get_bike_lane_from_db(projectId):
 def delete_comment_by_id(comment_id):
   connection = connect()
   cursor = connection.cursor()
-  delete_comment = f''' delete from comment where id= '{comment_id}'
-      ;
+  
+  selectCommentData = f''' select user_id,quest_id from comment where id= '{comment_id}'
   '''
+  cursor.execute(selectCommentData)
+  commentData = cursor.fetchall()
+  userId = commentData[0][0]
+  questId = commentData[0][1]
+  orderId = "ok" #TH only for testing, if no quest_id is there
+
+  # if the comment belongs to a quest, the fulfillment of this quest is reduced
+  if questId != None:
+    subtract_fulfillment= f'''  
+      update quests_user set fulfillment = fulfillment - 1 where quest_id='{questId}' and user_id='{userId}';
+      '''
+    cursor.execute(subtract_fulfillment)
+    selectOrderId = f''' select order_id from quests where quest_id= '{questId}'
+    '''
+    cursor.execute(selectOrderId)
+    orderId = cursor.fetchall()[0][0]
+
+  delete_comment = f''' delete from comment where id= '{comment_id}'; '''
   cursor.execute(delete_comment)
+  
   connection.commit()
   cursor.close()
   connection.close()
-  return "ok"
+  return orderId

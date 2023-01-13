@@ -48,7 +48,7 @@ const props = defineProps({
         default: false
     }
 })
-const emit = defineEmits(["addComment", "closeCommentDialog", "placeComment"])
+const emit = defineEmits(["addComment", "hideQuests","closeCommentDialog", "placeComment"])
 function cancelComment() {
     // store.commit('freecomment/setMoveComment', false)
     commentText.value = ""
@@ -58,6 +58,7 @@ function cancelComment() {
 
 function placeComment(){
     emit('placeComment')
+    emit('hideQuests')
 }
 function createComment(){
     const coords = store.state.freecomment.moveableCommentMarker.getLngLat()
@@ -90,10 +91,12 @@ function createComment(){
         }
     }
     emit('addComment', mapsource, ownCommentLayer)
-    store.state.freecomment.moveableCommentMarker.remove()
+
 }
 
 const saveComment = () => {
+    let quest =  store.state.quests.questList[store.state.quests.current_order_id]
+    store.state.freecomment.moveableCommentMarker.remove()
     createComment()
     const submitComment = () => {
         HTTP
@@ -103,8 +106,8 @@ const saveComment = () => {
                 //@ts-ignore
                 position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
                 userId: store.state.aoi.userId,
-                routeId: store.state.quests.selectedRouteId,
-                questId: 1
+                questId: quest.quest_id,
+                routeId: store.state.quests.selectedRouteId
             })
     }
     submitComment()
@@ -112,6 +115,7 @@ const saveComment = () => {
     // store.commit('freecomment/setMoveComment', false)
 
     emit('closeCommentDialog')
+    store.state.quests.questList[store.state.quests.current_order_id].fulfillment++
 }
 /************************************************/
 /*   handle Commenting Dialog for IOS, IPadOS   */

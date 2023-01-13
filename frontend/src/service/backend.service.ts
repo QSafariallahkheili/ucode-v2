@@ -30,7 +30,7 @@ export async function getQuestsFulfillmentFromDB(projectId: string, userId: stri
       projectId: projectId,
       userId: userId}
     })
-  return response;
+  return response.data;
   }
 
 export async function getbuildingsDataFromDB(projectId: string) {

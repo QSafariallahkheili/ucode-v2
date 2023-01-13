@@ -61,6 +61,7 @@ try:
 except Exception as err:
     print("Could not run database migrations", err)
 
+
 app = FastAPI()
 origins = [
     "https://api.v2.urban-codesign.com",
@@ -518,7 +519,6 @@ async def get_trees_from_db_api(request: Request):
     projectId = await request.json()
     return get_trees_from_db(projectId)
 
-
 @app.post("/add-comment")
 async def add_comment_api(request: Request):
     data = await request.json()
@@ -532,7 +532,7 @@ async def add_comment_api(request: Request):
         routeId = data["routeId"]
     else: 
         routeId = "NULL"
-    print(routeId)
+
     lng = sure_float(data["position"][0])
     lat = sure_float(data["position"][1])
     response = add_comment(userId,projectId,comment,lng,lat,questId,routeId)
@@ -576,7 +576,6 @@ async def get_filtered_comments_api(projectId: str, userId: str):
 @app.post("/get-filtered-comments")
 async def get_filtered_comments_api(request: Request):
     data = await request.json()
-    print(data)
     projectId = data["projectId"]
     userId = data["userId"]
     return get_filtered_comments(projectId,userId)
@@ -1216,6 +1215,6 @@ async def get_bike_lanes_from_db_api(request: Request):
 @app.post("/delete-comment-by-id")
 async def delete_comment_by_id_api(request: Request):
     data = await request.json()
-    delete_comment_by_id(data["commentId"])
-    return "comment deleted"
+    orderId = delete_comment_by_id(data["commentId"])
+    return orderId
 

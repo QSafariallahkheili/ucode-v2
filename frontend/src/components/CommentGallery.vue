@@ -99,7 +99,7 @@
     const cnacelDeleteDialog = ()=>{
         deleteDialog.value = false
     }
-    const confirmDeleteCommentDialog = ()=>{
+    const confirmDeleteCommentDialog = async()=>{
         deleteDialog.value = false
         let commentInstance = null
         
@@ -120,12 +120,11 @@
         }
         commentList.value.splice(commentInstance, 1);
         
-        HTTP.post("delete-comment-by-id",{
+        const response = await HTTP.post("delete-comment-by-id",{
             commentId: deleteCommentId.value,
         })
-
         emit("deleteQuestCommentFromSource", store.state.comment.deletedComments)
-
+        store.state.quests.questList[response.data].fulfillment--
     }
 
     onMounted(() => {

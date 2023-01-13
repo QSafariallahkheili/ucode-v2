@@ -3,12 +3,12 @@
       <div class="map" id="map">
         <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
         <Suspense>
-          <Quests/>
+          <Quests :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
         </Suspense>
         <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
             @navigateToPlanningIdea="navigateToPlanningIdea" />
         <FreeComment @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
-          @closeCommentDialog="closeCommentDialog"/>
+          @closeCommentDialog="closeCommentDialog" @hideQuests="() => {hideQuests = true}"/>
         <CommentGallery :show="tabIndex=='discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource" />
         <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
         <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
@@ -58,6 +58,7 @@ let lineDrawCreated = ref(0)
 let mapStyleLoaded = ref(false)
 let tabIndex = ref("planning")
 let showCommentDialog = ref(false)
+let hideQuests = ref(false)
 //let activeMarker = reactive<any>({});
 
 
@@ -438,7 +439,8 @@ const switchView = (newTabIndex: string) => {
 }
 
 const closeCommentDialog = () => {
-  showCommentDialog.value = false
+  showCommentDialog.value = false;
+  hideQuests.value = false;
 }
 
 const deleteQuestCommentFromSource = (deletedComment: Feature[])=>{

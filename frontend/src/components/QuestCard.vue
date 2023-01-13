@@ -1,7 +1,7 @@
 <template >
     <v-card elevation="5">
         <div class="text-body-1 font-weight-bold">{{ props.title }}</div>
-        <div class="text-body-1">{{ props.description }}</div>
+        <div class="text-body-1 quest-description">{{ props.description }}</div>
         <QuestProgressbar :fulfillment="props.fulfillment" :goal="props.goal"/>
     </v-card>
 </template>
@@ -30,12 +30,13 @@ const props = defineProps({
 
 <style scoped>
 .v-card{
-    position: absolute;
-    z-index: 1000;
+    margin: 1rem 1rem;
     padding: 1.5rem;
     border-radius: 18px;
-    top: 1rem;
-    left: 1rem;
-    right: 1rem;
+}
+.quest-description{
+    min-height: 4.5rem;
+    max-height: 4.5rem;
+    font-size: 14px !important;
 }
 </style>
