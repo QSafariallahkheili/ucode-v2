@@ -6,7 +6,7 @@
         <div @click="() => {isExtended = !isExtended}">
             <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
             <div :id="props.id" :class="isExtended?'comment-text text-body-1 is-extended':'comment-text text-body-1'">{{props.comment}}</div>
-            <div class="text-body-2 text-disabled show-more">{{contentIsOverflowing && !isExtended?'mehr Anzeigen':''}}</div>
+            <div class="text-body-2 show-more" :style="contentIsOverflowing && !isExtended?'opacity: 0.5 !important': 'opacity: 0 !important'">mehr Anzeigen</div>
         </div>
         <div class="action-area">
             <v-chip v-if="props.user_id === userId" variant="elevated" size="small" color="primary" >Mein</v-chip>
@@ -182,7 +182,7 @@ onMounted(() => {
 .v-card{
     margin: 1.5rem 0rem;
     margin-left: 50%;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 1.5rem 2.5rem !important;
     transform: translateX(-50%);
     width: calc(100% - 3rem) !important;
     border-radius: 18px;
@@ -206,6 +206,7 @@ onMounted(() => {
 
 .show-more{
     min-height: 20px;
+    transition: opacity 0.25s;
 }
 .action-area{
     margin-top: 1rem;
@@ -236,12 +237,13 @@ onMounted(() => {
 .v-card:after {
   content: '';
   position: absolute;
-  left: -2px;
-  top: 25%;
-  height: 50%;
-  border-left: 10px solid;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4rem;
+  border-left: 8px solid;
   border-left-color: var(--borderColor);
-  border-radius: 4px;
+  border-radius: 0px 4px 4px 0px;
  
 }
 </style>

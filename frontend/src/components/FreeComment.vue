@@ -8,6 +8,7 @@
             <v-card v-show="props.showCommentDialog" id="card" elevation="20">
                 <v-btn @click="cancelComment" icon="mdi-close" variant="plain" id="close-btn"/>
                 <p class="font-weight-bold text-body-1 call-to-action" >Platziere deinen Kommentar</p>
+                <p v-if="!store.state.quests.selectedRouteId" class="text-body-2 text-medium-emphasis call-to-action" >frei in der Stadt</p>
                 <p v-if="store.state.quests.selectedRouteId" class="text-body-2 text-medium-emphasis call-to-action" >an der Route {{store.state.quests.selectedRouteId}}</p>
                 <div class="comment-text-area">
                     <v-textarea 
@@ -49,10 +50,17 @@ const props = defineProps({
     }
 })
 const emit = defineEmits(["addComment", "hideQuests","closeCommentDialog", "placeComment"])
+
 function cancelComment() {
     // store.commit('freecomment/setMoveComment', false)
     commentText.value = ""
     store.state.freecomment.moveableCommentMarker.remove()
+
+    let card = document.getElementById('card')
+    
+    card?.classList.remove('expand');
+    card?.classList.remove('reduce');
+
     emit('closeCommentDialog')
 }
 

@@ -10,11 +10,11 @@
         :key="quest.order_id"
     >
       <QuestCard
-        
         :title="(quest.content?.title)"
         :description="(quest.content?.description)"
         :fulfillment="quest.fulfillment"
         :goal="quest.goal"
+        @allQuestsCompleted="() => { showAllQuestsCompletedDialog = true;}"
       />
     </v-window-item>
   </v-window>
@@ -26,6 +26,7 @@
       <QuestStepper v-if="!props.hide" :quests="store.state.quests.questList"/>
     </transition>
   </div>
+  <QuestsCompletedDialog :show="showAllQuestsCompletedDialog" @allQuestsCompletedWasShown="() => { showAllQuestsCompletedDialog = false;}"/>
 </div>
 </template>
 
@@ -34,6 +35,7 @@ import { useStore } from "vuex";
 import { prepareQuestsUserTable, getQuestsFulfillmentFromDB } from "@/service/backend.service";
 import QuestCard from "@/components/QuestCard.vue";
 import QuestStepper from "@/components/QuestStepper.vue"
+import QuestsCompletedDialog from "@/components/QuestsCompletedDialog.vue"
 import { onMounted, ref } from "vue"
 
 const store = useStore();
@@ -45,6 +47,7 @@ const props = defineProps({
   }
 })
 
+const showAllQuestsCompletedDialog = ref(false)
 const emit = defineEmits(["hideQuests"])
 
 
@@ -68,7 +71,6 @@ const hideBtnClicked = () => {
 
 <style scoped>
 .v-btn{
-  z-index: 1000;
   margin-left: 1rem;
   margin-top: -0.5rem;
   height: 3rem;

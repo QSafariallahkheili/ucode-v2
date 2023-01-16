@@ -1,6 +1,7 @@
 <template>
     <div class="comment-gallery-wrapper">
         <DeletingDialog
+            v-if="(commentsAreLoaded && props.show)"
            :deleteDialog="deleteDialog"
            @cnacelDeleteDialog="cnacelDeleteDialog"
            @confirmDeleteCommentDialog="confirmDeleteCommentDialog"
