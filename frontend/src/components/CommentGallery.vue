@@ -1,5 +1,6 @@
 <template>
     <div class="comment-gallery-wrapper">
+       
         <DeletingDialog
             v-if="(commentsAreLoaded && props.show)"
            :deleteDialog="deleteDialog"
@@ -8,6 +9,7 @@
         />
         <transition name="card">
             <div v-if="(commentsAreLoaded && props.show)" className="comment-list"> 
+                <CommentSortAndFilter @sortComment="sortComment"/>
                 <CommentCard 
                     v-for="comment in commentList"
                     :id="comment.properties.id" 
@@ -40,6 +42,7 @@
     import CardSkeleton from "@/components/CardSkeleton.vue";
     import CommentCard from "@/components/CommentCard.vue"
     import DeletingDialog from "@/components/DeletingDialog.vue"
+    import CommentSortAndFilter from "@/components/CommentSortAndFilter.vue"
     import { HTTP } from "@/utils/http-common.js";
 
 
@@ -127,6 +130,28 @@
         })
         emit("deleteQuestCommentFromSource", store.state.comment.deletedComments)
         store.state.quests.questList[response.data].fulfillment--
+    }
+
+    const sortComment = (sortOption) => {
+        if (sortOption == "neuste zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> new Date(b.properties.created_at).getTime() - new Date(a.properties.created_at).getTime())
+        }
+        else if (sortOption == "älteste zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> new Date(a.properties.created_at).getTime() - new Date(b.properties.created_at).getTime())
+        }
+        else if (sortOption == "längste zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> (b.properties.comment?.length) - (a.properties.comment?.length))
+        }
+        else if (sortOption == "kürzeste zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> (a.properties.comment?.length) - (b.properties.comment?.length))
+        }
+        else if (sortOption == "beliebte zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> (b.properties.likes) - (a.properties.likes))
+        }
+        else if (sortOption == "unbeliebte zuerst"){
+            commentList.value = commentList.value.sort((a,b)=> (b.properties.dislikes) - (a.properties.dislikes))
+        }
+
     }
 
     onMounted(() => {

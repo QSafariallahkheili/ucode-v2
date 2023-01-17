@@ -186,6 +186,7 @@ onMounted(() => {
     transform: translateX(-50%);
     width: calc(100% - 3rem) !important;
     border-radius: 18px;
+    top: 60px /* margin to the sticky commentSortFilter component */
 }
 .time-text{
     margin-bottom: 0.5rem;
