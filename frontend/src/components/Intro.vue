@@ -39,16 +39,10 @@
 
 <script lang="ts" setup>
 import { useStore } from "vuex";
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 const store = useStore();
-
 let onboarding = ref(0)
-let sections = reactive({
-    'Project Goal': store.state.aoi.projectSpecification.project_goal,
-    'How to Use This App': "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos repreLorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos reprehenderit, ex iusto?henderit, ex iusto?",
-    'Why Quests': "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos reprehenderit, ex iusto?",
-
-})
+let sections = reactive(store.state.aoi.projectInformation)
 let sectionsLength = ref(Object.keys(sections).length)
 
 const next = () => {

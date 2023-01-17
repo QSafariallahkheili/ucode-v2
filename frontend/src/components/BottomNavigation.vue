@@ -1,10 +1,13 @@
 <template>
     <v-bottom-navigation grow mode="shift" :elevation="6" color="secondary" :model-value="tabIndex" @update:modelValue="handleValueChange">
+        <v-btn value="projectInfo">
+            <v-icon>mdi-information</v-icon>
+            <span>Projektinfo</span> 
+        </v-btn>
         <v-btn value="planning" >
             <v-icon v-if="projectType == 'transportation_planning'">mdi-road-variant</v-icon>
             <v-icon v-else-if="projectType == 'city_planning'">mdi-city-variant</v-icon>
             <v-icon v-else>mdi-message-draw</v-icon>
-            
             <span>Planung</span>
         </v-btn>
         <v-btn value="discussion">

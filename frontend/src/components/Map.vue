@@ -2,14 +2,17 @@
     <div class="map-wrap" ref="mapContainer">
       <div class="map" id="map">
         <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+        <ProjectInfo :show="tabIndex=='projectInfo'" />
         <Suspense>
           <Quests :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
         </Suspense>
+        
         <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
             @navigateToPlanningIdea="navigateToPlanningIdea" />
         <FreeComment @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
           @closeCommentDialog="closeCommentDialog" @hideQuests="() => {hideQuests = true}"/>
         <CommentGallery :show="tabIndex=='discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource" />
+        
         <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
         <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
           @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
@@ -32,6 +35,7 @@ import FreeComment from "@/components/FreeComment.vue";
 import BottomNavigation from "@/components/BottomNavigation.vue";
 import CommentGallery from "@/components/CommentGallery.vue";
 import Intro from "@/components/Intro.vue";
+import ProjectInfo from "@/components/ProjectInfo.vue"
 import { getCommentsFromDB } from "@/service/backend.service";
 import { getFilteredCommentsFromDB } from "@/service/backend.service";
 import type { ProjectSpecification } from "@/store/modules/aoi";
