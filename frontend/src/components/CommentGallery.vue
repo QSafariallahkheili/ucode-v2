@@ -162,11 +162,7 @@
     const filteredCommentList = computed( () => {
         let filter = filterText.value
         if (!filter) return commentList.value
-<<<<<<< HEAD
         else if (filter.filterType=="meine"){
-=======
-        else if (filter.filterType=="mine"){
->>>>>>> 03b83b0 (filtering logic)
             return commentList.value.filter( f => f.properties.user_id == filter.filterValue )
         }
         else if (filter.filterType=='planningIdeas'){
