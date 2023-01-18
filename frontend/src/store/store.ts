@@ -8,6 +8,7 @@ import pulse from './modules/pulse';
 import quests from './modules/quests';
 import ui from './modules/ui';
 import freecomment from './modules/freecomment';
+import planningIdeas from './modules/planningIdeas';
 
 export default createStore({
   modules: {
@@ -19,5 +20,6 @@ export default createStore({
     quests,
     ui,
     freecomment,
+    planningIdeas
   },
 });

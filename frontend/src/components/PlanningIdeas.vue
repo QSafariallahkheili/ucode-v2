@@ -87,17 +87,19 @@ const sendRouteRequestTHREE = async () => {
     height: 0.5,
     extrude: 2
   })
-
+  
   store.commit("ui/planningIdeasLoaded",true)
   }
 const sendRouteRequest = async () => {
 
     const routeData = await getRoutesFromDB(store.state.aoi.projectSpecification.project_id)
+   
    if (routeData.data.features == null) {
     return
    }
 
     planningData.routes = routeData.data
+    store.commit("planningIdeas/addPlanningIdeaFeatures",routeData.data)
     store.commit("map/addSource", {
       id: "routes",
       geojson: {

@@ -8,6 +8,24 @@
                :items="['beliebte zuerst', 'unbeliebte zuerst', 'neuste zuerst', 'älteste zuerst', 'längste zuerst', 'kürzeste zuerst']"
                variant="solo" class="sort-select" density="compact" @update:modelValue="sortComment">
             </v-select>
+            <v-btn-toggle v-model="toggle" divided>
+               <v-btn height="32px" size="small" class="ml-2" flat rounded="lg" value="meine"
+                  @click="filterComment({ filterType: 'meine', filterValue: store.state.aoi.userId })">
+                  Meine
+               </v-btn>
+               <div v-for="route in store.state.planningIdeas.planningIdeasFeatures.features"
+                  :key="route.properties.id">
+
+                  <v-btn height="32px" size="small" class="ml-2" rounded="lg" :value="route.properties.id" flat
+                     @click="filterComment({ filterType: 'planningIdeas', filterValue: route.properties.id })">
+                     <v-icon :color="route.properties.color">
+                        mdi-checkbox-blank-circle
+                     </v-icon>
+                     route {{ route.properties.id }}
+                  </v-btn>
+               </div>
+            </v-btn-toggle>
+
          </v-slide-group-item>
       </v-slide-group>
 
@@ -15,11 +33,26 @@
 </template>
 
 <script lang="ts" setup>
-const emit = defineEmits(["sortComment"])
+import { useStore } from "vuex";
+import { ref } from "vue"
+const store = useStore();
+let toggle = ref(null)
+const emit = defineEmits(["sortComment", "filterComment"])
 const sortComment = (sortOption: string) => {
    emit("sortComment", sortOption)
 
 }
+const filterComment = (filterOption: { filterType: string, filterValue: string }) => {
+   console.log(toggle.value)
+   if (!toggle.value) {
+      emit("filterComment", null)
+   }
+   else {
+      emit("filterComment", filterOption)
+   }
+}
+
+
 
 </script>
 
@@ -40,7 +73,6 @@ const sortComment = (sortOption: string) => {
 .sort-select {
    max-width: 200px;
    min-width: 150px;
-   vertical-align: middle;
-
+   vertical-align: bottom;
 }
 </style>

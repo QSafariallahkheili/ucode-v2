@@ -9,9 +9,9 @@
         />
         <transition name="card">
             <div v-if="(commentsAreLoaded && props.show)" className="comment-list"> 
-                <CommentSortAndFilter @sortComment="sortComment"/>
+                <CommentSortAndFilter @sortComment="sortComment" @filterComment="filterComment"/>
                 <CommentCard 
-                    v-for="comment in commentList"
+                    v-for="comment in filteredCommentList"
                     :id="comment.properties.id" 
                     :created_at="comment.properties.created_at"
                     :comment="comment.properties.comment"
@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, watch } from 'vue';
+    import { onMounted, ref, watch, computed } from 'vue';
     import { useStore } from "vuex";
     import { getFilteredCommentsFromDB } from "../service/backend.service";
     import CardSkeleton from "@/components/CardSkeleton.vue";
@@ -52,6 +52,7 @@
     const userId = store.state.aoi.userId;
     let deleteDialog = ref(false)
     let deleteCommentId = ref()
+    let filterText = ref()
 
     const props = defineProps({
         show: {
@@ -153,6 +154,22 @@
         }
 
     }
+
+    const filterComment = (filterOption) => {
+        filterText.value = filterOption
+    }
+
+    const filteredCommentList = computed( () => {
+        let filter = filterText.value
+        if (!filter) return commentList.value
+        else if (filter.filterType=="meine"){
+            return commentList.value.filter( f => f.properties.user_id == filter.filterValue )
+        }
+        else if (filter.filterType=='planningIdeas'){
+            return commentList.value.filter( f => f.properties.route_id == filter.filterValue )
+        }
+       
+    })
 
     onMounted(() => {
         sendCommentRequest();
