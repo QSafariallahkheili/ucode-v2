@@ -20,9 +20,9 @@ export interface AOIState {
 }
 
 export interface ProjectInformation {
-  'Projektziel': string;
-  'How to Use This App': string;
-  'Why Quests': string;
+  'Was ist das Ziel des Projekts?': string;
+  'Wie benutze ich die App?': string;
+  'Wie bearbeite ich die Aufgaben?': string;
 }
 
 export interface ProjectSpecification {
@@ -67,12 +67,12 @@ const aoi = {
     projectInformation: null,
   },
   mutations: {
-    setProjectSpecification(state: AOIState, payload: ProjectSpecification, mutations: any) {
+    setProjectSpecification(state: AOIState, payload: ProjectSpecification) {
       state.projectSpecification = payload;
       state.projectInformation = {
-        'Projektziel': payload.project_goal,
-        'How to Use This App': "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos repreLorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos reprehenderit, ex iusto?henderit, ex iusto?",
-        'Why Quests': "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore suscipit harum deleniti doloremque vitae porro culpa, ea quaerat reiciendis voluptas repellat ad non, praesentium tenetur officiis eos reprehenderit, ex iusto?"
+        'Was ist das Ziel des Projekts?': payload.project_goal,
+        'Wie benutze ich die App?': "Wenn Sie diese Anleitung beendet haben, sehen sie auf dem Bildschirm das Mainzer Areal als 3D-Modell, sowie im oberen Bereich die zu erfüllenden Aufgaben sowie im unteren Bereich mehrere Knöpfe, welche die Streckenvarianten anzeigen.",
+        'Wie bearbeite ich die Aufgaben?': "Ihre Aufgabe in diesem Projekt ist es, an verschiedene Stellen auf der Karte Kommentare zu setzen, um eine ortsbezogene Kommentierung zu erreichen."
     }
     },
     setProjectId(state: AOIState, projectId: string) {

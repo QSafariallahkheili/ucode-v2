@@ -17,7 +17,7 @@ import { ref, watch } from 'vue';
 import { useStore } from "vuex";
 import { Vue3Lottie } from 'vue3-lottie'
 import 'vue3-lottie/dist/style.css'
-import SuccessJSON from '@/../public/animations/quest_completed.json'
+import SuccessJSON from '@/../src/animations/quest_completed.json'
 
 const store = useStore();
 

@@ -24,7 +24,7 @@
 <script setup>
 import { Vue3Lottie } from 'vue3-lottie'
 import 'vue3-lottie/dist/style.css'
-import SuccessJSON from '@/../public/animations/all_quests_completed.json'
+import SuccessJSON from '@/../src/animations/all_quests_completed.json'
 import { ref } from "vue"
 
 const props = defineProps({

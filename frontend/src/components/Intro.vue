@@ -19,16 +19,16 @@
             </v-card-actions>
             <div class="intro-action-area" v-if="onboarding != 3">
                 <v-btn color="secondary" @click="next">
-                    next
+                    Weiter
                 </v-btn>
                 <v-btn color="grey" variant="plain" class="justify-center align-center" @click="closeIntro"
                     v-show="onboarding != sectionsLength ? true : false">
-                    I already know that
+                    Ich habe es bereits gelesen
                 </v-btn>
             </div>
             <div class="intro-action-area" v-if="onboarding == 3">
                 <v-btn color="secondary" @click="closeIntro">
-                    Let's go
+                    Auf geht's
                 </v-btn>
             </div>
         </v-card>

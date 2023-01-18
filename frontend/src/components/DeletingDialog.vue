@@ -17,7 +17,7 @@
      
       <v-card>
         <span class="text-h6" >
-          Are you sure you want to delete the comment?
+          Soll der Kommentar wirklich gelöscht werden?
         </span>
         <v-card-actions style="">
           <v-spacer></v-spacer>
@@ -26,14 +26,14 @@
             variant="text"
             @click="cnacelDeleteDialog"
           >
-            Cancel
+            Abbruch
           </v-btn>
           <v-btn
             color="red-darken-1"
             variant="text"
             @click="confirmDeleteCommentDialog"
           >
-            Confirm
+            Löschen
           </v-btn>
         </v-card-actions>
       </v-card>
