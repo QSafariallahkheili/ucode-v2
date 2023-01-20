@@ -1,9 +1,6 @@
 import json
-from smtpd import DebuggingServer
 
 import requests
-import osmnx as ox
-import geopandas
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
@@ -56,6 +53,9 @@ from db import (
 
 )
 from db_migrations import run_database_migrations
+from models import ProjectSpecification
+from roads import getDriveNetwork
+
 try:
     run_database_migrations()
 except Exception as err:
@@ -612,19 +612,26 @@ async def undislike_comment_api(request: Request):
     data = await request.json()
     undislike_comment(data["id"],data["projectId"])
     return "added"
-
+  
 @app.post("/get-driving-lane-from-osm")
-async def get_driving_lane_from_osm_api(request: Request):
-    data = await request.json()
-    projectId = data["projectId"]
-    drop_driving_lane_table(projectId)
-    xmin = sure_float(data['bbox']["xmin"])
-    ymin = sure_float(data['bbox']["ymin"])
-    xmax = sure_float(data['bbox']["xmax"])
-    ymax = sure_float(data['bbox']["ymax"]) 
-    G = ox.graph_from_bbox(ymin, ymax, xmin, xmax, network_type='drive')
-    gdf = ox.graph_to_gdfs(G, nodes=False, edges=True)
-    road = json.loads(gdf.to_json())
+async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
+    projectId = project_spec.projectId
+    try:
+        drop_driving_lane_table(projectId)
+    except:
+        print("Could not drop_driving_lane_table ")
+    
+    xmin = sure_float(project_spec.bbox.xmin)
+    ymin = sure_float(project_spec.bbox.ymin)
+    xmax = sure_float(project_spec.bbox.xmax)
+    ymax = sure_float(project_spec.bbox.ymax) 
+    try:
+        road = getDriveNetwork(ymin, ymax, xmin, xmax)
+    except ValueError:
+        raise HTTPException(
+            status_code=412,
+            detail="Found no graph nodes within the requested polygon"
+        )
     #print(road)
     """
     mylist =[]
