@@ -699,7 +699,7 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     connection = connect()
     cursor = connection.cursor()
 
-    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+    bbox = f"""{ymin},{xmin},{ymax},{xmax}"""
     overpass_url = "http://overpass-api.de/api/interpreter"
     overpass_query_serviceroad = f"""
         [out:json];
