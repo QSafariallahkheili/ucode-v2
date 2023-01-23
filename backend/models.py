@@ -1,12 +1,20 @@
+from dataclasses import dataclass
+
 from pydantic import BaseModel
 
 
-class BoundingBox(BaseModel):
-  xmin: float
-  ymin: float
-  xmax: float
-  ymax: float
+@dataclass
+class BoundingBox:
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
 
-class ProjectSpecification(BaseModel):
-  projectId: str
-  bbox: BoundingBox
+    def __str__(self):
+        return f"{self.ymin},{self.xmin},{self.ymax},{self.xmax}"
+
+
+@dataclass
+class ProjectSpecification:
+    projectId: str
+    bbox: BoundingBox

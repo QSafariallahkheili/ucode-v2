@@ -5,56 +5,34 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
-from db import (
-    add_comment,
-    add_drawn_line,
-    dislike_comment,
-    update_voting_status,
-    get_buildings_from_db,
-    connect,
-    delete_comments,
-    get_comments,
-    get_filtered_comments,
-    get_filtered_comments_with_status,
-    get_greenery_from_db,
-    get_table_names,
-    get_trees_from_db,
-    like_comment,
-    dislike_comment,
-    undislike_comment,
-    unlike_comment,
-    get_driving_lane_from_db,
-    get_driving_lane_polygon_from_db,
-    add_fulfillment,
-    prepare_quests_user_table,
-    get_quests_from_db,
-    get_quests_and_fulfillment_from_db,
-    get_driving_lane_polygon_from_db,
-    drop_greenery_table,
-    drop_building_table,
-    drop_tree_table,
-    drop_driving_lane_table,
-    drop_traffic_signal_table,
-    get_traffic_signal_from_db,
-    get_project_specification_from_db,
-    get_routes_from_db,
-    drop_tram_line_table,
-    get_tram_line_from_db,
-    drop_water_table,
-    get_water_from_db,
-    drop_sidewalk_table,
-    drop_sidewalk_polygon,
-    get_sidewalk_from_db,
-    drop_bike_table,
-    drop_bike_polygon_table,
-    get_bike_from_db,
-    get_bike_lane_from_db,
-    delete_comment_by_id
-
-)
+from buildings import create_building_polygons, persist_building_polygons
+from db import (add_comment, add_drawn_line, add_fulfillment, connect,
+                delete_comment_by_id, delete_comments, dislike_comment,
+                drop_bike_polygon_table, drop_bike_table, drop_building_table,
+                drop_driving_lane_table, drop_greenery_table,
+                drop_sidewalk_polygon, drop_sidewalk_table,
+                drop_traffic_signal_table, drop_tram_line_table,
+                drop_tree_table, drop_water_table, get_bike_from_db,
+                get_bike_lane_from_db, get_buildings_from_db, get_comments,
+                get_driving_lane_from_db, get_driving_lane_polygon_from_db,
+                get_filtered_comments, get_filtered_comments_with_status,
+                get_greenery_from_db, get_project_specification_from_db,
+                get_quests_and_fulfillment_from_db, get_quests_from_db,
+                get_routes_from_db, get_sidewalk_from_db, get_table_names,
+                get_traffic_signal_from_db, get_tram_line_from_db,
+                get_trees_from_db, get_water_from_db, like_comment,
+                prepare_quests_user_table, undislike_comment, unlike_comment,
+                update_voting_status)
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
 from roads import getDriveNetwork
+from services.overpass import (interpreter, query_building_parts,
+                               query_building_with_hole, query_fountain,
+                               query_greenery, query_serviceroad,
+                               query_traffic_signals, query_tram_lines,
+                               query_tree_row, query_trees, query_walk,
+                               query_water)
+from utils import sure_float
 
 try:
     run_database_migrations()
@@ -115,36 +93,13 @@ async def get_greenery_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"] 
     drop_greenery_table(projectId)
-    xmin = data["bbox"]["xmin"]
-    ymin = data["bbox"]["ymin"]
-    xmax = data["bbox"]["xmax"]
-    ymax = data["bbox"]["ymax"]
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
     tags = data["usedTagsForGreenery"]["tags"]
     _tags = ""
     for i in tags:
         _tags += "way.all[" + i.replace(":", "=") + "]" + ";\n"
 
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_greenery = """
-        [out:json];
-        way(%s,%s,%s,%s)->.all;
-        (
-            %s
-        );
-        convert item ::=::,::geom=geom(),_osm_type=type();
-        out geom;
-    """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-        _tags,
-    )
-
-    response_greenery = requests.get(
-        overpass_url, params={"data": overpass_query_greenery}
-    )
-    data_greenery = response_greenery.json()
+    data_greenery = interpreter(query_greenery(bbox,_tags))
 
     connection = connect()
     cursor = connection.cursor()
@@ -191,49 +146,15 @@ async def get_buildings_from_osm_api(request: Request):
     drop_building_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
     
-    overpass_url = "http://overpass-api.de/api/interpreter"
     
+    
+    response_building = interpreter(query_building_parts(bbox))
+    building_polygons = create_building_polygons(projectId,  response_building)
+    persist_building_polygons(connect(), building_polygons)
 
-    overpass_query_building_parts = f"""
-        [out:json];
-        (
-            (
-                way[building]({bbox});
-                way["building:part"]({bbox});
-            );
-            -
-            (
-                rel(bw:"outline");
-                way(r:"outline");
-            );
-        );
-        convert item ::=::,::geom=geom(),_osm_type=type();
-        out geom;
-    """
-    response_building = requests.get(
-        overpass_url, params={"data": overpass_query_building_parts}
-    )
 
-    data_building = response_building.json()
-
-    ###############
-    overpass_query_building_with_hole = f"""
-        [out:json];
-           
-                (
-                    rel["building"]({bbox});
-                   
-                );
-                
-            (._;>;);
-            out geom;
-
-        """
-    response_building_with_hole = requests.get(
-        overpass_url, params={"data": overpass_query_building_with_hole}
-    )
-    results = response_building_with_hole.json()
-    for f in results["elements"]:
+    response_building_with_hole = interpreter(query_building_with_hole(bbox))
+    for f in response_building_with_hole["elements"]:
         if "type" in f and f["type"] == "relation":
             if(f["members"][0]["role"] != "outer"):
                 i = 0
@@ -243,7 +164,7 @@ async def get_buildings_from_osm_api(request: Request):
                         break
                     i += 1
                 
-    bhole = osmtogeojson.process_osm_json(results)
+    bhole = osmtogeojson.process_osm_json(response_building_with_hole)
     # print(bhole)
     connectionn = connect()
     cursorr = connectionn.cursor()
@@ -315,82 +236,6 @@ async def get_buildings_from_osm_api(request: Request):
     cursorr.close()
     connectionn.close()
 
-    connection = connect()
-    cursor = connection.cursor()
-       # INSERT INTO building (wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, geom) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
-    insert_query_building = """
-        INSERT INTO building (project_id,wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, amenity, geom) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
-    """
-    for f in data_building["elements"]:
-        #print(f)
-        f["geometry"]["type"] = "Polygon"
-        f["geometry"]["coordinates"] = [f["geometry"]["coordinates"]]
-    for f in data_building["elements"]:
-       # print(f)
-        wallcolor = None
-        if "building:colour" in f["tags"]:
-            wallcolor = f["tags"]["building:colour"]
-        wallmaterial = None
-        if "building:material" in f["tags"]:
-            wallmaterial = f["tags"]["building:material"]
-        roofcolor = None
-        if "roof:colour" in f["tags"]:
-            roofcolor = f["tags"]["roof:colour"]
-        roofmaterial = None
-        if "roof:material" in f["tags"]:
-            roofmaterial = f["tags"]["roof:material"]
-        roofshape = None
-        if "roof:shape" in f["tags"]:
-            roofshape = f["tags"]["roof:shape"]
-        roofheight = None
-        if "roof:height" in f["tags"]:
-            roofheight = f["tags"]["roof:height"]
-            if "," in roofheight:
-                roofheight = roofheight.replace(",", ".")
-        height = None
-        if "height" in f["tags"]:
-            height = f["tags"]["height"]
-            height = sure_float(height)
-        floors = None
-        if "building:levels" in f["tags"]:
-            floors = f["tags"]["building:levels"]
-            floors = sure_float(floors)
-
-        estimatedheight = None
-        if height is not None:
-            estimatedheight = sure_float(height)
-        elif floors is not None:
-            estimatedheight = sure_float(floors) * 3.5
-        else:
-            estimatedheight = 15
-
-        amenity = None
-        if "amenity" in f["tags"]:
-            amenity = f["tags"]["amenity"]
-        geom = json.dumps(f["geometry"])
-        #print(geom)
-        # get_buildings_from_osm(wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, geom)
-        cursor.execute(
-            insert_query_building,
-            (
-                projectId,
-                wallcolor,
-                wallmaterial,
-                roofcolor,
-                roofmaterial,
-                roofshape,
-                roofheight,
-                height,
-                floors,
-                estimatedheight,
-                amenity,
-                geom,
-            ),
-        )
-
-    connection.commit()
-    cursor.close()
-    connection.close()
 
     # building refinement: identifing and deleting duplicated buildings and small overlapping building geometries
     
@@ -454,23 +299,10 @@ async def get_trees_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     drop_tree_table(projectId)
-    xmin = data["bbox"]["xmin"]
-    ymin = data["bbox"]["ymin"]
-    xmax = data["bbox"]["xmax"]
-    ymax = data["bbox"]["ymax"]
-    overpass_url = "http://overpass-api.de/api/interpreter"
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
-    overpass_query_trees = f"""
-         [out:json];
-         node["natural"="tree"]({bbox});
-         convert item ::=::,::geom=geom(),_osm_type=type();
-         out geom;
-     """
+    data_tree = interpreter(query_trees(bbox))
 
-    response_tree = requests.get(overpass_url, params={"data": overpass_query_trees})
-
-    data_tree = response_tree.json()
     connection = connect()
     cursor = connection.cursor()
     insert_query_tree = """
@@ -486,17 +318,7 @@ async def get_trees_from_osm_api(request: Request):
     cursor.close()
     connection.close()
 
-    overpass_query_tree_row = f"""
-         [out:json];
-         way["natural"="tree_row"]({bbox});
-         convert item ::=::,::geom=geom(),_osm_type=type();
-         out geom;
-     """ 
-
-    response_tree_row = requests.get(overpass_url, params={"data": overpass_query_tree_row})
-
-    data_tree_row = response_tree_row.json()
-
+    data_tree_row = interpreter(query_tree_row(bbox))
     connection = connect()
     cursor = connection.cursor()
     insert_query_tree_row = """
@@ -700,21 +522,7 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     cursor = connection.cursor()
 
     bbox = f"""{ymin},{xmin},{ymax},{xmax}"""
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_serviceroad = f"""
-        [out:json];
-            (
-                
-                way["highway"="service"]( {bbox});
-                relation["highway"="service"]( {bbox});
-            );
-            (._;>;);
-        out geom;
-    """
-
-    response_serviceroad = requests.get(overpass_url, params={"data": overpass_query_serviceroad})
-
-    data_serviceroad_osm = response_serviceroad.json()
+    data_serviceroad_osm = interpreter(query_serviceroad(bbox))
     data_serviceroad_geojson = osmtogeojson.process_osm_json(data_serviceroad_osm)
     for f in data_serviceroad_geojson["features"]:
 
@@ -743,25 +551,6 @@ async def get_driving_lane_from_db_api(request: Request):
     projectId = await request.json()
     return {"lane": get_driving_lane_from_db(projectId), "polygon": get_driving_lane_polygon_from_db(projectId)}
 
-def sure_float(may_be_number):  
-    # function which extracts surely the integer or float inside a string
-    # will handle strings like "23m" or "23,5 m" or "23.0 m" correctly
-    my_sure_float = "0"
-    try:
-        my_sure_float = float(may_be_number)
-    except:
-        may_be_number = may_be_number.strip()
-        may_be_number = may_be_number.replace(",", ".")
-        may_be_number = may_be_number.replace("'", ".")
-        for x in may_be_number:
-            if x in "0123456789.":
-                my_sure_float = my_sure_float + x
-            elif x.isspace():
-                break
-        my_sure_float = float(my_sure_float)
-
-    return my_sure_float
-
 #TH:add projectId to insert command
 @app.post("/get-traffic-lights-from-osm")
 async def get_traffic_lights_from_osm_api(request: Request):
@@ -770,27 +559,9 @@ async def get_traffic_lights_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     drop_traffic_signal_table(projectId)
-    xmin = data["bbox"]["xmin"]
-    ymin = data["bbox"]["ymin"]
-    xmax = data["bbox"]["xmax"]
-    ymax = data["bbox"]["ymax"]
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_traffic_signals = """
-         [out:json];
-         node["crossing"="traffic_signals"](%s,%s,%s,%s);
-         convert item ::=::,::geom=geom(),_osm_type=type();
-         out geom;
-     """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-    )
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
-    response_traffic_signal = requests.get(overpass_url, params={"data": overpass_query_traffic_signals})
-
-    data_traffic_signal = response_traffic_signal.json()
-
+    data_traffic_signal = interpreter(query_traffic_signals(bbox))
     connection = connect()
     cursor = connection.cursor()
     insert_query_traffic_signal = """
@@ -843,33 +614,14 @@ async def get_water_from_osm_api(request: Request):
     projectId = data["projectId"] 
     drop_water_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
+
     
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    
-    overpass_query_water = f"""
-        [out:json];
-        way["natural"="water"]({bbox});
-        relation["natural"="water"]({bbox});
-        (._;>;);
-        out geom;
-    """
-    overpass_query_fountain = f"""
-        [out:json];
-        way["amenity"="fountain"]({bbox});
-        (._;>;);
-        out geom;
-    """
-    
-    response_fountain = requests.get(
-        overpass_url, params={"data": overpass_query_fountain}
-    )
-    response_water = requests.get(
-        overpass_url, params={"data": overpass_query_water}
-    )
+    response_fountain = interpreter(query_fountain(bbox))
+    response_water = interpreter(query_water(bbox))
     # print(response_water)
     
-    data_fountain = osmtogeojson.process_osm_json(response_fountain.json())
-    data_water = osmtogeojson.process_osm_json(response_water.json())
+    data_fountain = osmtogeojson.process_osm_json(response_fountain)
+    data_water = osmtogeojson.process_osm_json(response_water)
     # print(data_fountain)
     # print(data_water)
     connection = connect()
@@ -930,28 +682,9 @@ async def get_tram_lines_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     drop_tram_line_table(projectId)
-    xmin = sure_float(data['bbox']["xmin"])
-    ymin = sure_float(data['bbox']["ymin"])
-    xmax = sure_float(data['bbox']["xmax"])
-    ymax = sure_float(data['bbox']["ymax"]) 
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_tram_lines = """
-         [out:json];
-         relation["type"="route"]["route"="tram"](%s,%s,%s,%s);
-        
-        convert item ::=::,::geom=geom(),_osm_type=type();
-        out geom;
-     """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-    )
-
-    response_tram_lines = requests.get(overpass_url, params={"data": overpass_query_tram_lines})
-
-    data_tram_lines = response_tram_lines.json()
+    data_tram_lines = interpreter(query_tram_lines(bbox))
    
     connection = connect()
     cursor = connection.cursor()
@@ -1027,25 +760,7 @@ async def get_side_walk_from_osm_api(request: Request):
     ##### ############## overpass ###################
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
     
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_walk = f"""
-        [out:json];
-            (
-                
-                way["highway"="path"]( {bbox});
-                way["highway"="footway"]( {bbox});
-                way["highway"="pedestrian"]( {bbox});
-                relation["highway"="path"]( {bbox});
-                relation["highway"="footway"]( {bbox});
-                relation["highway"="pedestrian"]( {bbox});
-            );
-            (._;>;);
-        out geom;
-    """
-
-    response_walk = requests.get(overpass_url, params={"data": overpass_query_walk})
-
-    data_walk_osm = response_walk.json()
+    data_walk_osm = interpreter(query_walk(bbox))
     data_walk_geojson = osmtogeojson.process_osm_json(data_walk_osm)
     
     connection = connect()
@@ -1092,6 +807,7 @@ async def get_bike_from_osm_api(request: Request):
     projectId = data["projectId"]
     drop_bike_table(projectId)
     drop_bike_polygon_table(projectId)
+
     xmin = sure_float(data['bbox']["xmin"])
     ymin = sure_float(data['bbox']["ymin"])
     xmax = sure_float(data['bbox']["xmax"])
@@ -1225,3 +941,7 @@ async def delete_comment_by_id_api(request: Request):
     orderId = delete_comment_by_id(data["commentId"])
     return orderId
 
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -11,4 +11,4 @@ test:
 	 python3 -m pytest -ra
 
 run:
-	uvicorn main:app --reload
+	python -m uvicorn main:app --reload

@@ -1,0 +1,1106 @@
+# name: test_interpreter
+  list([
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0073462,
+            53.5404369,
+          ]),
+          list([
+            10.0075443,
+            53.5401249,
+          ]),
+          list([
+            10.0077422,
+            53.5402703,
+          ]),
+          list([
+            10.0078034,
+            53.5403154,
+          ]),
+          list([
+            10.0079052,
+            53.5403905,
+          ]),
+          list([
+            10.0073462,
+            53.5404369,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 1,
+      'tags': dict({
+        '_osm_type': 'way',
+        'addr:city': 'Hamburg',
+        'addr:housenumber': '2',
+        'addr:postcode': '20457',
+        'addr:street': 'Versmannstraße',
+        'building:levels': '16',
+        'building:part': 'yes',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0079896,
+            53.540254,
+          ]),
+          list([
+            10.0078759,
+            53.5402623,
+          ]),
+          list([
+            10.0077422,
+            53.5402703,
+          ]),
+          list([
+            10.0075443,
+            53.5401249,
+          ]),
+          list([
+            10.0073462,
+            53.5404369,
+          ]),
+          list([
+            10.0079052,
+            53.5403905,
+          ]),
+          list([
+            10.0080458,
+            53.5403769,
+          ]),
+          list([
+            10.0081469,
+            53.5403684,
+          ]),
+          list([
+            10.0085548,
+            53.5403344,
+          ]),
+          list([
+            10.0087564,
+            53.5403173,
+          ]),
+          list([
+            10.0087252,
+            53.5401905,
+          ]),
+          list([
+            10.0079896,
+            53.540254,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 2,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'office',
+        'building:levels': '7',
+        'name': 'Campus Tower',
+        'wikidata': 'Q114345313',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0071975,
+            53.5410399,
+          ]),
+          list([
+            10.0072421,
+            53.5409874,
+          ]),
+          list([
+            10.0078058,
+            53.5411567,
+          ]),
+          list([
+            10.0077612,
+            53.5412091,
+          ]),
+          list([
+            10.0071975,
+            53.5410399,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 3,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'school',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0065223,
+            53.5406825,
+          ]),
+          list([
+            10.0065228,
+            53.5406837,
+          ]),
+          list([
+            10.0065227,
+            53.5406849,
+          ]),
+          list([
+            10.0065219,
+            53.540686,
+          ]),
+          list([
+            10.0065206,
+            53.5406869,
+          ]),
+          list([
+            10.0065188,
+            53.5406875,
+          ]),
+          list([
+            10.0065168,
+            53.5406878,
+          ]),
+          list([
+            10.0065147,
+            53.5406877,
+          ]),
+          list([
+            10.0065127,
+            53.5406871,
+          ]),
+          list([
+            10.0065112,
+            53.5406861,
+          ]),
+          list([
+            10.0065103,
+            53.540685,
+          ]),
+          list([
+            10.0065101,
+            53.5406837,
+          ]),
+          list([
+            10.0065107,
+            53.5406824,
+          ]),
+          list([
+            10.0065119,
+            53.5406814,
+          ]),
+          list([
+            10.0065137,
+            53.5406806,
+          ]),
+          list([
+            10.0065157,
+            53.5406803,
+          ]),
+          list([
+            10.0065177,
+            53.5406803,
+          ]),
+          list([
+            10.0065196,
+            53.5406807,
+          ]),
+          list([
+            10.0065212,
+            53.5406815,
+          ]),
+          list([
+            10.0065223,
+            53.5406825,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 4,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'yes',
+        'man_made': 'silo',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.006545,
+            53.5406832,
+          ]),
+          list([
+            10.0065446,
+            53.5406846,
+          ]),
+          list([
+            10.0065434,
+            53.5406858,
+          ]),
+          list([
+            10.0065416,
+            53.5406868,
+          ]),
+          list([
+            10.0065394,
+            53.5406873,
+          ]),
+          list([
+            10.0065369,
+            53.5406874,
+          ]),
+          list([
+            10.0065347,
+            53.540687,
+          ]),
+          list([
+            10.0065328,
+            53.5406862,
+          ]),
+          list([
+            10.0065314,
+            53.5406851,
+          ]),
+          list([
+            10.0065307,
+            53.5406838,
+          ]),
+          list([
+            10.0065307,
+            53.5406824,
+          ]),
+          list([
+            10.0065314,
+            53.5406811,
+          ]),
+          list([
+            10.0065328,
+            53.54068,
+          ]),
+          list([
+            10.0065347,
+            53.5406793,
+          ]),
+          list([
+            10.006537,
+            53.5406789,
+          ]),
+          list([
+            10.0065394,
+            53.540679,
+          ]),
+          list([
+            10.0065416,
+            53.5406795,
+          ]),
+          list([
+            10.0065435,
+            53.5406805,
+          ]),
+          list([
+            10.0065446,
+            53.5406817,
+          ]),
+          list([
+            10.006545,
+            53.5406832,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 5,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'yes',
+        'man_made': 'silo',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0063898,
+            53.5407043,
+          ]),
+          list([
+            10.006559,
+            53.5406935,
+          ]),
+          list([
+            10.0065546,
+            53.5406688,
+          ]),
+          list([
+            10.0063854,
+            53.5406796,
+          ]),
+          list([
+            10.0063898,
+            53.5407043,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 6,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'industrial',
+        'building:levels': '1',
+        'roof:shape': 'flat',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0056766,
+            53.5402323,
+          ]),
+          list([
+            10.0057331,
+            53.540155,
+          ]),
+          list([
+            10.0057873,
+            53.5400787,
+          ]),
+          list([
+            10.0059891,
+            53.5400711,
+          ]),
+          list([
+            10.0059341,
+            53.5401474,
+          ]),
+          list([
+            10.0058791,
+            53.5402239,
+          ]),
+          list([
+            10.0056766,
+            53.5402323,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 7,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'university',
+        'height': '5',
+        'roof:direction': '94',
+        'roof:material': 'concrete',
+        'roof:shape': 'skillion',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0057515,
+            53.5404012,
+          ]),
+          list([
+            10.0058011,
+            53.5403325,
+          ]),
+          list([
+            10.0058791,
+            53.5402239,
+          ]),
+          list([
+            10.0056766,
+            53.5402323,
+          ]),
+          list([
+            10.0057331,
+            53.540155,
+          ]),
+          list([
+            10.0057873,
+            53.5400787,
+          ]),
+          list([
+            10.0057064,
+            53.5400819,
+          ]),
+          list([
+            10.0055644,
+            53.5402063,
+          ]),
+          list([
+            10.0053467,
+            53.5402258,
+          ]),
+          list([
+            10.0053529,
+            53.5402933,
+          ]),
+          list([
+            10.0053586,
+            53.5403635,
+          ]),
+          list([
+            10.0057515,
+            53.5404012,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 8,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'university',
+        'height': '5',
+        'roof:material': 'concrete',
+        'surface': 'concrete',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0042288,
+            53.5412127,
+          ]),
+          list([
+            10.0042575,
+            53.5411733,
+          ]),
+          list([
+            10.0050176,
+            53.5411026,
+          ]),
+          list([
+            10.005232,
+            53.5411552,
+          ]),
+          list([
+            10.0053858,
+            53.5409294,
+          ]),
+          list([
+            10.0047571,
+            53.5409803,
+          ]),
+          list([
+            10.0046913,
+            53.5409858,
+          ]),
+          list([
+            10.0046266,
+            53.5409912,
+          ]),
+          list([
+            10.0042954,
+            53.5410145,
+          ]),
+          list([
+            10.0041835,
+            53.5410232,
+          ]),
+          list([
+            10.0041048,
+            53.5410284,
+          ]),
+          list([
+            10.0040723,
+            53.5410469,
+          ]),
+          list([
+            10.0039245,
+            53.5412562,
+          ]),
+          list([
+            10.0041571,
+            53.541311,
+          ]),
+          list([
+            10.0042288,
+            53.5412127,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 9,
+      'tags': dict({
+        '_osm_type': 'way',
+        'addr:city': 'Hamburg',
+        'addr:country': 'DE',
+        'addr:housenumber': '15',
+        'addr:postcode': '20457',
+        'addr:street': 'Überseeallee',
+        'brand': 'Holiday Inn',
+        'brand:wikidata': 'Q2717882',
+        'building': 'yes',
+        'building:levels': '7',
+        'contact:phone': '+49 40 491514220',
+        'contact:website': 'https://www.ihg.com/holidayinn/hotels/us/en/hamburg/hamhc/hoteldetail',
+        'internet_access': 'wlan',
+        'internet_access:fee': 'no',
+        'name': 'Holiday Inn Hamburg - HafenCity',
+        'tourism': 'hotel',
+        'wheelchair': 'yes',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0050738,
+            53.5403499,
+          ]),
+          list([
+            10.0051801,
+            53.5403464,
+          ]),
+          list([
+            10.0053586,
+            53.5403635,
+          ]),
+          list([
+            10.0053467,
+            53.5402258,
+          ]),
+          list([
+            10.0049752,
+            53.5402582,
+          ]),
+          list([
+            10.0050738,
+            53.5403499,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 10,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:material': 'glass',
+        'building:part': 'yes',
+        'height': '22',
+        'roof:material': 'glass',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0037878,
+            53.5401601,
+          ]),
+          list([
+            10.0045082,
+            53.5402572,
+          ]),
+          list([
+            10.0046909,
+            53.5403626,
+          ]),
+          list([
+            10.0050738,
+            53.5403499,
+          ]),
+          list([
+            10.0049752,
+            53.5402582,
+          ]),
+          list([
+            10.0055644,
+            53.5402063,
+          ]),
+          list([
+            10.0057064,
+            53.5400819,
+          ]),
+          list([
+            10.0048383,
+            53.5401147,
+          ]),
+          list([
+            10.0035472,
+            53.5398819,
+          ]),
+          list([
+            10.0037878,
+            53.5401601,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 11,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'yes',
+        'height': '22',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0041404,
+            53.5404859,
+          ]),
+          list([
+            10.0051068,
+            53.5405451,
+          ]),
+          list([
+            10.0056864,
+            53.5404926,
+          ]),
+          list([
+            10.0057515,
+            53.5404012,
+          ]),
+          list([
+            10.0051801,
+            53.5403464,
+          ]),
+          list([
+            10.0050738,
+            53.5403499,
+          ]),
+          list([
+            10.0046909,
+            53.5403626,
+          ]),
+          list([
+            10.0041342,
+            53.5403809,
+          ]),
+          list([
+            10.0041404,
+            53.5404859,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 12,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:part': 'yes',
+        'height': '26',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0069895,
+            53.5413877,
+          ]),
+          list([
+            10.0072207,
+            53.5411128,
+          ]),
+          list([
+            10.0070558,
+            53.5410638,
+          ]),
+          list([
+            10.0068246,
+            53.5413388,
+          ]),
+          list([
+            10.0069895,
+            53.5413877,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 13,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'school',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0075022,
+            53.5406001,
+          ]),
+          list([
+            10.007541,
+            53.5405967,
+          ]),
+          list([
+            10.0075354,
+            53.540574,
+          ]),
+          list([
+            10.0074966,
+            53.5405773,
+          ]),
+          list([
+            10.0074994,
+            53.5405886,
+          ]),
+          list([
+            10.0075022,
+            53.5406001,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 14,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'yes',
+        'level': '0',
+        'levelpart': 'elevator_platform',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0081469,
+            53.5403684,
+          ]),
+          list([
+            10.0080593,
+            53.5403047,
+          ]),
+          list([
+            10.0079896,
+            53.540254,
+          ]),
+          list([
+            10.0078759,
+            53.5402623,
+          ]),
+          list([
+            10.0077422,
+            53.5402703,
+          ]),
+          list([
+            10.0078034,
+            53.5403154,
+          ]),
+          list([
+            10.0079052,
+            53.5403905,
+          ]),
+          list([
+            10.0080458,
+            53.5403769,
+          ]),
+          list([
+            10.0081469,
+            53.5403684,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 15,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building:levels': '7',
+        'building:min_level': '2',
+        'building:part': 'yes',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0076434,
+            53.5399793,
+          ]),
+          list([
+            10.0077866,
+            53.5401068,
+          ]),
+          list([
+            10.0086842,
+            53.5400318,
+          ]),
+          list([
+            10.0086604,
+            53.5399444,
+          ]),
+          list([
+            10.0086482,
+            53.5398914,
+          ]),
+          list([
+            10.0076434,
+            53.5399793,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 16,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'yes',
+        'building:levels': '8',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0080593,
+            53.5403047,
+          ]),
+          list([
+            10.0081469,
+            53.5403684,
+          ]),
+          list([
+            10.0085548,
+            53.5403344,
+          ]),
+          list([
+            10.0087564,
+            53.5403173,
+          ]),
+          list([
+            10.0087252,
+            53.5401905,
+          ]),
+          list([
+            10.0079896,
+            53.540254,
+          ]),
+          list([
+            10.0080593,
+            53.5403047,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 17,
+      'tags': dict({
+        '_osm_type': 'way',
+        'addr:city': 'Hamburg',
+        'addr:housenumber': '4',
+        'addr:postcode': '20457',
+        'addr:street': 'Versmannstraße',
+        'building:levels': '7',
+        'building:part': 'yes',
+      }),
+      'type': 'item',
+    }),
+    dict({
+      'geometry': dict({
+        'coordinates': list([
+          list([
+            10.0078666,
+            53.5412757,
+          ]),
+          list([
+            10.0079021,
+            53.5412981,
+          ]),
+          list([
+            10.007913,
+            53.541292,
+          ]),
+          list([
+            10.0079433,
+            53.5413112,
+          ]),
+          list([
+            10.0075885,
+            53.5415097,
+          ]),
+          list([
+            10.0075578,
+            53.5414903,
+          ]),
+          list([
+            10.0075756,
+            53.5414804,
+          ]),
+          list([
+            10.0075405,
+            53.5414583,
+          ]),
+          list([
+            10.0078666,
+            53.5412757,
+          ]),
+        ]),
+        'type': 'LineString',
+      }),
+      'id': 18,
+      'tags': dict({
+        '_osm_type': 'way',
+        'building': 'school',
+      }),
+      'type': 'item',
+    }),
+  ])
+# ---
+# name: test_query_building_parts
+  '''
+  
+          [out:json];
+          (
+              (
+                  way[building](53.539938,10.005326,53.541302,10.008459);
+                  way["building:part"](53.539938,10.005326,53.541302,10.008459);
+              );
+              -
+              (
+                  rel(bw:"outline");
+                  way(r:"outline");
+              );
+          );
+          convert item ::=::,::geom=geom(),_osm_type=type();
+          out geom;
+      
+  '''
+# ---
+# name: test_query_building_with_hole
+  '''
+  
+          [out:json];
+             
+                  (
+                      rel["building"](53.539938,10.005326,53.541302,10.008459);
+                     
+                  );
+                  
+              (._;>;);
+              out geom;
+  
+          
+  '''
+# ---
+# name: test_query_fountain
+  '''
+  
+          [out:json];
+          way["amenity"="fountain"](53.539938,10.005326,53.541302,10.008459);
+          (._;>;);
+          out geom;
+      
+  '''
+# ---
+# name: test_query_greenery
+  '''
+  
+          [out:json];
+          way(53.539938,10.005326,53.541302,10.008459)->.all;
+          (
+              way.all[natural=wood];way.all[landuse=meadow]
+          );
+          convert item ::=::,::geom=geom(),_osm_type=type();
+          out geom;
+      
+  '''
+# ---
+# name: test_query_serviceroad
+  '''
+  
+          [out:json];
+              (
+                  
+                  way["highway"="service"]( 53.539938,10.005326,53.541302,10.008459);
+                  relation["highway"="service"]( 53.539938,10.005326,53.541302,10.008459);
+              );
+              (._;>;);
+          out geom;
+      
+  '''
+# ---
+# name: test_query_traffic_signals
+  '''
+  
+           [out:json];
+           node["crossing"="traffic_signals"](53.539938,10.005326,53.541302,10.008459);
+           convert item ::=::,::geom=geom(),_osm_type=type();
+           out geom;
+       
+  '''
+# ---
+# name: test_query_tram_lines
+  '''
+  
+           [out:json];
+           relation["type"="route"]["route"="tram"](53.539938,10.005326,53.541302,10.008459);
+          
+          convert item ::=::,::geom=geom(),_osm_type=type();
+          out geom;
+       
+  '''
+# ---
+# name: test_query_tree_row
+  '''
+  
+           [out:json];
+           way["natural"="tree_row"](53.539938,10.005326,53.541302,10.008459);
+           convert item ::=::,::geom=geom(),_osm_type=type();
+           out geom;
+       
+  '''
+# ---
+# name: test_query_trees
+  '''
+  
+           [out:json];
+           node["natural"="tree"](53.539938,10.005326,53.541302,10.008459);
+           convert item ::=::,::geom=geom(),_osm_type=type();
+           out geom;
+       
+  '''
+# ---
+# name: test_query_walk
+  '''
+  
+          [out:json];
+              (
+                  
+                  way["highway"="path"]( 53.539938,10.005326,53.541302,10.008459);
+                  way["highway"="footway"]( 53.539938,10.005326,53.541302,10.008459);
+                  way["highway"="pedestrian"]( 53.539938,10.005326,53.541302,10.008459);
+                  relation["highway"="path"]( 53.539938,10.005326,53.541302,10.008459);
+                  relation["highway"="footway"]( 53.539938,10.005326,53.541302,10.008459);
+                  relation["highway"="pedestrian"]( 53.539938,10.005326,53.541302,10.008459);
+              );
+              (._;>;);
+          out geom;
+      
+  '''
+# ---
+# name: test_query_water
+  '''
+  
+          [out:json];
+          way["natural"="water"](53.539938,10.005326,53.541302,10.008459);
+          relation["natural"="water"](53.539938,10.005326,53.541302,10.008459);
+          (._;>;);
+          out geom;
+      
+  '''
+# ---
