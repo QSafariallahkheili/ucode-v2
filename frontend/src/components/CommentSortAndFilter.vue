@@ -36,6 +36,13 @@
 import { useStore } from "vuex";
 import { ref } from "vue"
 const store = useStore();
+const props = defineProps({
+   bottomPositionSortFilter: {
+      type: String,
+      default: ""
+   }
+})
+
 let toggle = ref(null)
 const emit = defineEmits(["sortComment", "filterComment"])
 const sortComment = (sortOption: string) => {
@@ -67,12 +74,13 @@ const filterComment = (filterOption: { filterType: string, filterValue: string }
    position: fixed;
    z-index: 1000;
    width: 100%;
-
+   bottom: v-bind(bottomPositionSortFilter);
 }
 
 .sort-select {
    max-width: 200px;
    min-width: 150px;
    vertical-align: bottom;
+   height: 0
 }
 </style>

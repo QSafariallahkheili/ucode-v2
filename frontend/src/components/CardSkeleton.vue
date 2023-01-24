@@ -1,6 +1,7 @@
 <template>
     <v-card
         elevation="3"
+        class="skletton-card"
     >
         <div class="skeleton-time-text"> </div>
         <div class="skeleton-comment-text">
@@ -66,6 +67,14 @@
     background: rgb(0,0,0,0.1);
     border-radius: 20px;
     animation: blink 0.6s ease-in-out 0.3s infinite alternate;
+}
+.skletton-card{
+    margin: 1.5rem 0rem;
+    margin-left: 50%;
+    padding: 1.5rem;
+    transform: translateX(-50%);
+    width: calc(100% - 3rem) !important;
+    border-radius: 18px;
 }
 
 @keyframes blink {

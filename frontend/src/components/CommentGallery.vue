@@ -7,11 +7,51 @@
            @cnacelDeleteDialog="cnacelDeleteDialog"
            @confirmDeleteCommentDialog="confirmDeleteCommentDialog"
         />
+        
         <transition name="card">
-            <div v-if="(commentsAreLoaded && props.show)" className="comment-list"> 
-                <CommentSortAndFilter @sortComment="sortComment" @filterComment="filterComment"/>
+            <div v-if="(commentsAreLoaded && props.show && mapView==false)" className="comment-list"> 
+                <CommentSortAndFilter @sortComment="sortComment" @filterComment="filterComment" :bottomPositionSortFilter="bottomPositionSortFilter"/>
+                <div>
+                    <CommentCard 
+                        v-for="comment in filteredCommentList"
+                        :id="comment.properties.id" 
+                        :created_at="comment.properties.created_at"
+                        :comment="comment.properties.comment"
+                        :user_id="comment.properties.user_id"
+                        :likes="comment.properties.likes"
+                        :dislikes="comment.properties.dislikes"
+                        :voting_status="comment.properties.voting_status"
+                        :color="comment.properties.color"
+                        :key="comment.id"
+                        @deleteComment="deleteComment"
+                    />
+                </div>
+                
+                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); getCommentsFromDB()" v-if="mapView==false" size="large" icon class="map-comment-view-toggle">
+                    <v-icon>mdi-map-outline</v-icon>
+                </v-btn>
+            </div>
+        </transition>
+        <transition  name="fade">
+            <div v-if="props.show && mapView==false" className="backdrop" >
+                <div v-if="(!commentsAreLoaded && props.show)" class="comment-list">
+                    <CardSkeleton v-for="index in 4" :key="index"></CardSkeleton>
+                </div>
+            </div>
+        </transition>
+        <div v-if="props.show && mapView==true" style="margin-bottom:10px; z-index: 9999; position: absolute; bottom: 340px; right: 1.5rem">
+                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); "  size="large" icon class="comment-view-toggle">
+                    <v-icon>mdi-format-list-bulleted</v-icon>
+                </v-btn>
+        </div>
+        <CommentSortAndFilter v-if="props.show && mapView==true" @sortComment="sortComment" @filterComment="filterComment" :bottomPositionSortFilter="bottomPositionSortFilter"/>
+        <div class="map-card" v-if="props.show && mapView==true">
+            
+            
+
+            <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id"  >
+
                 <CommentCard 
-                    v-for="comment in filteredCommentList"
                     :id="comment.properties.id" 
                     :created_at="comment.properties.created_at"
                     :comment="comment.properties.comment"
@@ -20,18 +60,13 @@
                     :dislikes="comment.properties.dislikes"
                     :voting_status="comment.properties.voting_status"
                     :color="comment.properties.color"
-                    :key="comment.id"
+                    :key="comment.properties.id"
                     @deleteComment="deleteComment"
-                />
+                    @mouseenter="mouseEnterOnComment(comment.properties.id)"
+            />
             </div>
-        </transition>
-        <transition  name="fade">
-            <div v-if="props.show" className="backdrop">
-                <div v-if="(!commentsAreLoaded && props.show)" class="comment-list">
-                    <CardSkeleton v-for="index in 4" :key="index"></CardSkeleton>
-                </div>
-            </div>
-        </transition>
+            
+        </div>
     </div>
 </template>
 
@@ -44,16 +79,17 @@
     import DeletingDialog from "@/components/DeletingDialog.vue"
     import CommentSortAndFilter from "@/components/CommentSortAndFilter.vue"
     import { HTTP } from "@/utils/http-common.js";
+    import { getCommentsDataFromDB } from "../service/backend.service"; 
 
 
     const store = useStore(); 
-    const emit = defineEmits(["deleteQuestCommentFromSource"]);
+    const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleCommentLayerVisibility", "updateCommentSource", "addImage"]);
     const projectId = store.state.aoi.projectSpecification.project_id;
     const userId = store.state.aoi.userId;
     let deleteDialog = ref(false)
     let deleteCommentId = ref()
     let filterText = ref()
-
+    let mapView = ref(false)
     const props = defineProps({
         show: {
             type: Boolean,
@@ -67,7 +103,7 @@
 
     let commentList = ref([])
     let commentsAreLoaded = ref(false)
-
+    let bottomPositionSortFilter = ref('')
     
     const delay = (time) => {
         return new Promise(resolve => setTimeout(resolve, time));
@@ -171,6 +207,59 @@
        
     })
 
+
+    const changeCommentSortAndFilterUIPosition = () => {
+       if(mapView.value == true){
+            bottomPositionSortFilter.value = "50px"
+       }
+       else {
+            bottomPositionSortFilter.value = ""
+       }
+        
+    }
+    const setMapCommentView = () => {
+        mapView.value = ! mapView.value
+        
+    }
+
+    const getCommentsFromDB = async() => {
+        let allComments = { type: "FeatureCollection", features: [] }
+        for (let f of filteredCommentList.value){
+            allComments.features.push(f)
+        }
+        
+        let commentSourceLayer = {
+            id: "allComments",
+            geojson: {
+                "type": "geojson",
+                "data": allComments
+            }
+        }
+        let CommentLayer = {
+            'id': "allComments",
+            'type': 'symbol',
+            'source': "allComments",
+            'layout': {
+                'icon-image': 'comment.png', // reference the image
+                'icon-size': 0.15,
+                'icon-offset': [65, 50],
+                'icon-anchor': "bottom",
+                'icon-allow-overlap': true,
+            }
+        }
+        store.commit("map/addSource",commentSourceLayer)
+        emit('addImage', 'comment.png')
+        store.commit("map/addLayer",CommentLayer)
+        //emit('addComment', commentSourceLayer, CommentLayer)
+        
+        
+    }
+
+    const mouseEnterOnComment = (HoveredCommentId) => {
+        emit('scaleUpComment', HoveredCommentId)
+        
+    }
+   
     onMounted(() => {
         sendCommentRequest();
     })
@@ -179,7 +268,36 @@
         if (props.show){
             sendCommentRequest();
         }
+        
     })
+
+    const compoundProperty = computed( () => {
+        return {mapview: mapView.value, commentshow: props.show}
+       
+    })
+
+    watch(compoundProperty, function() { 
+
+        if (compoundProperty.value.mapview==true && compoundProperty.value.commentshow==true){
+            emit('toggleCommentLayerVisibility', 'allComments', 'visible')
+        }
+        else {
+            emit('toggleCommentLayerVisibility', 'allComments', 'none')
+        }
+        
+    })
+
+    watch(filteredCommentList, function () {
+       if (compoundProperty.value.mapview==true && compoundProperty.value.commentshow==true){
+            let allComments = { type: "FeatureCollection", features: [] }
+            for (let f of filteredCommentList.value){
+                allComments.features.push(f)
+            }
+            emit('updateCommentSource', { id: 'allComments', geojson: {data: allComments} })
+        }
+    })
+    
+    
 </script>
 
 <style scoped>
@@ -212,7 +330,7 @@
 .comment-list::-webkit-scrollbar {
   display: none;
 }
-.v-card{
+.comment-list.v-card{
     margin: 1.5rem 0rem;
     margin-left: 50%;
     padding: 1.5rem;
@@ -220,7 +338,31 @@
     width: calc(100% - 3rem) !important;
     border-radius: 18px;
 }
+.map-card {
+    padding:0 1.5rem 0 1.5rem !important;
+    position: fixed;
+    bottom: 110px;
+    z-index: 1100;
+    max-width: 100%;
+    display: flex;
+    overflow-x: scroll;
+}
+.map-card::-webkit-scrollbar {
+  display: none;
+}
+.map-card .v-card{
+    margin-top: 0  !important;
+    margin-bottom: 0  !important;
+    border-radius: 18px;
+    width: calc(100vw - 8rem) !important;
+    top:0 !important
+}
 
+.map-card .set-margin{
+    margin-right: 1.5rem ;
+    margin-bottom: 0;
+   
+}
 /* Animation */
 /* Card      */
  .card-leave-active {
@@ -248,5 +390,14 @@
 
 .fade-leave-to{
     opacity: 0;
+}
+
+.map-comment-view-toggle{
+    z-index: 9999;
+    position: fixed;
+    bottom: 60px;
+    right:1.5rem;
+    scrollbar-width: none !important; 
+
 }
 </style>

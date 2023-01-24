@@ -4,14 +4,21 @@
         <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
         <ProjectInfo :show="tabIndex=='projectInfo'" />
         <Suspense>
-          <Quests :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
+          <Quests v-show="tabIndex=='planning'" :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
         </Suspense>
         
-        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded && tabIndex=='planning'" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
             @navigateToPlanningIdea="navigateToPlanningIdea" />
-        <FreeComment @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
+        <FreeComment v-show="tabIndex=='planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
           @closeCommentDialog="closeCommentDialog" @hideQuests="() => {hideQuests = true}"/>
-        <CommentGallery :show="tabIndex=='discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource" />
+        <CommentGallery 
+          :show="tabIndex=='discussion'" 
+          @deleteQuestCommentFromSource="deleteQuestCommentFromSource" 
+          @scaleUpComment="scaleUpComment"
+          @toggleCommentLayerVisibility="togglelayerVisibility"
+          @updateCommentSource="addSourceToMap"
+          @addImage="addImageToMap"
+        />
         
         <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
         <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
@@ -133,6 +140,17 @@ onMounted(() => {
     }
 
   });
+
+  map.on('click', 'allComments', function (e) {    
+    // @ts-ignore
+    document.getElementById(e.features[0].properties.id).scrollIntoView({behavior: 'smooth'}, true);
+    map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4 , 0.15]);
+
+  });
+
+  map.on('draw.create', () => {
+    lineDrawCreated.value = 1
+  })
 
   map.on('draw.create', () => {
     lineDrawCreated.value = 1
@@ -332,11 +350,24 @@ const addSourceToMap = (source: { id: string, geojson: any }) => {
 
 const addImageToMap = (imgUrl: string) => {
   if (!imgUrl) return;
-  map?.loadImage(imgUrl, (error, image) => {
-    if (error) throw error;
-    map?.addImage(imgUrl, image!);
-  });
+  if (!map.hasImage(imgUrl)) {
+    map?.loadImage(imgUrl, (error, image) => {
+      if (error) throw error;
+      map?.addImage(imgUrl, image!);
+    });
+  }
 };
+const scaleUpComment = (hoveredCommentId: number) =>{
+  map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], hoveredCommentId, 0.4 , 0.15]);
+}
+
+const togglelayerVisibility = (layerId:any, visbilityStatus: string) =>{
+  const layer = map.getLayer(layerId)
+  if (typeof layer !== 'undefined') {
+    map.setLayoutProperty(layerId, 'visibility', visbilityStatus);
+  }
+}
+  
 
 //TH
 // provides all comments of a project but only the user comments have his/her name, all other are anonymous

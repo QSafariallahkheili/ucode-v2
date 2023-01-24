@@ -466,3 +466,10 @@ export async function getBikeLaneDataFromDB(projectId: string) {
   const response = await HTTP.post("get-bike-lanes-from-db", projectId);
   return response;
 }
+
+export async function getCommentsDataFromDB(projectId: string) {
+  const response = await HTTP.post("get-comments", projectId)
+  return response;
+}
+
+
