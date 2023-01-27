@@ -34,12 +34,12 @@ export async function getQuestsFulfillmentFromDB(projectId: string, userId: stri
   }
 
 export async function getbuildingsDataFromDB(projectId: string) {
-  buildingresponse = await HTTP.post("get-buildings-from-db", projectId);
+  buildingresponse = await HTTP.get("get-buildings-from-db", { params: { projectId } });
   return buildingresponse.data;
 }
 export async function getAmenityDataFromDB(projectId: string) {
   if(buildingresponse == undefined){
-    buildingresponse = await HTTP.post("get-buildings-from-db", projectId);
+    buildingresponse = await HTTP.get("get-buildings-from-db", { params: { projectId } });
   }
   const detectAmenities = (d: Feature) => d?.properties?.amenity != null;
   const amenities = buildingresponse.data.features.filter(detectAmenities);
@@ -61,7 +61,7 @@ export async function getAmenityDataFromDB(projectId: string) {
 }
 
 export async function getbuildingsFromDB(projectId: string) {
-  const response = await HTTP.post("get-buildings-from-db", projectId);
+  const response = await HTTP.get("get-buildings-from-db", { params: { projectId } } );
   // @ts-ignore
 
   const emptygeom = (d: Feature) => d?.geometry?.coordinates?.length == 1;

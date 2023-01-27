@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
-from buildings import create_building_polygons, persist_building_polygons
+from features.buildings import create_building_holes_polygons, create_building_polygons, get_buildings_from_db, persist_building_polygons, refine_persisted_buildings, transform_building_with_hole
 from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 delete_comment_by_id, delete_comments, dislike_comment,
                 drop_bike_polygon_table, drop_bike_table, drop_building_table,
@@ -13,12 +13,12 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 drop_sidewalk_polygon, drop_sidewalk_table,
                 drop_traffic_signal_table, drop_tram_line_table,
                 drop_tree_table, drop_water_table, get_bike_from_db,
-                get_bike_lane_from_db, get_buildings_from_db, get_comments,
+                get_bike_lane_from_db, get_comments,
                 get_driving_lane_from_db, get_driving_lane_polygon_from_db,
                 get_filtered_comments, get_filtered_comments_with_status,
                 get_greenery_from_db, get_project_specification_from_db,
                 get_quests_and_fulfillment_from_db, get_quests_from_db,
-                get_routes_from_db, get_sidewalk_from_db, get_table_names,
+                get_routes_from_db, get_sidewalk_from_db,
                 get_traffic_signal_from_db, get_tram_line_from_db,
                 get_trees_from_db, get_water_from_db, like_comment,
                 prepare_quests_user_table, undislike_comment, unlike_comment,
@@ -33,12 +33,12 @@ from services.overpass import (interpreter, query_bike, query_building_parts,
                                query_tree_row, query_trees, query_walk,
                                query_water)
 from utils import sure_float
+from repository.db import db_pool, get_table_names
 
 try:
     run_database_migrations()
 except Exception as err:
     print("Could not run database migrations", err)
-
 
 app = FastAPI()
 origins = [
@@ -56,6 +56,16 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+
+@app.on_event("startup")
+def open_pool():
+    db_pool.open()
+
+@app.on_event("shutdown")
+def close_pool():
+    db_pool.close()
 
 @app.get("/")
 async def root():
@@ -140,144 +150,30 @@ async def get_greenery_from_db_api(request: Request):
 
 
 @app.post("/get-buildings-from-osm")
-async def get_buildings_from_osm_api(request: Request):
-    data = await request.json()
-    projectId = data["projectId"]
+async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
+    projectId = project_spec.projectId
     drop_building_table(projectId)
-    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
-    
-    
-    
-    response_building = interpreter(query_building_parts(bbox))
-    building_polygons = create_building_polygons(projectId,  response_building)
-    persist_building_polygons(connect(), building_polygons)
 
+    response_building = interpreter(query_building_parts(project_spec.bbox))
+    building_polygons = create_building_polygons(project_spec.projectId,  response_building)
+    persist_building_polygons(db_pool, building_polygons)
 
-    response_building_with_hole = interpreter(query_building_with_hole(bbox))
-    for f in response_building_with_hole["elements"]:
-        if "type" in f and f["type"] == "relation":
-            if(f["members"][0]["role"] != "outer"):
-                i = 0
-                for x in f["members"]:
-                    if x["role"] == "outer":
-                        f["members"][0], f["members"][i] = f["members"][i],f["members"][0]
-                        break
-                    i += 1
+    response_building_with_hole = interpreter(query_building_with_hole(project_spec.bbox))
+    transform_building_with_hole(response_building_with_hole)
                 
     bhole = osmtogeojson.process_osm_json(response_building_with_hole)
-    # print(bhole)
-    connectionn = connect()
-    cursorr = connectionn.cursor()
-    insert_query_buildingg = """
-        INSERT INTO building (project_id,wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, amenity, geom) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
-    """
-    for f in bhole["features"]:
-        
-        if "type" in f["properties"] and f["properties"]["type"] == "multipolygon":
-            
-            wallcolor = None
-            if "building:colour" in f["properties"]:
-                wallcolor = f["properties"]["building:colour"]
-            wallmaterial = None
-            if "building:material" in f["properties"]:
-                wallmaterial = f["properties"]["building:material"]
-            roofcolor = None
-            if "roof:colour" in f["properties"]:
-                roofcolor = f["properties"]["roof:colour"]
-            roofmaterial = None
-            if "roof:material" in f["properties"]:
-                roofmaterial = f["properties"]["roof:material"]
-            roofshape = None
-            if "roof:shape" in f["properties"]:
-                roofshape = f["properties"]["roof:shape"]
-            roofheight = None
-            if "roof:height" in f["properties"]:
-                roofheight = f["properties"]["roof:height"]
-                if "," in roofheight:
-                    roofheight = roofheight.replace(",", ".")
-            height = None
-            if "height" in f["properties"]:
-                height = f["properties"]["height"]
-                height = sure_float(height)
-            floors = None
-            if "building:levels" in f["properties"]:
-                floors = f["properties"]["building:levels"]
-                floors = sure_float(floors)
+    building_holes_polygons = create_building_holes_polygons(projectId, bhole)
+    persist_building_polygons(db_pool, building_holes_polygons)
 
-            estimatedheight = None
-            if height is not None:
-                estimatedheight = sure_float(height)
-            elif floors is not None:
-                estimatedheight = sure_float(floors) * 3.5
-            else:
-                estimatedheight = 15
-            amenity = None
-            if "amenity" in f["properties"]:
-                amenity = f["properties"]["amenity"]  
-            cursorr.execute(
-                    insert_query_buildingg,
-                    (
-                        projectId,
-                        wallcolor,
-                        wallmaterial,
-                        roofcolor,
-                        roofmaterial,
-                        roofshape,
-                        roofheight,
-                        height,
-                        floors,
-                        estimatedheight,
-                        amenity,
-                        json.dumps(f["geometry"]),
-                    ),
-            )
-         
-    connectionn.commit()
-    cursorr.close()
-    connectionn.close()
-
-
-    # building refinement: identifing and deleting duplicated buildings and small overlapping building geometries
+    refine_persisted_buildings(db_pool, projectId)
     
-    connection = connect()
-    cursor = connection.cursor()
-    
-    refinement_building_query = f"""
-        with buildingone as (select * from building where project_id = '{projectId}' and st_isvalid(geom))
-
-        delete from building where id in (
-            select building.id from building, buildingone
-            where building.project_id = '{projectId}' 
-                and st_isvalid(building.geom) 
-                and st_equals(building.geom, buildingone.geom) 
-                and building.id <> buildingone.id
-        );
-
-        with buildingone as (select * from building where project_id = '{projectId}' and st_isvalid(geom))
-            
-        delete from building where id in (
-            select building.id from building, buildingone 
-            where building.project_id = '{projectId}' 
-                and st_isvalid(building.geom) 
-                and st_within(building.geom, buildingone.geom) 
-                and building.id <> buildingone.id 
-                and buildingone.estimatedheight >=building.estimatedheight);
-
-    """
-    
-    cursor.execute(refinement_building_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-    
-
+    get_buildings_from_db.cache_clear()
     return "fine"
 
 
-@app.post("/get-buildings-from-db")
-async def get_buildings_from_db_api(request: Request):
-    data = await request.json()
-    return get_buildings_from_db(data)
+@app.get("/get-buildings-from-db")
+def get_buildings_from_db_api(projectId: str):
+    return get_buildings_from_db(db_pool, projectId)
 
 @app.post("/get-quests-from-db")
 async def get_quests_from_db_api(request: Request):

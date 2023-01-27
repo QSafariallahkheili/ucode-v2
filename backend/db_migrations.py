@@ -1,6 +1,6 @@
 from yoyo import get_backend, read_migrations
 
-from db import dbConfig
+from configuration import dbConfig
 
 
 def run_database_migrations()->None:
