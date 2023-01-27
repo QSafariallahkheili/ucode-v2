@@ -7,3 +7,6 @@ __pycache__/
 
 # Exclude vscode plugin logs
 .vscode/*.log
+
+# Exclude application cache
+cache/

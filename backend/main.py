@@ -25,7 +25,7 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 update_voting_status)
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
-from roads import getDriveNetwork
+from services.open_street_map import getDriveNetwork
 from services.overpass import (interpreter, query_bike, query_building_parts,
                                query_building_with_hole, query_fountain,
                                query_greenery, query_serviceroad,
@@ -448,7 +448,7 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     xmax = sure_float(project_spec.bbox.xmax)
     ymax = sure_float(project_spec.bbox.ymax) 
     try:
-        road = getDriveNetwork(ymin, ymax, xmin, xmax)
+        road = getDriveNetwork(project_spec.bbox)
     except ValueError:
         raise HTTPException(
             status_code=412,

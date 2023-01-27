@@ -1,8 +1,8 @@
 import pytest
-from overpass import interpreter
 
 from models import BoundingBox
 from services.overpass import (
+    interpreter,
     query_bike,
     query_building_parts,
     query_building_with_hole,

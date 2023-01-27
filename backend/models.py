@@ -1,7 +1,4 @@
-from dataclasses import dataclass
-
-from pydantic import BaseModel
-
+from dataclasses import astuple, dataclass
 
 @dataclass
 class BoundingBox:
