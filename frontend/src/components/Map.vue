@@ -144,6 +144,7 @@ onMounted(() => {
   map.on('click', 'allComments', function (e) {    
     // @ts-ignore
     document.getElementById(e.features[0].properties.id).scrollIntoView({behavior: 'smooth'}, true);
+    // @ts-ignore
     map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4 , 0.15]);
 
   });

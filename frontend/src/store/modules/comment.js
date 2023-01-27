@@ -8,13 +8,14 @@ const comment = {
         likedCommentIds: [],
         unlikedCommentIds: [],
         deletedComments: []
+
     },
     mutations: {
         setCommentToggle(state) {
             state.toggle = true
         },
         getClickedCommentObject(state, payload) {
-               // TH 19.10.2022 -> Time-relative Timestamd: 
+            // TH 19.10.2022 -> Time-relative Timestamd: 
             // when older than 1 week = the exact timestamp, 
             // when less than 24 houers = e.g. 9 hours before
             // when less tahn 1 hour before = 15 minutes before
@@ -31,9 +32,9 @@ const comment = {
 
             let date = new Date(payload.properties.created_at);
             let puretimestamp = date.toString()
-            
+
             // TH 2022-11-07: if the timestamp is already modified, skip the modifikation
-            if (puretimestamp.includes("GMT"))  {
+            if (puretimestamp.includes("GMT")) {
                 date = new Date(Date.parse(date));
                 date = date.toUTCString();
                 let day = new Date(date).getDate();
@@ -43,12 +44,12 @@ const comment = {
                 if (hours < 10) {
                     hours = "0" + hours
                 };
-    
+
                 let minutes = new Date(date).getMinutes();
                 if (minutes < 10) {
                     minutes = "0" + minutes
                 };
-    
+
                 let seconds = new Date(date).getSeconds();
                 if (seconds < 10) {
                     seconds = "0" + seconds
@@ -59,12 +60,12 @@ const comment = {
                     hours + ":" +
                     minutes + ":" +
                     seconds;
-    
-                payload.properties.created_at = newdate;    
-    
+
+                payload.properties.created_at = newdate;
+
             };
-            
-            state.commentData = payload 
+
+            state.commentData = payload
 
         }
     },
