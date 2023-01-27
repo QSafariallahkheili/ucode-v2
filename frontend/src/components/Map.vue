@@ -7,8 +7,8 @@
           <Quests v-show="tabIndex=='planning'" :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
         </Suspense>
         
-        <PlanningIdeas v-show="store.state.ui.intro==false" v-if="mapStyleLoaded && tabIndex=='planning'" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-            @navigateToPlanningIdea="navigateToPlanningIdea" />
+        <PlanningIdeas v-show="store.state.ui.intro==false && tabIndex=='planning'" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+            @navigateToPlanningIdea="navigateToPlanningIdea" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
         <FreeComment v-show="tabIndex=='planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
           @closeCommentDialog="closeCommentDialog" @hideQuests="() => {hideQuests = true}"/>
         <CommentGallery 
@@ -51,7 +51,7 @@ import { pulseLayer } from "@/utils/pulseLayer";
 import { MapboxLayer } from "@deck.gl/mapbox/typed";
 import { ScenegraphLayer } from "@deck.gl/mesh-layers/typed";
 import * as turf from '@turf/turf';
-import { Map, type CustomLayerInterface, type Feature, type IControl, type LayerSpecification, type LngLatBoundsLike, type LngLatLike, type Popup, Marker } from "maplibre-gl";
+import { Map, type CustomLayerInterface, type Feature, type IControl, type LayerSpecification, type LngLatBoundsLike, type LngLatLike, Popup, Marker } from "maplibre-gl";
 import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
 import { useStore } from "vuex";
 import { deckLightingEffect } from "@/utils/deckLighting";
@@ -133,7 +133,6 @@ onMounted(() => {
   map.on('click', function (mapClick) {
     // @ts-ignore
     mapClicks.clickedCoordinates = [mapClick.lngLat.lng, mapClick.lngLat.lat]
-
     if (store.state.comment.toggle) {
       //@ts-ignore
       addLayerToMap(pulseLayer(store.state.pulse.pulseCoordinates.geometry.coordinates))
@@ -459,6 +458,7 @@ const activateSelectedPlanningIdeaInMap = (selectedFeature: Feature) => {
   }
 }
 
+
 const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
 
   setTimeout(() => {
@@ -468,6 +468,10 @@ const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
       curve: 4,
     });
   }, 1000);
+}
+
+const flyToLocation = (flyOptions:any)=>{
+  map.flyTo(flyOptions)
 }
 
 const switchView = (newTabIndex: string) => {
