@@ -26,7 +26,7 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
 from roads import getDriveNetwork
-from services.overpass import (interpreter, query_building_parts,
+from services.overpass import (interpreter, query_bike, query_building_parts,
                                query_building_with_hole, query_fountain,
                                query_greenery, query_serviceroad,
                                query_traffic_signals, query_tram_lines,
@@ -807,29 +807,10 @@ async def get_bike_from_osm_api(request: Request):
     projectId = data["projectId"]
     drop_bike_table(projectId)
     drop_bike_polygon_table(projectId)
+    bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
-    xmin = sure_float(data['bbox']["xmin"])
-    ymin = sure_float(data['bbox']["ymin"])
-    xmax = sure_float(data['bbox']["xmax"])
-    ymax = sure_float(data['bbox']["ymax"]) 
-
-    overpass_url = "http://overpass-api.de/api/interpreter"
-    overpass_query_bike = """
-         [out:json];
-            way["bicycle"="designated"](%s,%s,%s,%s);
-            convert item ::=::,::geom=geom(),_osm_type=type();
-            out geom;
-     """ % (
-        ymin,
-        xmin,
-        ymax,
-        xmax,
-    )
-
-    response_bike = requests.get(overpass_url, params={"data": overpass_query_bike})
-
-    data_bike = response_bike.json()
-    
+    data_bike = interpreter(query_bike(bbox))
+        
     connection = connect()
     cursor = connection.cursor()
 

@@ -150,3 +150,12 @@ def query_tram_lines(bbox: BoundingBox | str) -> str:
         convert item ::=::,::geom=geom(),_osm_type=type();
         out geom;
      """
+
+
+def query_bike(bbox: BoundingBox | str) -> str:
+    return f"""
+         [out:json];
+            way["bicycle"="designated"]({bbox});
+            convert item ::=::,::geom=geom(),_osm_type=type();
+            out geom;
+     """

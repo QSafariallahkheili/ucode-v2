@@ -3,6 +3,7 @@ from overpass import interpreter
 
 from models import BoundingBox
 from services.overpass import (
+    query_bike,
     query_building_parts,
     query_building_with_hole,
     query_fountain,
@@ -75,3 +76,7 @@ def test_query_walk(snapshot):
 
 def test_query_tram_lines(snapshot):
     assert query_tram_lines(HAMBURG_BBOX) == snapshot
+
+
+def test_query_bike(snapshot):
+    assert query_bike(HAMBURG_BBOX) == snapshot

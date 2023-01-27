@@ -961,6 +961,16 @@
     }),
   ])
 # ---
+# name: test_query_bike
+  '''
+  
+           [out:json];
+              way["bicycle"="designated"](53.539938,10.005326,53.541302,10.008459);
+              convert item ::=::,::geom=geom(),_osm_type=type();
+              out geom;
+       
+  '''
+# ---
 # name: test_query_building_parts
   '''
   
