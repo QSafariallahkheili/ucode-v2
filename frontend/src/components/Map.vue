@@ -1,32 +1,29 @@
 <template>
-    <div class="map-wrap" ref="mapContainer">
-      <div class="map" id="map">
-        <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
-        <ProjectInfo :show="tabIndex=='projectInfo'" />
-        <Suspense>
-          <Quests v-show="tabIndex=='planning'" :hide="hideQuests" @hideQuests="() => {hideQuests = !hideQuests}"/>
-        </Suspense>
-        
-        <PlanningIdeas v-show="store.state.ui.intro==false && tabIndex=='planning'" v-if="mapStyleLoaded" @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-            @navigateToPlanningIdea="navigateToPlanningIdea" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
-        <FreeComment v-show="tabIndex=='planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog" @addComment="addCommentToMap"
-          @closeCommentDialog="closeCommentDialog" @hideQuests="() => {hideQuests = true}"/>
-        <CommentGallery 
-          :show="tabIndex=='discussion'" 
-          @deleteQuestCommentFromSource="deleteQuestCommentFromSource" 
-          @scaleUpComment="scaleUpComment"
-          @toggleCommentLayerVisibility="togglelayerVisibility"
-          @updateCommentSource="addSourceToMap"
-          @addImage="addImageToMap"
-        />
-        
-        <BottomNavigation v-show="store.state.ui.intro==false" @tabIndexChanged="switchView" :tabIndex="tabIndex"/>
-        <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
-          @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
-          :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
-        <Comment @removePulseLayer="removePulseLayerFromMap" />
-        <Intro  v-show="store.state.ui.intro"/>
-      </div>
+  <div class="map-wrap" ref="mapContainer">
+    <div class="map" id="map">
+      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+      <ProjectInfo :show="tabIndex == 'projectInfo'" />
+      <Suspense>
+        <Quests v-show="tabIndex == 'planning'" :hide="hideQuests" @hideQuests="() => { hideQuests = !hideQuests }" />
+      </Suspense>
+
+      <PlanningIdeas v-show="store.state.ui.intro == false && tabIndex == 'planning'" v-if="mapStyleLoaded"
+        @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
+        @navigateToPlanningIdea="navigateToPlanningIdea" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
+      <FreeComment v-show="tabIndex == 'planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog"
+        @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog"
+        @hideQuests="() => { hideQuests = true }" />
+      <CommentGallery :show="tabIndex == 'discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource"
+        @scaleUpComment="scaleUpComment" @toggleLayerVisibility="togglelayerVisibility"
+        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" />
+
+      <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" @toggleLayerVisibility="togglelayerVisibility" :tabIndex="tabIndex"/>
+      <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
+        @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
+        :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
+      <Comment @removePulseLayer="removePulseLayerFromMap" />
+      <Intro v-show="store.state.ui.intro" />
+    </div>
 
   </div>
 </template>
@@ -138,11 +135,11 @@ onMounted(() => {
 
   });
 
-  map.on('click', 'allComments', function (e) {    
+  map.on('click', 'allComments', function (e) {
     // @ts-ignore
-    document.getElementById(e.features[0].properties.id).scrollIntoView({behavior: 'smooth'}, true);
+    document.getElementById(e.features[0].properties.id).scrollIntoView({ behavior: 'smooth' }, true);
     // @ts-ignore
-    map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4 , 0.15]);
+    map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4, 0.15]);
 
   });
 
@@ -177,7 +174,7 @@ const addCommentToMap = (source: any, layer: any) => {
     map?.loadImage('comment.png', (error, image) => {
       if (error) throw error;
       map?.addImage('comment.png', image!);
-       addLayerToMap(layer)
+      addLayerToMap(layer)
     });
   }
   else {
@@ -358,11 +355,13 @@ const addImageToMap = (imgUrl: string) => {
     });
   }
 };
-const scaleUpComment = (hoveredCommentId: number) =>{
-  map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], hoveredCommentId, 0.4 , 0.15]);
+const scaleUpComment = (hoveredCommentId: number) => {
+  map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], hoveredCommentId, 0.4, 0.15]);
 }
-
-const togglelayerVisibility = (layerId:any, visbilityStatus: string) =>{
+/*watch(tabIndex, function () {
+  tabIndex.value !== 'planning'? togglelayerVisibility('ownComments', 'none'):togglelayerVisibility('ownComments', 'visible')
+})*/
+const togglelayerVisibility = (layerId: any, visbilityStatus: string) => {
   const layer = map.getLayer(layerId)
   if (typeof layer !== 'undefined') {
     map.setLayoutProperty(layerId, 'visibility', visbilityStatus);
@@ -449,7 +448,7 @@ const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
   }, 1000);
 }
 
-const flyToLocation = (flyOptions:any)=>{
+const flyToLocation = (flyOptions: any) => {
   map.flyTo(flyOptions)
 }
 
@@ -462,18 +461,18 @@ const closeCommentDialog = () => {
   hideQuests.value = false;
 }
 
-const deleteQuestCommentFromSource = (deletedComment: Feature[])=>{
+const deleteQuestCommentFromSource = (deletedComment: Feature[]) => {
   const ownCommentLayer = map.getLayer("ownComments")
   if (typeof ownCommentLayer !== 'undefined') {
     //@ts-ignore
     let comments = map.getSource("ownComments")?._data
-    for (let i=0; i<comments.features.length; i++){
-      for (let j=0; j<deletedComment?.length; j++){
+    for (let i = 0; i < comments.features.length; i++) {
+      for (let j = 0; j < deletedComment?.length; j++) {
         //@ts-ignore
-        if (Number(comments.features[i]?.geometry?.coordinates[0])?.toFixed(5)==Number(deletedComment[j]?.geometry?.coordinates[0])?.toFixed(5) && Number(comments.features[i]?.geometry?.coordinates[1])?.toFixed(5)==Number(deletedComment[j]?.geometry?.coordinates[1])?.toFixed(5)){
-            comments.features.splice(i, 1);
-            //@ts-ignore
-            map.getSource("ownComments")?.setData(comments);
+        if (Number(comments.features[i]?.geometry?.coordinates[0])?.toFixed(5) == Number(deletedComment[j]?.geometry?.coordinates[0])?.toFixed(5) && Number(comments.features[i]?.geometry?.coordinates[1])?.toFixed(5) == Number(deletedComment[j]?.geometry?.coordinates[1])?.toFixed(5)) {
+          comments.features.splice(i, 1);
+          //@ts-ignore
+          map.getSource("ownComments")?.setData(comments);
         }
       }
     }

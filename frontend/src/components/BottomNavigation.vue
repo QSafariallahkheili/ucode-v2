@@ -33,10 +33,11 @@
         }
     })
 
-    const emit = defineEmits(['tabIndexChanged'])
+    const emit = defineEmits(['tabIndexChanged', 'toggleLayerVisibility'])
 
     const handleValueChange = newValue => {
         if (newValue !== undefined){
+            newValue == 'planning'?emit('toggleLayerVisibility', 'ownComments', 'visible'):emit('toggleLayerVisibility', 'ownComments', 'none')
             emit('tabIndexChanged', newValue)
         }
     }

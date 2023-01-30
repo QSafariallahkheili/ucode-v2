@@ -65,7 +65,7 @@ import comment from '@/store/modules/comment';
 import type { Feature } from '@turf/helpers';
 
 const store = useStore();
-const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleCommentLayerVisibility", "updateCommentSource", "addImage"]);
+const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage"]);
 const projectId = store.state.aoi.projectSpecification.project_id;
 const userId = store.state.aoi.userId;
 let deleteDialog = ref(false)
@@ -322,10 +322,10 @@ const compoundProperty = computed(() => {
 watch(compoundProperty, function () {
 
     if (compoundProperty.value.mapview == true && compoundProperty.value.commentshow == true) {
-        emit('toggleCommentLayerVisibility', 'allComments', 'visible')
+        emit('toggleLayerVisibility', 'allComments', 'visible')
     }
     else {
-        emit('toggleCommentLayerVisibility', 'allComments', 'none')
+        emit('toggleLayerVisibility', 'allComments', 'none')
     }
 
 })
