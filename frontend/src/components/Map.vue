@@ -40,6 +40,10 @@ import BottomNavigation from "@/components/BottomNavigation.vue";
 import CommentGallery from "@/components/CommentGallery.vue";
 import Intro from "@/components/Intro.vue";
 import ProjectInfo from "@/components/ProjectInfo.vue"
+<<<<<<< HEAD
+=======
+import { getCommentsFromDB } from "@/service/backend.service";
+>>>>>>> ab8cbe4 (remove unused function for API call for retrieving comments in map component:getFilteredCommentsFromDB)
 import type { ProjectSpecification } from "@/store/modules/aoi";
 import { HTTP } from "@/utils/http-common";
 import { pulseLayer } from "@/utils/pulseLayer";
