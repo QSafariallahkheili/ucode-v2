@@ -43,8 +43,6 @@ import BottomNavigation from "@/components/BottomNavigation.vue";
 import CommentGallery from "@/components/CommentGallery.vue";
 import Intro from "@/components/Intro.vue";
 import ProjectInfo from "@/components/ProjectInfo.vue"
-import { getCommentsFromDB } from "@/service/backend.service";
-import { getFilteredCommentsFromDB } from "@/service/backend.service";
 import type { ProjectSpecification } from "@/store/modules/aoi";
 import { HTTP } from "@/utils/http-common";
 import { pulseLayer } from "@/utils/pulseLayer";
@@ -179,8 +177,11 @@ const addCommentToMap = (source: any, layer: any) => {
     map?.loadImage('comment.png', (error, image) => {
       if (error) throw error;
       map?.addImage('comment.png', image!);
-      addLayerToMap(layer)
+       addLayerToMap(layer)
     });
+  }
+  else {
+    addLayerToMap(layer)
   }
 }
 
@@ -367,28 +368,6 @@ const togglelayerVisibility = (layerId:any, visbilityStatus: string) =>{
     map.setLayoutProperty(layerId, 'visibility', visbilityStatus);
   }
 }
-  
-
-//TH
-// provides all comments of a project but only the user comments have his/her name, all other are anonymous
-const getFilteredCommentData = async () => {
-  /*
-  const commentLayerFiltered = await getFilteredCommentsFromDB(store.state.aoi.projectId, store.state.aoi.userId);
-  console.log(commentLayerFiltered)
-  addLayerToMap(commentLayerFiltered as unknown as CustomLayerInterface)
-  */
-  const commentLayer = await getFilteredCommentsFromDB(store.state.aoi.projectId, store.state.aoi.userId);
-  console.log(commentLayer)
-  addLayerToMap(commentLayer as unknown as CustomLayerInterface)
-
-};
-
-
-//Show comment symbols on the map
-const getCommentData = async () => {
-  const commentLayer = await getCommentsFromDB(store.state.aoi.projectId);
-  addLayerToMap(commentLayer as unknown as CustomLayerInterface)
-};
 
 // deckgl layder
 const addDeckglShape = () => {

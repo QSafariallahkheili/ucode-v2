@@ -16,7 +16,7 @@
                         :color="comment.properties.color" :key="comment.id" @deleteComment="deleteComment" />
                 </div>
 
-                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); getCommentsFromDB()"
+                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
                     v-if="mapView == false" size="large" icon class="map-comment-view-toggle">
                     <v-icon>mdi-map-outline</v-icon>
                 </v-btn>
@@ -71,6 +71,7 @@ const userId = store.state.aoi.userId;
 let deleteDialog = ref(false)
 let deleteCommentId = ref()
 let mapView = ref(false)
+let commentLayerBuilt = ref(false)
 let filterArray = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }[]>()
 let activfilterOptions = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }[]>([
     { isActive: false, filterOptions: { filterType: 'meine', filterValue: "" } },
@@ -87,7 +88,7 @@ const props = defineProps({
 })
 
 let commentList = ref<any[]>([])
-let commentsAreLoaded = ref(false)
+let commentsAreLoaded = ref<boolean>(false)
 let bottomPositionSortFilter = ref<string>('')
 const delay = (time: number) => {
     return new Promise(resolve => setTimeout(resolve, time));
@@ -102,8 +103,7 @@ const sendCommentRequest = async () => {
 
     const commentData = await getFilteredCommentsFromDB(projectId, userId)
     //@ts-ignore
-    response = commentData.props.data
-    response.forEach(item => {
+    commentData.features.forEach(item => {
         item.properties.user_id !== userId ? otherComments.push(item) : myComments.push(item);
     })
 
@@ -265,36 +265,40 @@ const setMapCommentView = () => {
     mapView.value = !mapView.value
 }
 
-const getCommentsFromDB = async () => {
+const buildCommentLayer = async () => {
+    
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
-    for (let f of filteredCommentList.value) {
-        allComments.features.push(f)
-    }
 
-    let commentSourceLayer = {
-        id: "allComments",
-        geojson: {
-            "type": "geojson",
-            "data": allComments
-        }
-    }
-    let CommentLayer = {
-        'id': "allComments",
-        'type': 'symbol',
-        'source': "allComments",
-        'layout': {
-            'icon-image': 'comment.png', // reference the image
-            'icon-size': 0.15,
-            'icon-offset': [65, 50],
-            'icon-anchor': "bottom",
-            'icon-allow-overlap': true,
-        }
-    }
-    store.commit("map/addSource", commentSourceLayer)
-    emit('addImage', 'comment.png')
-    store.commit("map/addLayer", CommentLayer)
-    //emit('addComment', commentSourceLayer, CommentLayer)
+    allComments.features=filteredCommentList.value
 
+    if (commentLayerBuilt.value==false){
+        let commentSourceLayer = {
+            id: "allComments",
+            geojson: {
+                "type": "geojson",
+                "data": allComments
+            }
+        }
+        let CommentLayer = {
+            'id': "allComments",
+            'type': 'symbol',
+            'source': "allComments",
+            'layout': {
+                'icon-image': 'comment.png', // reference the image
+                'icon-size': 0.15,
+                'icon-offset': [65, 50],
+                'icon-anchor': "bottom",
+                'icon-allow-overlap': true,
+            }
+        }
+        store.commit("map/addSource", commentSourceLayer)
+        emit('addImage', 'comment.png')
+        store.commit("map/addLayer", CommentLayer)
+        commentLayerBuilt.value = true
+    }
+    else {
+        emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
+    }
 
 }
 
@@ -303,20 +307,11 @@ const mouseEnterOnComment = (HoveredCommentId: string) => {
 
 }
 
-onMounted(() => {
-    sendCommentRequest();
-})
 
 watch(props, function () {
     if (props.show) {
         sendCommentRequest();
     }
-})
-watch(props, function () {
-    if (props.show) {
-        sendCommentRequest();
-    }
-
 })
 
 const compoundProperty = computed(() => {
@@ -338,9 +333,8 @@ watch(compoundProperty, function () {
 watch(filteredCommentList, function () {
     if (compoundProperty.value.mapview == true && compoundProperty.value.commentshow == true) {
         let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
-        for (let f of filteredCommentList.value) {
-            allComments.features.push(f)
-        }
+        allComments.features=filteredCommentList.value
+
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
     }
 })
