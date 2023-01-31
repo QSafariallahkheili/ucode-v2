@@ -13,7 +13,7 @@
                         :created_at="comment.properties.created_at" :comment="comment.properties.comment"
                         :user_id="comment.properties.user_id" :likes="comment.properties.likes"
                         :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
-                        :color="comment.properties.color" :key="comment.id" @deleteComment="deleteComment" />
+                        :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment" />
                 </div>
 
                 <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
@@ -65,9 +65,10 @@ import CommentSortAndFilter from "@/components/CommentSortAndFilter.vue"
 import { HTTP } from "@/utils/http-common.js";
 import comment from '@/store/modules/comment';
 import type { Feature } from '@turf/helpers';
+import bbox from "@turf/bbox";
 
 const store = useStore();
-const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage"]);
+const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage", "fitBoundsToBBOX"]);
 const projectId = store.state.aoi.projectSpecification.project_id;
 const userId = store.state.aoi.userId;
 let deleteDialog = ref(false)
@@ -271,9 +272,12 @@ const buildCommentLayer = async () => {
 
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
 
-    allComments.features = filteredCommentList.value
-
-    if (commentLayerBuilt.value == false) {
+    allComments.features=filteredCommentList.value
+    const allCommentsBBOX = bbox(allComments)
+    if (allComments.features.length){
+        emit("fitBoundsToBBOX", allCommentsBBOX)
+    }
+    if (commentLayerBuilt.value==false){
         let commentSourceLayer = {
             id: "allComments",
             geojson: {
@@ -338,6 +342,11 @@ watch(filteredCommentList, function () {
         allComments.features = filteredCommentList.value
 
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
+
+        const allCommentsBBOX = bbox(allComments)
+        if (allComments.features.length){
+            emit("fitBoundsToBBOX", allCommentsBBOX)
+        }
     }
 })
 

@@ -9,13 +9,13 @@
 
       <PlanningIdeas v-show="store.state.ui.intro == false && tabIndex == 'planning'" v-if="mapStyleLoaded"
         @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-        @navigateToPlanningIdea="navigateToPlanningIdea" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
+        @fitBoundsToBBOX="fitBoundsToBBOX" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
       <FreeComment v-show="tabIndex == 'planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog"
         @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog"
         @hideQuests="() => { hideQuests = true }" />
       <CommentGallery :show="tabIndex == 'discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource"
         @scaleUpComment="scaleUpComment" @toggleLayerVisibility="togglelayerVisibility"
-        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" />
+        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" @fitBoundsToBBOX="fitBoundsToBBOX" />
 
       <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" @toggleLayerVisibility="togglelayerVisibility" :tabIndex="tabIndex"/>
       <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
@@ -435,15 +435,18 @@ const activateSelectedPlanningIdeaInMap = (selectedFeature: Feature) => {
 }
 
 
-const navigateToPlanningIdea = (planningIdeaBBOX: LngLatBoundsLike) => {
-
-  setTimeout(() => {
-    map.fitBounds(planningIdeaBBOX, {
-      pitch: 60,
-      duration: 3000,
-      curve: 4,
-    });
-  }, 1000);
+const fitBoundsToBBOX = (planningIdeaBBOX: LngLatBoundsLike) => {
+  map.fitBounds(planningIdeaBBOX, {
+    pitch: 60,
+    duration: 3000,
+    curve: 4,
+    padding: {
+      top: 100,
+      bottom: 300,
+      left: 100,
+      right: 100
+   }
+  });
 }
 
 const flyToLocation = (flyOptions: any) => {

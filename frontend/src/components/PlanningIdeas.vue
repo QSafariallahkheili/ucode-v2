@@ -37,7 +37,7 @@ import { HTTP } from "@/utils/http-common";
 
 const store = useStore();
 
-const emit = defineEmits(["activateSelectedPlanningIdea", "navigateToPlanningIdea", "addPopup", "flyToLocation", "flyToLocation"])
+const emit = defineEmits(["activateSelectedPlanningIdea", "fitBoundsToBBOX", "addPopup", "flyToLocation", "flyToLocation"])
 
 let planningData = reactive<{routes: Feature[]}>({ routes: [] })
 
@@ -249,7 +249,7 @@ watch(store.state.quests, function (state) {
 watch(store.state.ui, function (state) {
   if (state.aoiMapPopulated == true && state.projectsLoaded == true && state.planningIdeasLoaded == true && state.intro == false) {
     const planningIdeaBBOX = bbox(planningData.routes);
-    emit("navigateToPlanningIdea", planningIdeaBBOX)
+    emit("fitBoundsToBBOX", planningIdeaBBOX)
   }
 });
 
