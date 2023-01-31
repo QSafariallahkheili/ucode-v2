@@ -90,7 +90,8 @@ const sendRouteRequest = async () => {
   if (routeData.data.features == null) {
     return
   }
-
+  let baseWidth = 0.1; 
+  let baseZoom = 10;
   planningData.routes = routeData.data
   store.commit("planningIdeas/addPlanningIdeaFeatures", routeData.data)
   store.commit("map/addSource", {
@@ -119,13 +120,42 @@ const sendRouteRequest = async () => {
       //         "#4e76d3",
       // ],//
       'line-color': ['get', 'color'],
-      'line-width': 5,
-      'line-offset': {
+      //'line-width': 5,
+      'line-width':{
+            stops: [[14, 4], [17, 6],[24, 35]]
+      },
+      /*'line-offset': {
         property: "id",
         type: "categorical",
-        stops: [[1, -4], [2, 0], [3, -4]]
-      },
-      //'line-dasharray': [1,5]
+        stops: [[1,-5], [2, 0], [3, -5]]
+      },*/
+      'line-offset':
+          ['interpolate', ['linear'], ['zoom'],
+            14,
+            ['case',
+                ["==", ["get", "id"], 1],
+                -4,
+                ["==", ["get", "id"], 3],
+                -4,
+                0
+            ],
+            17,
+            ['case',
+                ["==", ["get", "id"], 1],
+                -6,
+                ["==", ["get", "id"], 3],
+                -6,
+                0
+            ],
+            24,
+            ['case',
+                ["==", ["get", "id"], 1],
+                -35,
+                ["==", ["get", "id"], 3],
+                -35,
+                0
+            ]
+          ]
     }
   })
   // store.commit("map/addLayer", {
