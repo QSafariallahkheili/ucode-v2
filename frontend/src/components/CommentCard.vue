@@ -5,7 +5,7 @@
     >
         <div @click="() => {isExtended = !isExtended}">
             <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
-            <div :id="props.id" :class="isExtended?'comment-text text-body-1 is-extended':'comment-text text-body-1'">{{props.comment}}</div>
+            <div :id="props.id" :class="props.mapView? isExtended?'comment-text-small text-body-1 is-extended':'comment-text-small text-body-1':isExtended?'comment-text text-body-1 is-extended':'comment-text text-body-1'">{{props.comment}}</div>
             <div class="text-body-2 show-more" :style="contentIsOverflowing && !isExtended?'opacity: 0.5 !important': 'opacity: 0 !important'">mehr Anzeigen</div>
         </div>
         <div class="action-area">
@@ -95,6 +95,10 @@ const props = defineProps({
     color: {
         type: String,
         default: "#FFFFFF"
+    },
+    mapView:{
+        type: Boolean,
+        default: false
     }
 })
 let voting_status = ref(props.voting_status==="undefined"?undefined:props.voting_status)
@@ -200,6 +204,14 @@ onMounted(() => {
     transition: max-height 0.3s ease-in-out;
     
 }
+.comment-text-small{
+    min-height: 1.5rem;
+    max-height: 1.5rem;
+    white-space: pre-line;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    
+}
 .is-extended{
     max-height: 20rem;
     
@@ -225,6 +237,7 @@ onMounted(() => {
 .btn-end{
     font-size: 1rem;
     margin-left: 1rem;
+    height:48px
 }
 .reaction{
     background: rgb(0,0,0,0.02) !important;

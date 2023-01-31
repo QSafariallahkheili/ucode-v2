@@ -1,5 +1,5 @@
 <template>
-    <div class="comment-gallery-wrapper">
+    <div class="comment-gallery-wrapper" v-if="props.show">
 
         <DeletingDialog v-if="(commentsAreLoaded && props.show)" :deleteDialog="deleteDialog"
             @cnacelDeleteDialog="cnacelDeleteDialog" @confirmDeleteCommentDialog="confirmDeleteCommentDialog" />
@@ -29,26 +29,28 @@
                 </div>
             </div>
         </transition>
-        <div v-if="props.show && mapView == true"
-            style="margin-bottom:10px; z-index: 1100; position: absolute; bottom: 340px; right: 1.5rem">
-            <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); " size="large" icon
-                class="comment-view-toggle">
-                <v-icon>mdi-format-list-bulleted</v-icon>
-            </v-btn>
-        </div>
-        <CommentSortAndFilter v-if="props.show && mapView == true" @sortComment="sortComment"
-            @multifFilterComment="multifFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter" :activfilterOptions="activfilterOptions" />
-        <div class="map-card" v-if="props.show && mapView == true">
-            <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id">
+        <div class="map-comment-container">
+            <div v-if="props.show && mapView == true">
+                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); " size="large" icon class="list-comment-view-toggle">
+                    <v-icon>mdi-format-list-bulleted</v-icon>
+                </v-btn>
+            </div>
+            <div class="map-card" v-if="props.show && mapView == true">
+                <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id">
 
-                <CommentCard :id="comment.properties.id" :created_at="comment.properties.created_at"
-                    :comment="comment.properties.comment" :user_id="comment.properties.user_id"
-                    :likes="comment.properties.likes" :dislikes="comment.properties.dislikes"
-                    :voting_status="comment.properties.voting_status" :color="comment.properties.color"
-                    :key="comment.properties.id" @deleteComment="deleteComment"
-                    @mouseenter="mouseEnterOnComment(comment.properties.id)" />
+                    <CommentCard :id="comment.properties.id" :created_at="comment.properties.created_at"
+                        :comment="comment.properties.comment" :user_id="comment.properties.user_id"
+                        :likes="comment.properties.likes" :dislikes="comment.properties.dislikes"
+                        :voting_status="comment.properties.voting_status" :color="comment.properties.color"
+                        :key="comment.properties.id" @deleteComment="deleteComment"
+                        @mouseenter="mouseEnterOnComment(comment.properties.id)" :mapView="mapView" />
+                </div>
             </div>
         </div>
+        <CommentSortAndFilter v-if="props.show && mapView == true" @sortComment="sortComment"
+            @multifFilterComment="multifFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter"
+            :activfilterOptions="activfilterOptions" />
+
     </div>
 </template>
 
@@ -72,8 +74,8 @@ let deleteDialog = ref(false)
 let deleteCommentId = ref()
 let mapView = ref(false)
 let commentLayerBuilt = ref(false)
-let filterArray = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }[]>()
-let activfilterOptions = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }[]>([
+let filterArray = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]>()
+let activfilterOptions = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]>([
     { isActive: false, filterOptions: { filterType: 'meine', filterValue: "" } },
     { isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: 1 } },
     { isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: 2 } },
@@ -179,15 +181,15 @@ const sortComment = (sortOption: string) => {
     }
 }
 
-const multifFilterComment = (filterOption: { isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }[]) => {
-    
+const multifFilterComment = (filterOption: { isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]) => {
+
     activfilterOptions.value = filterOption
     filterArray.value = activfilterOptions.value
 }
 
 const filteredCommentList = computed(() => {
     let filterAr = filterArray.value
-    if (!filterAr || filterAr.filter(f=>f.isActive==true).length==0) {
+    if (!filterAr || filterAr.filter(f => f.isActive == true).length == 0) {
         filteredList = commentList.value
         if (currentSorting.value != "") {
             sortComment(currentSorting.value)
@@ -266,12 +268,12 @@ const setMapCommentView = () => {
 }
 
 const buildCommentLayer = async () => {
-    
+
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
 
-    allComments.features=filteredCommentList.value
+    allComments.features = filteredCommentList.value
 
-    if (commentLayerBuilt.value==false){
+    if (commentLayerBuilt.value == false) {
         let commentSourceLayer = {
             id: "allComments",
             geojson: {
@@ -333,7 +335,7 @@ watch(compoundProperty, function () {
 watch(filteredCommentList, function () {
     if (compoundProperty.value.mapview == true && compoundProperty.value.commentshow == true) {
         let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
-        allComments.features=filteredCommentList.value
+        allComments.features = filteredCommentList.value
 
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
     }
@@ -347,6 +349,17 @@ watch(filteredCommentList, function () {
     width: 100%;
 }
 
+.map-comment-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: relative;
+    bottom: 113px;
+    z-index: 1105;
+}
+.list-comment-view-toggle{
+    margin: 0 1.5rem 1rem 0
+}
 .comment-list {
     position: fixed;
     top: 0px;
@@ -387,12 +400,11 @@ watch(filteredCommentList, function () {
 }
 
 .map-card {
-    padding: 0 1.5rem 0 1.5rem !important;
-    position: fixed;
-    bottom: 110px;
-    z-index: 1100;
+    padding: 0 1rem 1rem 1rem !important;
+    position: relative;
     max-width: 100%;
     display: flex;
+    align-items: flex-end;
     overflow-x: scroll;
 }
 
@@ -404,7 +416,7 @@ watch(filteredCommentList, function () {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     border-radius: 18px;
-    width: calc(100vw - 8rem) !important;
+    width: calc(100vw - 3rem) !important;
     top: 0 !important
 }
 
