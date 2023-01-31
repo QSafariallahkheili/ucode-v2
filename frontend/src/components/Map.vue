@@ -51,10 +51,10 @@ import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } fr
 import { useStore } from "vuex";
 import { deckLightingEffect } from "@/utils/deckLighting";
 
-
 const store = useStore();
 
 const devMode = computed(() => store.getters["ui/devMode"]);
+
 
 const mapContainer = shallowRef(null);
 let map: Map = {} as Map;
@@ -358,9 +358,7 @@ const addImageToMap = (imgUrl: string) => {
 const scaleUpComment = (hoveredCommentId: number) => {
   map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], hoveredCommentId, 0.4, 0.15]);
 }
-/*watch(tabIndex, function () {
-  tabIndex.value !== 'planning'? togglelayerVisibility('ownComments', 'none'):togglelayerVisibility('ownComments', 'visible')
-})*/
+
 const togglelayerVisibility = (layerId: any, visbilityStatus: string) => {
   const layer = map.getLayer(layerId)
   if (typeof layer !== 'undefined') {

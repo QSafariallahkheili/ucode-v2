@@ -36,7 +36,7 @@ import { prepareQuestsUserTable, getQuestsFulfillmentFromDB } from "@/service/ba
 import QuestCard from "@/components/QuestCard.vue";
 import QuestStepper from "@/components/QuestStepper.vue"
 import QuestsCompletedDialog from "@/components/QuestsCompletedDialog.vue"
-import { onMounted, ref } from "vue"
+import { watch, onMounted, ref } from "vue"
 
 const store = useStore();
 
@@ -50,6 +50,18 @@ const props = defineProps({
 const showAllQuestsCompletedDialog = ref(false)
 const emit = defineEmits(["hideQuests"])
 
+watch(store.state.quests, function (state) {
+  if (Object.keys(state.questList).length === 0) {
+  }
+  else {
+    let quest = state.questList
+    for (let i in state.questList) {
+      if (quest[i]["order_id"] == state.current_order_id) {
+        state.current_quest_type=quest[i].type
+      }
+    }
+  }
+})
 
 await prepareQuestsUserTable(store.state.aoi.projectId, store.state.aoi.userId)
 

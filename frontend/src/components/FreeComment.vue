@@ -1,6 +1,6 @@
 <template>
     <div class="comment-container">
-        <v-btn id="comment-btn" size="large" height="48px" rounded="pill" color="primary"
+        <v-btn v-show="store.state.quests.current_quest_type==2" id="comment-btn" size="large" height="48px" rounded="pill" color="primary"
             @click="placeComment">
             Kommentieren
         </v-btn>
@@ -35,7 +35,7 @@
 <script lang="ts" setup>
 import { useStore } from 'vuex';
 import { HTTP } from '@/utils/http-common';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import type { FeatureCollection } from 'geojson';
 const store = useStore()
 let commentText = ref<string>("")
@@ -50,7 +50,18 @@ const props = defineProps({
     }
 })
 const emit = defineEmits(["addComment", "hideQuests","closeCommentDialog", "placeComment"])
-
+/*const currentQuestType = computed(() => {
+  if (Object.keys(store.state.quests.questList).length === 0) {
+  }
+  else {
+    let quest = store.state.quests.questList
+    for (let i in store.state.quests.questList) {
+      if (quest[i]["order_id"] == store.state.quests.current_order_id) {
+        return quest[i].type
+      }
+    }
+  }
+})*/
 function cancelComment() {
     // store.commit('freecomment/setMoveComment', false)
     commentText.value = ""
