@@ -142,6 +142,26 @@ onMounted(() => {
     map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4, 0.15]);
 
   });
+  map.on('click', 'clustered-comments', function (e) {
+    let features = map.queryRenderedFeatures(e.point, {
+      layers: ['clustered-comments']
+    });
+    let clusterId = features[0].properties.cluster_id;
+    // @ts-ignore
+    map.getSource('allComments').getClusterExpansionZoom(
+      clusterId,
+      function (err: any, zoom: any) {
+        if (err) return;
+    
+        map.easeTo({
+          // @ts-ignore
+          center: features[0].geometry.coordinates,
+          zoom: zoom
+        });
+      }
+    );
+  });
+ 
 
   map.on('draw.create', () => {
     lineDrawCreated.value = 1

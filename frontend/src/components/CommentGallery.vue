@@ -282,12 +282,16 @@ const buildCommentLayer = async () => {
             id: "allComments",
             geojson: {
                 "type": "geojson",
-                "data": allComments
+                "data": allComments,
+                'cluster': true,
+                'clusterMaxZoom': 24,
+                'clusterRadius': 50,
             }
         }
-        let CommentLayer = {
-            'id': "allComments",
+        let clusteredCommentLayer = {
+            'id': "clustered-comments",
             'type': 'symbol',
+            'filter': ['has', 'point_count'],
             'source': "allComments",
             'layout': {
                 'icon-image': 'comment.png', // reference the image
@@ -295,11 +299,38 @@ const buildCommentLayer = async () => {
                 'icon-offset': [65, 0],
                 'icon-anchor': "bottom",
                 'icon-allow-overlap': true,
+                'text-field': '{point_count_abbreviated}',
+                'text-font': ['Open Sans Bold'],
+                'text-size': 12,
+                'text-allow-overlap': true,
+                'text-offset': [1.9, -2.65]
+            },
+            'paint': {
+                'text-color': "white",
+                "text-halo-color": "#333133",
+                "text-halo-width": 10
             }
+
         }
-        store.commit("map/addSource", commentSourceLayer)
+        
+       let unclusteredComments = {
+            id: 'allComments',
+            type: 'symbol',
+            source: 'allComments',
+            filter: ['!', ['has', 'point_count']],
+            layout: {
+                'icon-image': 'comment.png',
+                'icon-size': 0.15,
+                'icon-offset': [65, 0],
+                'icon-anchor': "bottom",
+                'icon-allow-overlap': true,
+            },
+        };
+
         emit('addImage', 'comment.png')
-        store.commit("map/addLayer", CommentLayer)
+        store.commit("map/addSource", commentSourceLayer)
+        store.commit("map/addLayer", clusteredCommentLayer)
+        store.commit("map/addLayer", unclusteredComments)
         commentLayerBuilt.value = true
     }
     else {
@@ -329,9 +360,11 @@ watch(compoundProperty, function () {
 
     if (compoundProperty.value.mapview == true && compoundProperty.value.commentshow == true) {
         emit('toggleLayerVisibility', 'allComments', 'visible')
+         emit('toggleLayerVisibility', 'clustered-comments', 'visible')
     }
     else {
         emit('toggleLayerVisibility', 'allComments', 'none')
+         emit('toggleLayerVisibility', 'clustered-comments', 'none')
     }
 
 })

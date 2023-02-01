@@ -18,27 +18,28 @@ const map = {
             'center': [0, 0],
             'zoom': 0,
             'sources': {
-            'raster-tiles': {
-            'type': 'raster',
-            'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            'tileSize': 256,
-            'minzoom': 0,
-            'maxzoom': 19
-            }
+                'raster-tiles': {
+                    'type': 'raster',
+                    'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    'tileSize': 256,
+                    'minzoom': 0,
+                    'maxzoom': 19
+                }
             },
+            "glyphs": "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
             'layers': [
-            {
-            'id': 'background',
-            'type': 'background',
-            'paint': {
-            'background-color': '#e0dfdf'
-            }
-            },
-            {
-            'id': 'simple-tiles',
-            'type': 'raster',
-            'source': 'raster-tiles'
-            }
+                {
+                    'id': 'background',
+                    'type': 'background',
+                    'paint': {
+                    'background-color': '#e0dfdf'
+                    }
+                },
+                {
+                'id': 'simple-tiles',
+                'type': 'raster',
+                'source': 'raster-tiles'
+                }
             ],
             'id': 'blank'
         }
