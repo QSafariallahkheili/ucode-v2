@@ -5,7 +5,7 @@
             <div class="projectInfo-content">
                 <div class="v-item-group" v-for="n in sectionsLength" :value="n" :key="n">
                     <div class="text-body-1 font-weight-bold info-sub-headline">{{ Object.keys(sections)[n - 1] }}</div>
-                    <div class="text-body-2 info-text">{{ Object.values(sections)[n - 1] }}</div>
+                    <div class="text-body-2 info-text" v-html="Object.values(sections)[n - 1]"></div>
                 </div>
             </div>
         </v-card>

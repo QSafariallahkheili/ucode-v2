@@ -6,7 +6,7 @@
                     <v-card-actions class="justify-center" style="margin: auto; padding: 0px !important;">
                         <div class="text-body-1 font-weight-bold text-center"> {{ Object.keys(sections)[n - 1] }} </div>
                     </v-card-actions>
-                    <div class="text-body-2 intro-text">{{ Object.values(sections)[n - 1] }}</div>
+                    <div class="text-body-2 intro-text" v-html="Object.values(sections)[n - 1]"></div>
                 </v-window-item>
             </v-window>
             <v-card-actions class="justify-space-between">

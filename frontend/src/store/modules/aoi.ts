@@ -71,7 +71,7 @@ const aoi = {
       state.projectSpecification = payload;
       state.projectInformation = {
         'Was ist das Ziel des Projekts?': payload.project_goal,
-        'Wie benutze ich die App?': "Wenn Sie diese Anleitung beendet haben, sehen sie auf dem Bildschirm das Mainzer Areal als 3D-Modell, sowie im oberen Bereich die zu erfüllenden Aufgaben sowie im unteren Bereich mehrere Knöpfe, welche die Streckenvarianten anzeigen.",
+        'Wie benutze ich die App?': "Wenn Sie diese Anleitung beendet haben, sehen sie auf dem Bildschirm das Mainzer Areal als <span class='font-weight-bold'>3D-Modell</span>, sowie im oberen Bereich die zu erfüllenden <span class='font-weight-bold'>Aufgaben</span> sowie im unteren Bereich mehrere Knöpfe, welche die <span class='font-weight-bold'>Streckenvarianten</span> anzeigen.",
         'Wie bearbeite ich die Aufgaben?': "Ihre Aufgabe in diesem Projekt ist es, an verschiedene Stellen auf der Karte Kommentare zu setzen, um eine ortsbezogene Kommentierung zu erreichen."
     }
     },
