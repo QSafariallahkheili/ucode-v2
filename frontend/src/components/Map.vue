@@ -455,18 +455,8 @@ const activateSelectedPlanningIdeaInMap = (selectedFeature: Feature) => {
 }
 
 
-const fitBoundsToBBOX = (planningIdeaBBOX: LngLatBoundsLike) => {
-  map.fitBounds(planningIdeaBBOX, {
-    pitch: 60,
-    duration: 3000,
-    curve: 4,
-    padding: {
-      top: 100,
-      bottom: 300,
-      left: 100,
-      right: 100
-   }
-  });
+const fitBoundsToBBOX = (planningIdeaBBOX: LngLatBoundsLike, fitBoundsOptions: any) => {
+  map.fitBounds(planningIdeaBBOX, fitBoundsOptions);
 }
 
 const flyToLocation = (flyOptions: any) => {

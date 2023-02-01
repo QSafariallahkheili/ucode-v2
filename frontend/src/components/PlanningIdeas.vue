@@ -249,7 +249,20 @@ watch(store.state.quests, function (state) {
 watch(store.state.ui, function (state) {
   if (state.aoiMapPopulated == true && state.projectsLoaded == true && state.planningIdeasLoaded == true && state.intro == false) {
     const planningIdeaBBOX = bbox(planningData.routes);
-    emit("fitBoundsToBBOX", planningIdeaBBOX)
+    const fitBoundsOptions = 
+    {
+      pitch: 50,
+      duration: 3000,
+      curve: 4,
+      padding: {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 30
+      }
+    }
+
+    emit("fitBoundsToBBOX", planningIdeaBBOX, fitBoundsOptions)
   }
 });
 

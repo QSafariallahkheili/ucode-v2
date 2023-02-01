@@ -377,8 +377,20 @@ watch(filteredCommentList, function () {
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
 
         const allCommentsBBOX = bbox(allComments)
+        const fitBoundsOptions = 
+            {
+                pitch: 60,
+                duration: 3000,
+                curve: 1,
+                padding: {
+                    top: 100,
+                    bottom: 300,
+                    left: 100,
+                    right: 100
+                }
+            }
         if (allComments.features.length){
-            emit("fitBoundsToBBOX", allCommentsBBOX)
+            emit("fitBoundsToBBOX", allCommentsBBOX, fitBoundsOptions)
         }
     }
 })
