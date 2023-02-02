@@ -1,9 +1,10 @@
 <template>
 
-  <v-col  cols="6" md="3"  style="position:absolute; left: 0; top:0; z-index:999; width:800px">
+  <v-col  cols="6" md="3"  style="position:absolute; left: 0; top:50px; z-index:999; width:800px">
     <v-btn color="#41b883" class="mt-2" @click="clearServerCache">
       Clear server cache
     </v-btn>
+    
     <!-- <v-btn color="success" class="ml-1" @click="getFilteredCommentData">
       Show filtered comments
     </v-btn> -->
@@ -13,18 +14,21 @@
     <v-btn color="#41b883" class="mt-2" @click="ShoQuestsFulfillment">
       Show quest data 
     </v-btn>
-
-
-  </v-col>
-
-  <v-col cols="6" md="3"  style="position: absolute; right: 0; top: 0; z-index: 999">
-
     <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
       Import from OSM
     </v-btn>
+    <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
+      Import from OSM
+    </v-btn>
+    
     <v-btn color="#41b883" @click="emit('startPopulate')" class="mt-2">
       Load from DB
     </v-btn>
+
+  </v-col>
+
+  <v-col cols="6" md="3"  style="position: absolute; right: 0; top: 50px; z-index: 999">
+  
     <v-select :items="['get', 'retrieve']" label="building" variant="outlined" @update:modelValue="sendBuildingRequest">
     </v-select>
     <v-select :items="['get', 'retrieve']" :label="$t('AOI.greenery')" variant="outlined"
