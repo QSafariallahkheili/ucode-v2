@@ -15,7 +15,7 @@
         @hideQuests="() => { hideQuests = true }" />
       <CommentGallery :show="tabIndex == 'discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource"
         @scaleUpComment="scaleUpComment" @toggleLayerVisibility="togglelayerVisibility"
-        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" @fitBoundsToBBOX="fitBoundsToBBOX" />
+        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" @fitBoundsToBBOX="fitBoundsToBBOX" @flyToLocation="flyToLocation" />
 
       <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" @toggleLayerVisibility="togglelayerVisibility" :tabIndex="tabIndex"/>
       <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"

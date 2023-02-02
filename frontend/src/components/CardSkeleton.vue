@@ -13,6 +13,7 @@
             <v-chip class="skeleton-chip" color="primary" ></v-chip>
             <div class="skeleton-btn"></div>
             <div class="skeleton-btn"></div>
+            <div class="skeleton-btn"></div>
         </div>
     </v-card>
 </template>

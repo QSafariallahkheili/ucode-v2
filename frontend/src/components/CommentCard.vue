@@ -1,56 +1,47 @@
 <template>
-    <v-card
-        elevation="3"
-        :style="{'--borderColor': props.color?props.color: '#ffffff'}"
-    >
-        <div @click="() => {isExtended = !isExtended}">
-            <div class="time-text text-body-2 text-disabled">{{getRelativeTime(props.created_at)}}</div>
-            <div :id="props.id" :class="props.mapView? isExtended?'comment-text-small text-body-1 is-extended':'comment-text-small text-body-1':isExtended?'comment-text text-body-1 is-extended':'comment-text text-body-1'">{{props.comment}}</div>
-            <div class="text-body-2 show-more" :style="contentIsOverflowing && !isExtended?'opacity: 0.5 !important': 'opacity: 0 !important'">mehr Anzeigen</div>
+    <v-card elevation="3" :style="{ '--borderColor': props.color ? props.color : '#ffffff' }">
+        <div @click="() => { isExtended = !isExtended }">
+            <div class="time-text text-body-2 text-disabled">{{ getRelativeTime(props.created_at) }}</div>
+            <div :id="props.id"
+                :class="props.mapView ? isExtended ? 'comment-text-small text-body-1 is-extended' : 'comment-text-small text-body-1' : isExtended ? 'comment-text text-body-1 is-extended' : 'comment-text text-body-1'">
+                {{ props.comment }}</div>
+            <div class="text-body-2 show-more"
+                :style="contentIsOverflowing && !isExtended ? 'opacity: 0.5 !important' : 'opacity: 0 !important'">mehr
+                Anzeigen</div>
         </div>
         <div class="action-area">
-            <v-chip v-if="props.user_id === userId" variant="elevated" size="small" color="primary" >Mein</v-chip>
-            <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-up-outline">{{ props.likes }}</v-chip>
-            <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-down-outline" class="last-chip">{{ props.dislikes }}</v-chip>
-            <v-btn
-                v-if="(props.user_id === userId && (likes === 0 && dislikes === 0) && false)"
-                class="btn-end"
-                variant="plain"
-                size="small"
-                icon="mdi-pencil"
-            ></v-btn>
-            <v-btn
-                v-if="props.user_id === userId"
-                class="btn-end"
-                variant="plain"
-                size="small"
-                icon="mdi-delete"
-                @click="deleteComment(props.id)"
-            ></v-btn> 
+            <v-chip v-if="props.user_id === userId" variant="elevated" size="small" color="primary">Mein</v-chip>
+            <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-up-outline">{{
+                props.likes
+            }}</v-chip>
+            <v-chip v-if="props.user_id === userId" variant="text" size="small" append-icon="mdi-thumb-down-outline"
+                class="last-chip">{{ props.dislikes }}</v-chip>
+            <v-btn class="reaction-btn" :icon="isMagnified?'mdi-magnify-minus-outline':'mdi-magnify-plus-outline'" variant="text" v-show="props.mapView"
+                @click="isMagnified?zoomToAllComments():zoomToComment(props.id);">
+            </v-btn>
+            <v-btn v-if="(props.user_id === userId && (likes === 0 && dislikes === 0) && false)" class="btn-end"
+                variant="plain" size="small" icon="mdi-pencil"></v-btn>
+            <v-btn v-if="props.user_id === userId" class="btn-end" variant="plain" size="small" icon="mdi-delete"
+                @click="deleteComment(props.id)"></v-btn>
 
-            <v-btn-toggle
-                v-if="props.user_id !== userId"
-                v-model="voting_status"
-                variant="text"
-                color="secondary"
-                rounded="xl"
-                class="reaction"
-            >
+            <v-btn-toggle v-if="props.user_id !== userId" v-model="voting_status" variant="text" color="secondary"
+                rounded="xl" class="reaction">
                 <v-btn value="like" class="reaction-btn" @click="like">
                     <v-icon start>
-                        {{voting_status === "like"?'mdi-thumb-up':'mdi-thumb-up-outline'}}
+                        {{ voting_status === "like" ? 'mdi-thumb-up' : 'mdi-thumb-up-outline'}}
                     </v-icon>
-                    {{ voting_status !== undefined? voting_status === 'like'? likes+1 : likes : '' }}
+                    {{ voting_status !== undefined ? voting_status === 'like' ? likes + 1 : likes : '' }}
                 </v-btn>
-                <v-divider vertical/>
+                <v-divider vertical />
                 <v-btn value="dislike" class="reaction-btn" @click="dislike">
-                    {{ voting_status !== undefined? voting_status === 'dislike'? dislikes+1 : dislikes : ''}}
+                    {{ voting_status !== undefined ? voting_status === 'dislike' ? dislikes + 1 : dislikes : ''}}
                     <v-icon end>
-                        {{voting_status === "dislike"?'mdi-thumb-down':'mdi-thumb-down-outline'}}
+                        {{ voting_status === "dislike" ? 'mdi-thumb-down' : 'mdi-thumb-down-outline'}}
                     </v-icon>
 
                 </v-btn>
             </v-btn-toggle>
+
         </div>
     </v-card>
 </template>
@@ -60,15 +51,15 @@ import { useStore } from "vuex";
 import { ref, onMounted } from 'vue';
 import { HTTP } from "@/utils/http-common.js";
 
-const store = useStore(); 
+const store = useStore();
 const userId = store.state.aoi.userId;
-const emit = defineEmits(["deleteComment"]);
+const emit = defineEmits(["deleteComment", "zoomToComment", "zoomToAllComments"]);
 
 const props = defineProps({
     id: {
         type: Number,
         default: undefined
-    },created_at: {
+    }, created_at: {
         type: String,
         default: "2022-01-01T00:00:00.000000+00:00"
     },
@@ -96,17 +87,18 @@ const props = defineProps({
         type: String,
         default: "#FFFFFF"
     },
-    mapView:{
+    mapView: {
         type: Boolean,
         default: false
     }
 })
-let voting_status = ref(props.voting_status==="undefined"?undefined:props.voting_status)
-let likes = ref(voting_status.value!=='like' || props.user_id === userId?props.likes:props.likes-1)
-let dislikes = ref(voting_status.value!=='dislike' || props.user_id === userId?props.dislikes:props.dislikes-1)
-let borderColor =  ref('red')
+let voting_status = ref(props.voting_status === "undefined" ? undefined : props.voting_status)
+let likes = ref(voting_status.value !== 'like' || props.user_id === userId ? props.likes : props.likes - 1)
+let dislikes = ref(voting_status.value !== 'dislike' || props.user_id === userId ? props.dislikes : props.dislikes - 1)
+let borderColor = ref('red')
 const isExtended = ref(false)
 const contentIsOverflowing = ref(false)
+let isMagnified = ref(false)
 
 const getRelativeTime = (timestamp) => {
     let today = new Date();
@@ -119,145 +111,164 @@ const getRelativeTime = (timestamp) => {
     var elapsed = today - new Date(timestamp);
 
     if (elapsed < msPerMinute) {
-        let ending = Math.round(elapsed/1000) === 1?' Sekunde':' Sekunden'
-        return 'vor ' + Math.round(elapsed/1000) + ending;  
+        let ending = Math.round(elapsed / 1000) === 1 ? ' Sekunde' : ' Sekunden'
+        return 'vor ' + Math.round(elapsed / 1000) + ending;
     }
 
     else if (elapsed < msPerHour) {
-        let ending = Math.round(elapsed/msPerMinute) === 1?' Minute':' Minuten'
-        return 'vor ' + Math.round(elapsed/msPerMinute) +ending; 
+        let ending = Math.round(elapsed / msPerMinute) === 1 ? ' Minute' : ' Minuten'
+        return 'vor ' + Math.round(elapsed / msPerMinute) + ending;
     }
 
-    else if (elapsed < msPerDay ) {
-        let ending = Math.round(elapsed/msPerHour) === 1?' Stunde':' Stunden'
-        return 'vor ' + Math.round(elapsed/msPerHour) +ending; 
+    else if (elapsed < msPerDay) {
+        let ending = Math.round(elapsed / msPerHour) === 1 ? ' Stunde' : ' Stunden'
+        return 'vor ' + Math.round(elapsed / msPerHour) + ending;
     }
 
     else if (elapsed < msPerMonth) {
-        let ending = Math.round(elapsed/msPerDay) === 1?' Tag':' Tagen'
-        return 'vor ' + Math.round(elapsed/msPerDay) +ending;  
+        let ending = Math.round(elapsed / msPerDay) === 1 ? ' Tag' : ' Tagen'
+        return 'vor ' + Math.round(elapsed / msPerDay) + ending;
     }
 
     else if (elapsed < msPerYear) {
-        let ending = Math.round(elapsed/msPerMonth) === 1?' Monat':' Monate'
-        return 'vor ' + Math.round(elapsed/msPerMonth) +ending;     
+        let ending = Math.round(elapsed / msPerMonth) === 1 ? ' Monat' : ' Monate'
+        return 'vor ' + Math.round(elapsed / msPerMonth) + ending;
     }
 
     else {
-        let ending = Math.round(elapsed/msPerYear) === 1?' Jahr':' Jahren'
-        return 'vor ' + Math.round(elapsed/msPerYear) +ending;    
+        let ending = Math.round(elapsed / msPerYear) === 1 ? ' Jahr' : ' Jahren'
+        return 'vor ' + Math.round(elapsed / msPerYear) + ending;
     }
 }
 
 const like = async () => {
-    const response = await HTTP.get("update-voting-status",{
-    params: {
-        commentId: props.id,
-        userId: userId,
-        action: "like"
-    }
+    const response = await HTTP.get("update-voting-status", {
+        params: {
+            commentId: props.id,
+            userId: userId,
+            action: "like"
+        }
     })
     // console.log(response)
 }
 
 const dislike = async () => {
-    const response = await HTTP.get("update-voting-status",{
-    params: {
-        commentId: props.id,
-        userId: userId,
-        action: "dislike"
-    }
+    const response = await HTTP.get("update-voting-status", {
+        params: {
+            commentId: props.id,
+            userId: userId,
+            action: "dislike"
+        }
     })
     // console.log(response)
 }
 
-const deleteComment = (id)=>{
+const deleteComment = (id) => {
     emit("deleteComment", id)
+}
+
+const zoomToComment = (id) => {
+    emit("zoomToComment", id)
+    isMagnified.value = !isMagnified.value
+}
+const zoomToAllComments = (id) => {
+    emit('zoomToAllComments');
+    isMagnified.value = !isMagnified.value
 }
 
 onMounted(() => {
     const el = document.getElementById(props.id)
-    contentIsOverflowing.value = el.offsetHeight < el.scrollHeight?true:false
+    contentIsOverflowing.value = el.offsetHeight < el.scrollHeight ? true : false
 })
 </script>
 
 <style scoped>
-
-.v-card{
+.v-card {
     margin: 1.5rem 0rem;
     margin-left: 50%;
     padding: 1.5rem 1.5rem 1.5rem 2.5rem !important;
     transform: translateX(-50%);
     width: calc(100% - 3rem) !important;
     border-radius: 18px;
-    top: 60px /* margin to the sticky commentSortFilter component */
+    top: 60px
+        /* margin to the sticky commentSortFilter component */
 }
-.time-text{
+
+.time-text {
     margin-bottom: 0.5rem;
 }
 
-.comment-text{
+.comment-text {
     min-height: 4.5rem;
     max-height: 4.5rem;
     white-space: pre-line;
     overflow: hidden;
     transition: max-height 0.3s ease-in-out;
-    
+
 }
-.comment-text-small{
+
+.comment-text-small {
     min-height: 1.5rem;
     max-height: 1.5rem;
     white-space: pre-line;
     overflow: hidden;
     transition: max-height 0.3s ease-in-out;
-    
-}
-.is-extended{
-    max-height: 20rem;
-    
+
 }
 
-.show-more{
+.is-extended {
+    max-height: 20rem;
+
+}
+
+.show-more {
     min-height: 20px;
     transition: opacity 0.25s;
 }
-.action-area{
+
+.action-area {
     margin-top: 1rem;
     display: flex;
     justify-content: flex-end;
     align-items: center;
 }
-.v-chip{
+
+.v-chip {
     margin: 0rem 0.5rem 0rem 0rem;
 }
 
-.last-chip{
+.last-chip {
     margin: 0rem auto 0rem -10px !important;
 }
-.btn-end{
+
+.btn-end {
     font-size: 1rem;
     margin-left: 1rem;
-    height:48px
+    height: 48px
 }
-.reaction{
-    background: rgb(0,0,0,0.02) !important;
+
+.reaction {
+    background: rgb(0, 0, 0, 0.02) !important;
 }
-.reaction-btn{
-    color: rgb(0,0,0,0.55)
+
+.reaction-btn {
+    color: rgb(0, 0, 0, 0.55)
 }
-.v-divider{
+
+.v-divider {
     height: 1rem;
 }
+
 .v-card:after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 4rem;
-  border-left: 8px solid;
-  border-left-color: var(--borderColor);
-  border-radius: 0px 4px 4px 0px;
- 
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4rem;
+    border-left: 8px solid;
+    border-left-color: var(--borderColor);
+    border-radius: 0px 4px 4px 0px;
+
 }
 </style>

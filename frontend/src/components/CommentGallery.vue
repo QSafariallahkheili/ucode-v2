@@ -13,7 +13,8 @@
                         :created_at="comment.properties.created_at" :comment="comment.properties.comment"
                         :user_id="comment.properties.user_id" :likes="comment.properties.likes"
                         :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
-                        :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment" />
+                        :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment"
+                        @zoomToComment="zoomToComment" />
                 </div>
 
                 <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
@@ -43,7 +44,8 @@
                         :likes="comment.properties.likes" :dislikes="comment.properties.dislikes"
                         :voting_status="comment.properties.voting_status" :color="comment.properties.color"
                         :key="comment.properties.id" @deleteComment="deleteComment"
-                        @mouseenter="mouseEnterOnComment(comment.properties.id)" :mapView="mapView" />
+                        @mouseenter="mouseEnterOnComment(comment.properties.id)" :mapView="mapView"
+                        @zoomToComment="zoomToComment" @zoomToAllComments="zoomToAllComments" />
                 </div>
             </div>
         </div>
@@ -68,7 +70,7 @@ import type { Feature } from '@turf/helpers';
 import bbox from "@turf/bbox";
 
 const store = useStore();
-const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage", "fitBoundsToBBOX"]);
+const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage", "fitBoundsToBBOX", "flyToLocation"]);
 const projectId = store.state.aoi.projectSpecification.project_id;
 const userId = store.state.aoi.userId;
 let deleteDialog = ref(false)
@@ -273,9 +275,8 @@ const buildCommentLayer = async () => {
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
 
     allComments.features=filteredCommentList.value
-    const allCommentsBBOX = bbox(allComments)
     if (allComments.features.length){
-        emit("fitBoundsToBBOX", allCommentsBBOX)
+        zoomToAllComments()
     }
     if (commentLayerBuilt.value==false){
         let commentSourceLayer = {
@@ -375,8 +376,16 @@ watch(filteredCommentList, function () {
         allComments.features = filteredCommentList.value
 
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
+        zoomToAllComments()
+        
+    }
+})
 
-        const allCommentsBBOX = bbox(allComments)
+const zoomToAllComments = ()=>{
+
+    let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
+        allComments.features = filteredCommentList.value
+    const allCommentsBBOX = bbox(allComments)
         const fitBoundsOptions = 
             {
                 pitch: 60,
@@ -392,10 +401,17 @@ watch(filteredCommentList, function () {
         if (allComments.features.length){
             emit("fitBoundsToBBOX", allCommentsBBOX, fitBoundsOptions)
         }
-    }
-})
-
-
+}
+const zoomToComment = (commentId:number) => {
+    let commentCoordinates = commentList.value.find(feature => feature.properties.id == commentId);
+    emit("flyToLocation", {
+      center: commentCoordinates.geometry.coordinates,
+      zoom: 19,
+      bearing: 130,
+      pitch: 60,
+      essential: true
+    })
+}
 </script>
 
 <style scoped>
