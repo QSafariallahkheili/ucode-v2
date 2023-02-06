@@ -1,3 +1,4 @@
+# serializer version: 1
 # name: test_create_building_holes_polygons
   list([
     tuple(
