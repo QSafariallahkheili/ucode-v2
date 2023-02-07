@@ -20,7 +20,13 @@ type Mesh = {
   material: [];
 };
 export interface THREEGeoSettings {
-  scene: THREE.Scene, bbox: BoundingBox, geoJson: FeatureCollection, color: string | string[], height: number, extrude: number, textureURL: any
+  scene: THREE.Scene,
+  bbox: BoundingBox,
+  geoJson: FeatureCollection,
+  color: string | string[],
+  height: number,
+  extrude: number,
+  textureURL?: string
 }
 
 export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
