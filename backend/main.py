@@ -6,13 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
 from features.buildings import create_building_holes_polygons, create_building_polygons, get_buildings_from_db, persist_building_polygons, refine_persisted_buildings, transform_building_with_hole
+from features.amenities import create_amenities_polygons, persist_amenities_polygons, get_amenities_from_db
 from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 delete_comment_by_id, delete_comments, dislike_comment,
                 drop_bike_polygon_table, drop_bike_table, drop_building_table,
                 drop_driving_lane_table, drop_greenery_table,
                 drop_sidewalk_polygon, drop_sidewalk_table,
                 drop_traffic_signal_table, drop_tram_line_table,
-                drop_tree_table, drop_water_table, get_bike_from_db,
+                drop_tree_table, drop_water_table, drop_amenities_table, get_bike_from_db,
                 get_bike_lane_from_db, get_comments,
                 get_driving_lane_from_db, get_driving_lane_polygon_from_db,
                 get_filtered_comments, get_filtered_comments_with_status,
@@ -31,7 +32,7 @@ from services.overpass import (interpreter, query_bike, query_building_parts,
                                query_greenery, query_serviceroad,
                                query_traffic_signals, query_tram_lines,
                                query_tree_row, query_trees, query_walk,
-                               query_water)
+                               query_water, query_amenities)
 from utils import sure_float
 from repository.db import db_pool, get_table_names
 
@@ -149,6 +150,8 @@ async def get_greenery_from_db_api(request: Request):
     return get_greenery_from_db(data)
 
 
+
+
 @app.post("/get-buildings-from-osm")
 async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
@@ -169,7 +172,6 @@ async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
     
     get_buildings_from_db.cache_clear()
     return "fine"
-
 
 @app.get("/get-buildings-from-db")
 def get_buildings_from_db_api(projectId: str):
@@ -764,6 +766,23 @@ async def get_bike_from_db_api(request: Request):
     bike_poly = get_bike_from_db(projectId)
     return bike_poly
 
+@app.post("/get-amenities-from-osm")
+async def get_amenities_from_osm_api(project_spec: ProjectSpecification):
+    projectId = project_spec.projectId
+    drop_amenities_table(projectId)
+
+    response_amenities =  osmtogeojson.process_osm_json(interpreter(query_amenities(project_spec.bbox)))
+    amenity_polygons = create_amenities_polygons(project_spec.projectId,  response_amenities)
+    persist_amenities_polygons(db_pool, amenity_polygons)
+
+    get_amenities_from_db.cache_clear()
+    return 'amenities from osm fine'
+    
+@app.get("/get-amenities-from-db")
+def get_amenities_from_db_api(projectId: str):
+    return get_amenities_from_db(db_pool, projectId)
+
+
 @app.get("/admin/clear-cache")
 async def clear_cache():
     print("Cache cleared!")
@@ -778,6 +797,7 @@ async def clear_cache():
     get_sidewalk_from_db_cache_stats = get_sidewalk_from_db.cache_info()
     get_bike_from_db_cache_stats = get_bike_from_db.cache_info()
     get_bike_lane_from_db_cache_stats = get_bike_lane_from_db.cache_info()
+    get_amenities_from_db_cache_stats = get_amenities_from_db.cache_info()
     get_buildings_from_db.cache_clear()
     get_greenery_from_db.cache_clear()
     get_trees_from_db.cache_clear()
@@ -789,6 +809,7 @@ async def clear_cache():
     get_sidewalk_from_db.cache_clear()
     get_bike_from_db.cache_clear()
     get_bike_lane_from_db.cache_clear()
+    get_amenities_from_db.cache_clear()
     result = {
         "get_buildings_from_db_cache_stats": get_buildings_from_db_cache_stats,
         "get_greenery_from_db_cache_stats": get_greenery_from_db_cache_stats,
@@ -801,6 +822,7 @@ async def clear_cache():
         "get_sidewalk_from_db_cache_stats": get_sidewalk_from_db_cache_stats,
         "get_bike_from_db_cache_stats": get_bike_from_db_cache_stats,
         "get_bike_lane_from_db_cache_stats": get_bike_lane_from_db_cache_stats,
+        "get_amenities_from_db_cache_stats": get_amenities_from_db_cache_stats,
         "result": "Cache cleared"
     }
 #    print(result)

@@ -100,6 +100,21 @@ export function addGeoOnPointsToThreejsScene(
         bbox,
         hasRandomSize
       );
+      let raycaster = new THREE.Raycaster();
+      raycaster.near = -1;
+      raycaster.far = 1e6;
+
+      localCoordinates.map(c => {
+        if (c.position[1] == 0 && glbModel.startsWith('poiIcons')) {
+          let dir = new THREE.Vector3(0, -1, 0)
+          let origin = new THREE.Vector3(c.position[2], 1000, c.position[0])
+          raycaster.set(origin, dir)
+          let intersects = raycaster.intersectObjects(scene.children, true)
+          if (intersects.length > 0) {
+            c.position[1] = intersects[0].point.y
+          }
+        }
+      })
       const clusters = createGeoInstances(
         localCoordinates,
         currentMeshes,
@@ -190,7 +205,7 @@ function createMeshInstance(
     material,
     localSceneCoordinates.length
   );
-  
+
   localSceneCoordinates.forEach((localSceneCoordinate, index) => {
     let scale = new THREE.Vector3(1, 1, 1);
     let rotation = new THREE.Quaternion();
@@ -227,11 +242,6 @@ function generateLocalCoordinates(
   hasRandomSize?: number[]
 ): TransformationWrapper[] {
   const localSceneCoordinates: TransformationWrapper[] = [];
-  // for (let index = 0; index < 100; index++) {
-  //   console.log(getRndNumber(0, 90))
-
-  // }
-  // console.log(_geoJson)
   if (_geoJson != null) {
     for (let index = 0; index < _geoJson.features.length; index++) {
       const element = _geoJson.features[index].geometry.coordinates;
@@ -249,7 +259,7 @@ function generateLocalCoordinates(
         position: [
           ((localCordsFromWorldCords(element, _geoJson.features[index].properties.estimatedheight || 0).x - cords.x) * 1) /
           cords.meterInMercatorCoordinateUnits(),
-          _geoJson.features[index].properties.estimatedheight+0.5 || 0,
+          _geoJson.features[index].properties.estimatedheight || 0,
           ((cords.y - localCordsFromWorldCords(element, _geoJson.features[index].properties.estimatedheight || 0).y) * 1) /
           cords.meterInMercatorCoordinateUnits(),
         ],
@@ -282,7 +292,7 @@ function getRndNumber(min: number, max: number): number {
 
 export function localCordsFromWorldCords(
   worldCords: LngLatLike,
-  height : number
+  height: number
 ): MercatorCoordinate {
   return maplibregl.MercatorCoordinate.fromLngLat(worldCords, height);
 }
@@ -297,7 +307,7 @@ function createSinglePolygon(feature: Feature<any>, bbox: BoundingBox) {
   //Create holes in geometry
   if (feature.geometry.coordinates.length > 1) {
     for (let index = 1; index < feature.geometry.coordinates.length; index++) {
-      
+
       let pathPoints: THREE.Vector2[] = []
       feature.geometry.coordinates[index].forEach((coord: Position) => {
         let pos: THREE.Vector3 = worldPointInRelativeCoord(new maplibregl.LngLat(coord[0], coord[1]), bbox)// console.log(pos)

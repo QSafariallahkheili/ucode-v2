@@ -635,6 +635,15 @@ def drop_bike_polygon_table(projectId):
   cursor.close()
   connection.close()
 
+def drop_amenities_table(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  drop_amenities_table_query =f''' delete from amenities where project_id='{projectId}';'''
+  cursor.execute(drop_amenities_table_query)
+  connection.commit()
+  cursor.close()
+  connection.close()
+
 @lru_cache
 def get_traffic_signal_from_db(projectId):
   connection = connect()

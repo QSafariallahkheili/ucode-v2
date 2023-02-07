@@ -87,9 +87,9 @@ const sendBuildingRequest = async () => {
 
 };
 const addAmenities =  async () => {
-  const amenityData =  await getAmenityDataFromDB(store.state.aoi.projectSpecification.project_id);
+  const amenityData = await getAmenityDataFromDB(store.state.aoi.projectSpecification.project_id);
   const amenitiesAr: string[] = []
-  const groupedAmenities: [{"type": string , "featureCollection":FeatureCollection}]= []
+  const groupedAmenities: {"type": string , "featureCollection":FeatureCollection}[]= []
   // debugger
   amenityData.features.forEach((feat)=>{
     // console.log(amenitiesAr.includes(feat.properties?.amenity))

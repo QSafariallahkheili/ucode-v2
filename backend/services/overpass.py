@@ -159,3 +159,11 @@ def query_bike(bbox: BoundingBox | str) -> str:
             convert item ::=::,::geom=geom(),_osm_type=type();
             out geom;
      """
+
+def query_amenities(bbox: BoundingBox| str)->str:
+    return f"""
+         [out:json];
+            way["amenity"]({bbox});
+            (._;>;);
+            out geom;
+     """

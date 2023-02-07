@@ -50,6 +50,8 @@
 
     <v-select :items="['get', 'retrieve']" label="bike" variant="outlined"
       @update:modelValue="sendBikeRequest"></v-select>
+    <v-select :items="['get']" label="amenities" variant="outlined"
+      @update:modelValue="getAmenitiesFromOsm"></v-select>
     <v-alert type="success" v-if="store.state.aoi.dataIsLoaded">
       stored
     </v-alert>
@@ -81,7 +83,8 @@ import {
   getBikeFromOSM,
   getSidewalkFromDB,
   getBikeFromDB,
-  getQuestsFulfillmentFromDB
+  getQuestsFulfillmentFromDB,
+  getAmenitiesFromOSM
 } from "../service/backend.service";
 
 const store = useStore();
@@ -382,10 +385,21 @@ const sendBikeRequest = async (mode) => {
     });
   }
 }
+const getAmenitiesFromOsm = async () => {
+    store.dispatch("aoi/setDataIsLoading");
+    await getAmenitiesFromOSM(
+      store.state.aoi.projectSpecification.bbox,
+      store.state.aoi.projectSpecification.project_id
+    );
+  }
 </script>
 <style scoped>
 .v-btn{
   min-width: fit-content;
+}
+.v-input--density-default {
+    --v-input-control-height: 33px;
+    --v-input-padding-top: 3px;
 }
 
 </style>

@@ -38,24 +38,21 @@ export async function getbuildingsDataFromDB(projectId: string) {
   return buildingresponse.data;
 }
 export async function getAmenityDataFromDB(projectId: string) {
-  if(buildingresponse == undefined){
-    buildingresponse = await HTTP.get("get-buildings-from-db", { params: { projectId } });
-  }
-  const detectAmenities = (d: Feature) => d?.properties?.amenity != null;
-  const amenities = buildingresponse.data.features.filter(detectAmenities);
-  // console.log(amenities)
+  
+  const response = await HTTP.get("get-amenities-from-db", { params: { projectId } });
+  
 
   const amenity_tags = ["theatre", "arts_center", "clinic", "townhall", "library", "cinema"]
   let amenityGeojson: FeatureCollection = {type: "FeatureCollection", features: []}
-  amenities.forEach((feat: Feature<Geometries>) => {
+  response.data.features.forEach((feat: Feature<Geometries>) => {
+    // console.log(feat.properties.amenity)
     if (feat.geometry?.coordinates.length == 1 && amenity_tags.includes(feat.properties?.amenity)) {
+      // console.log(feat.properties.amenity)
       let centroid = turf.centroid((feat.geometry))
       centroid.properties = feat.properties
       amenityGeojson.features.push(centroid)
-      // console.log(turf.centroid((feat.geometry)))
     }
   });
-  // console.log(amenityGeojson)
   return amenityGeojson;
 
 }
@@ -158,6 +155,12 @@ export async function getAmenities() {
   return {amenityIconlayer, amenityTextlayer}
 }
 
+export async function getAmenitiesFromOSM(bbox: BoundingBox, projectId: string) {
+  HTTP.post("get-amenities-from-osm", {
+    bbox: bbox,
+    projectId: projectId,
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+}
 export async function getbuildingsFromOSM(bbox: BoundingBox, projectId: string) {
   HTTP.post("get-buildings-from-osm", {
     bbox: bbox,

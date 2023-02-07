@@ -4,11 +4,12 @@ import maplibregl, {
   type LngLatLike,
 } from "maplibre-gl";
 import * as THREE from "three";
-import { FogExp2, Scene } from "three";
+import { Scene } from "three";
 import type * as glMatrix from "gl-matrix";
+//import { relativeCoordInWorldPoint } from "./ThreejsGeometryCreation";
 
 
-
+let ThreeScenes: ThreeJsScene[] = []
 export class ThreeJsScene extends Scene {
   constructor() {
     super();
@@ -22,13 +23,12 @@ export class ThreeJsScene extends Scene {
 }
 
 
-
 export function getProjectionMatrix(
   modelAsMercatorCoordinate: maplibregl.MercatorCoordinate,
   matrix: glMatrix.mat4
 ): THREE.Matrix4 {
   //  const sceneRotate = [0, 0, 0];
-  const sceneRotate = [Math.PI / 2, Math.PI / 2, 0];
+  const sceneRotate = [0, 0, 0];
   // transformation parameters to position, rotate and scale the 3D scene onto the map
   const modelTransform = {
     translateX: modelAsMercatorCoordinate.x,
@@ -84,9 +84,15 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
   // dirLight.color.setHSL(0.1, 1, 0.95);
   dirLight.position.set(-2, 3, 1);
   dirLight.position.multiplyScalar(1);
-
+  let camInverseProjection: THREE.Matrix4
+  let cameraPosition: THREE.Vector3
+  let cameraTransform: any
+  let raycaster: any
+  let mainMap: any
   const mainScene = new ThreeJsScene();
-  const mainCamera = new THREE.Camera();
+  const mainCamera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
+  
+
   let mainRenderer = new THREE.WebGLRenderer();
   mainScene.add(hemiLight);
   mainScene.add(dirLight);
@@ -103,7 +109,18 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
     type: "custom",
     renderingMode: "3d",
     onAdd: function (map: Map, gl: any) {
-      // use the Mapbox GL JS map canvas for three.js
+
+      mainMap = map
+
+      const { x, y, z } = modelAsMercatorCoordinate;
+      const s = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
+      const scale = new THREE.Matrix4().makeScale(s, s, -s);
+      const rotation = new THREE.Matrix4().multiplyMatrices(
+        new THREE.Matrix4().makeRotationX(-0.5 * Math.PI),
+        new THREE.Matrix4().makeRotationY(Math.PI / 2));
+
+      cameraTransform = new THREE.Matrix4().multiplyMatrices(scale, rotation).setPosition(x, y, z);
+
 
       mainRenderer = new THREE.WebGLRenderer({
         canvas: map.getCanvas(),
@@ -113,22 +130,66 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
 
       mainRenderer.outputEncoding = THREE.sRGBEncoding;
       mainRenderer.autoClear = false;
+
+      raycaster = new THREE.Raycaster();
+      raycaster.near = -1;
+      raycaster.far = 1e6;
+      raycaster.layers.set(1);
+
+
     },
 
     render: function (gl, matrix) {
-      mainCamera.projectionMatrix = getProjectionMatrix(
-        modelAsMercatorCoordinate,
-        matrix
-      );
+      mainCamera.projectionMatrix = new THREE.Matrix4().fromArray(matrix).multiply(cameraTransform);
+      // console.log("matrix")
       // console.log(matrix)
-      // mainCamera.updateWorldMatrix(true, true)
-      // console.log(mainCamera.position)
-      // mainRenderer.state.reset();
       mainRenderer.resetState();
       mainRenderer.render(mainScene, mainCamera);
       // console.count("triggerRepaint")
       //this.map.triggerRepaint();
+      camInverseProjection = mainCamera.projectionMatrix.invert();
+      cameraPosition = new THREE.Vector3().applyMatrix4(camInverseProjection);
+      if(layerName == 'ownComments'){
+        mainScene.children.forEach((child) =>{
+          child.lookAt(cameraPosition)
+          // console.log(cameraPosition)
+        })
+      }
     },
+    //@ts-ignore
+    raycast(point: any) {
+      var mouse = new THREE.Vector2();
+      // debugger
+      // // scale mouse pixel position to a percentage of the screen's width and height
+      mouse.x = (point.x / mainMap.transform.width) * 2 - 1;
+      mouse.y = 1 - (point.y / mainMap.transform.height) * 2;
+      
+      const mousePosition = new THREE.Vector3(mouse.x, mouse.y, 1).applyMatrix4(camInverseProjection);
+      const viewDirection = mousePosition.clone().sub(cameraPosition).normalize();
+
+      raycaster.set(cameraPosition, viewDirection);
+
+      // calculate objects intersecting the picking ray
+      // var intersects = raycaster.intersectObjects(mainScene.children, true);
+      // console.log("Layers: " + ThreeScenes.length )
+      for (const scene of ThreeScenes) {
+        var intersects = raycaster.intersectObjects(scene.children, true);
+        if (intersects.length > 0) {
+          // console.log(mainScene.children)
+          const obj = mainScene.children[mainScene.children.length-1]
+          obj.position.x = intersects[0].point.x
+          obj.position.z = intersects[0].point.z
+          obj.position.y = intersects[0].point.y
+          mainMap.triggerRepaint()
+          break;
+        }
+       
+      };
+      
+    },
+
+
   };
+  ThreeScenes.push(mainScene)
   return { layer: customLayer, scene: mainScene };
 };
