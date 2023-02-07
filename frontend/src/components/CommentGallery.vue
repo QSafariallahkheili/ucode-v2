@@ -1,5 +1,5 @@
 <template>
-    <div class="comment-gallery-wrapper" v-if="props.show">
+    
 
         <DeletingDialog v-if="(commentsAreLoaded && props.show)" :deleteDialog="deleteDialog"
             @cnacelDeleteDialog="cnacelDeleteDialog" @confirmDeleteCommentDialog="confirmDeleteCommentDialog" />
@@ -31,11 +31,11 @@
             </div>
         </transition>
         <div class="map-comment-container">
-            <div v-if="props.show && mapView == true">
-                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); " size="large" icon class="list-comment-view-toggle">
-                    <v-icon>mdi-format-list-bulleted</v-icon>
-                </v-btn>
-            </div>
+            <v-btn v-if="props.show && mapView == true"
+                @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); " size="large" icon
+                class="list-comment-view-toggle">
+                <v-icon>mdi-format-list-bulleted</v-icon>
+            </v-btn>
             <div class="map-card" v-if="props.show && mapView == true">
                 <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id">
 
@@ -48,12 +48,12 @@
                         @zoomToComment="zoomToComment" @zoomToAllComments="zoomToAllComments" />
                 </div>
             </div>
-        </div>
+        
         <CommentSortAndFilter v-if="props.show && mapView == true" @sortComment="sortComment"
             @multifFilterComment="multifFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter"
             :activfilterOptions="activfilterOptions" />
-
     </div>
+
 </template>
 
 <script lang="ts" setup>
@@ -274,11 +274,11 @@ const buildCommentLayer = async () => {
 
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
 
-    allComments.features=filteredCommentList.value
-    if (allComments.features.length){
+    allComments.features = filteredCommentList.value
+    if (allComments.features.length) {
         zoomToAllComments()
     }
-    if (commentLayerBuilt.value==false){
+    if (commentLayerBuilt.value == false) {
         let commentSourceLayer = {
             id: "allComments",
             geojson: {
@@ -313,8 +313,8 @@ const buildCommentLayer = async () => {
             }
 
         }
-        
-       let unclusteredComments = {
+
+        let unclusteredComments = {
             id: 'allComments',
             type: 'symbol',
             source: 'allComments',
@@ -361,11 +361,11 @@ watch(compoundProperty, function () {
 
     if (compoundProperty.value.mapview == true && compoundProperty.value.commentshow == true) {
         emit('toggleLayerVisibility', 'allComments', 'visible')
-         emit('toggleLayerVisibility', 'clustered-comments', 'visible')
+        emit('toggleLayerVisibility', 'clustered-comments', 'visible')
     }
     else {
         emit('toggleLayerVisibility', 'allComments', 'none')
-         emit('toggleLayerVisibility', 'clustered-comments', 'none')
+        emit('toggleLayerVisibility', 'clustered-comments', 'none')
     }
 
 })
@@ -377,59 +377,60 @@ watch(filteredCommentList, function () {
 
         emit('updateCommentSource', { id: 'allComments', geojson: { data: allComments } })
         zoomToAllComments()
-        
+
     }
 })
 
-const zoomToAllComments = ()=>{
+const zoomToAllComments = () => {
 
     let allComments: { type: string, features: Feature[] } = { type: "FeatureCollection", features: [] }
-        allComments.features = filteredCommentList.value
+    allComments.features = filteredCommentList.value
     const allCommentsBBOX = bbox(allComments)
-        const fitBoundsOptions = 
-            {
-                pitch: 60,
-                duration: 3000,
-                curve: 1,
-                padding: {
-                    top: 100,
-                    bottom: 300,
-                    left: 100,
-                    right: 100
-                }
-            }
-        if (allComments.features.length){
-            emit("fitBoundsToBBOX", allCommentsBBOX, fitBoundsOptions)
+    const fitBoundsOptions =
+    {
+        pitch: 60,
+        duration: 3000,
+        curve: 1,
+        padding: {
+            top: 100,
+            bottom: 300,
+            left: 100,
+            right: 100
         }
+    }
+    if (allComments.features.length) {
+        emit("fitBoundsToBBOX", allCommentsBBOX, fitBoundsOptions)
+    }
 }
-const zoomToComment = (commentId:number) => {
+const zoomToComment = (commentId: number) => {
     let commentCoordinates = commentList.value.find(feature => feature.properties.id == commentId);
     emit("flyToLocation", {
-      center: commentCoordinates.geometry.coordinates,
-      zoom: 19,
-      bearing: 130,
-      pitch: 60,
-      essential: true
+        center: commentCoordinates.geometry.coordinates,
+        zoom: 19,
+        bearing: 130,
+        pitch: 60,
+        essential: true
     })
 }
 </script>
 
 <style scoped>
-.comment-gallery-wrapper {
-    width: 100%;
-}
-
 .map-comment-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     position: relative;
     bottom: 113px;
-    z-index: 1105;
+    z-index: 999;
+    width: 100%;
 }
-.list-comment-view-toggle{
-    margin: 0 1.5rem 1rem 0
+
+.list-comment-view-toggle {
+    margin: -4.5rem 1rem 1rem auto;
+    position: absolute;
+    right: 0;
 }
+
 .comment-list {
     position: fixed;
     top: 0px;
@@ -476,6 +477,7 @@ const zoomToComment = (commentId:number) => {
     display: flex;
     align-items: flex-end;
     overflow-x: scroll;
+    z-index: 999;
 }
 
 .map-card::-webkit-scrollbar {
@@ -526,10 +528,10 @@ const zoomToComment = (commentId:number) => {
 }
 
 .map-comment-view-toggle {
-    z-index: 1100;
     position: fixed;
-    bottom: 60px;
-    right: 1.5rem;
+    bottom: 56px;
+    right: 0;
+    margin: 0 1rem 1rem 0;
     scrollbar-width: none !important;
 
 }

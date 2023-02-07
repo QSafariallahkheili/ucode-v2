@@ -1,5 +1,6 @@
 <template>
     <div class="filter-container">
+        <div class="backdrop"></div>
         <v-card v-click-outside="closeWindow" style="border-radius: 18px 18px 0px 0px">
             <v-btn @click="closeWindow"  icon="mdi-close" class="close-button"  variant="plain">
             </v-btn>
@@ -64,7 +65,6 @@
                 Anwenden
             </v-btn>
         </v-card>
-        <div class="backdrop"></div>
     </div>
 </template>
 
@@ -198,7 +198,7 @@ const closeWindow=()=>{
 }
 
 .filter-container {
-    z-index: 1102;
+    z-index: 1002;
     width: 100%;
     margin-bottom: 0px;
     scrollbar-width: none !important;
@@ -207,7 +207,7 @@ const closeWindow=()=>{
 }
 
 .filter-headline {
-    margin-top: 1.5rem;
+    /* margin-top: 1.5rem; */
     margin-bottom: 1.5rem;
 }
 
@@ -217,6 +217,8 @@ const closeWindow=()=>{
 
 .filter-content {
     overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
 }
 
 .v-btn-toggle {
@@ -228,11 +230,11 @@ const closeWindow=()=>{
 }
 
 .v-card {
-    z-index: 1102;
     display: flex;
     flex-direction: column;
     align-items: center;
     max-height: 100vh;
+    padding: 1rem 1rem 1.5rem 1.5rem;
 
 }
 
@@ -245,22 +247,6 @@ const closeWindow=()=>{
     color: gray
 }
 
-.info-text {
-    margin-top: 0.5rem;
-    max-height: 100%;
-    max-width: 35rem;
-    overflow-y: scroll;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin: auto;
-}
-
-.v-item-group {
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-    overflow-y: scroll;
-}
-
 .backdrop {
     position: fixed;
     top: 0px;
@@ -268,7 +254,7 @@ const closeWindow=()=>{
     right: 0px;
     bottom: 0px;
     background: rgb(0, 0, 0, 0.8);
-    z-index: 1101;
+    
 }
 .keyword-btn{
     min-width: fit-content
