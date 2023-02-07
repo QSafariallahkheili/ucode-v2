@@ -67,18 +67,16 @@ export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
   // console.log(geoms)
   geoms.forEach((geom, index) => {
     polygeom = BufferGeometryUtils.mergeBufferGeometries(geom)
-    const texture = new THREE.TextureLoader().load( settings.textureURL );
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.offset.set( 0, 0 );
-    texture.repeat.set( 0.2, 0.2 );
+    let texture
+    if (settings.textureURL) {
+      texture = new THREE.TextureLoader().load(settings.textureURL);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.offset.set(0, 0);
+      texture.repeat.set(0.2, 0.2);
+    }
     let material = new THREE.MeshStandardMaterial({ color: geoms.length == 1 ? settings.color : settings.color[index], side: DoubleSide, roughness: 1, map: settings.textureURL? texture : null })
     const mesh = new THREE.Mesh(polygeom, material);
-    if (settings.extrude == .99) {
-      // mesh.translateY(feature.properties?.estimatedheight)
-      // let mat = new THREE.MeshStandardMaterial({ color: feature.properties?.color, side: DoubleSide, roughness: 1 })
-      // mesh.material = mat
-    }
-    else {
+    if (settings.extrude != .99) {
       mesh.translateY(settings.extrude)
     }
     settings.scene.add(mesh)

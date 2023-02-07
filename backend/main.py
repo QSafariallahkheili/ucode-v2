@@ -354,16 +354,6 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
             status_code=412,
             detail="Found no graph nodes within the requested polygon"
         )
-    #print(road)
-    """
-    mylist =[]
-    for i in road['features']: 
-        if i["properties"]["highway"] in mylist: 
-            continue
-        else:
-            mylist.append(i["properties"]["highway"])
-    print(mylist)
-    """
     
     connection = connect()
     cursor = connection.cursor()
@@ -859,8 +849,7 @@ async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
 
 @app.post("/get-pedestrian-area-from-db")
 async def get_pedestrian_are_from_db_api(request: Request):
-    projectId = await request.json()
-    print(projectId)
+    projectId = await request.json()    
     return get_pedestrian_area_from_db(db_pool, projectId)
 
 if __name__ == "__main__":

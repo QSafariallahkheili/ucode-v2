@@ -8,16 +8,18 @@
       </Suspense>
 
       <PlanningIdeas v-show="store.state.ui.intro == false && tabIndex == 'planning'" v-if="mapStyleLoaded"
-        @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap"
-        @fitBoundsToBBOX="fitBoundsToBBOX" @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
+        @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap" @fitBoundsToBBOX="fitBoundsToBBOX"
+        @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
       <FreeComment v-show="tabIndex == 'planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog"
         @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog"
         @hideQuests="() => { hideQuests = true }" />
       <CommentGallery :show="tabIndex == 'discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource"
         @scaleUpComment="scaleUpComment" @toggleLayerVisibility="togglelayerVisibility"
-        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" @fitBoundsToBBOX="fitBoundsToBBOX" @flyToLocation="flyToLocation" />
+        @updateCommentSource="addSourceToMap" @addImage="addImageToMap" @fitBoundsToBBOX="fitBoundsToBBOX"
+        @flyToLocation="flyToLocation" />
 
-      <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView" @toggleLayerVisibility="togglelayerVisibility" :tabIndex="tabIndex"/>
+      <BottomNavigation v-show="store.state.ui.intro == false" @tabIndexChanged="switchView"
+        @toggleLayerVisibility="togglelayerVisibility" :tabIndex="tabIndex" />
       <Contribution @addPopup="addPopupToMap" @addDrawControl="addDrawControl" @addDrawnLine="addDrawnLine"
         @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
         :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
@@ -137,10 +139,9 @@ onMounted(() => {
 
   map.on('click', 'allComments', function (e) {
     // @ts-ignore
-    document.getElementById(e.features[0].properties.id).scrollIntoView({ behavior: 'smooth' }, true);
+    document.getElementById(e.features[0].properties.id).scrollIntoView({ behavior: 'smooth', inline: 'center' }, true);
     // @ts-ignore
-    map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], e.features[0].properties.id, 0.4, 0.15]);
-
+    animateIconScale(0.15, 0.4, 50, e.features[0].properties.id);
   });
   map.on('click', 'clustered-comments', function (e) {
     let features = map.queryRenderedFeatures(e.point, {
@@ -152,7 +153,7 @@ onMounted(() => {
       clusterId,
       function (err: any, zoom: any) {
         if (err) return;
-    
+
         map.easeTo({
           // @ts-ignore
           center: features[0].geometry.coordinates,
@@ -161,7 +162,7 @@ onMounted(() => {
       }
     );
   });
- 
+
 
   map.on('draw.create', () => {
     lineDrawCreated.value = 1
@@ -172,7 +173,21 @@ onMounted(() => {
   })
 
 });
-
+const animateIconScale = (start: number, end: number, duration: number, id:any) => {
+  let startTime = performance.now();
+  let animationId = requestAnimationFrame(function animate(time) {
+    let timeElapsed = time - startTime;
+    let progress = timeElapsed / duration;
+    let currentValue = start + (end - start) * progress;
+    map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], id, currentValue, 0.15]);
+    if (progress >= 1) {
+      map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], id, end, 0.15]);
+      cancelAnimationFrame(animationId);
+    } else {
+      animationId = requestAnimationFrame(animate);
+    }
+  });
+}
 const triggerRepaint = () => {
   map.triggerRepaint()
 }
@@ -376,7 +391,7 @@ const addImageToMap = (imgUrl: string) => {
   }
 };
 const scaleUpComment = (hoveredCommentId: number) => {
-  map.setLayoutProperty('allComments', 'icon-size', ['match', ['get', 'id'], hoveredCommentId, 0.4, 0.15]);
+  animateIconScale(0.15, 0.4, 50, hoveredCommentId);
 }
 
 const togglelayerVisibility = (layerId: any, visbilityStatus: string) => {
