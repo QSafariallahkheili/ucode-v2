@@ -25,7 +25,8 @@ import {
   getAmenityDataFromDB,
   getSidewalkFromDB,
   getBikeFromDB,
-  getBikeLaneDataFromDB
+  getBikeLaneDataFromDB,
+  getPedestrianAreaFromDB
 
 } from "../service/backend.service";
 import type { FeatureCollection } from "@turf/helpers";
@@ -56,6 +57,7 @@ const populateMap = async () => {
   emit("addLayer", threeJsSceneFlat.layer, "routes")
   await sendSidewalkRequest();
   await sendBikeRequest()
+  await sendPedestrianAreaRequest()
   
  
   store.dispatch("aoi/setMapIsPopulated");
@@ -412,6 +414,19 @@ const sendBikeLaneIconRequest = async () => {
       'icon-color': '#ffffff'
     }
   });
+}
+
+const sendPedestrianAreaRequest = async () => {
+  const pedestrianData = await getPedestrianAreaFromDB(store.state.aoi.projectSpecification.project_id)
+  addPolygonsFromCoordsAr({
+    scene: threeJsSceneFlat.scene,
+    bbox: store.state.aoi.projectSpecification.bbox,
+    geoJson: pedestrianData.data,
+    color: "",
+    height: 0,
+    extrude: 0.2,
+    textureURL: "pattern-pedestrian.jpeg"
+  }) 
 }
 </script>
 

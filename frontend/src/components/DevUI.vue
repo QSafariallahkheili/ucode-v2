@@ -1,64 +1,70 @@
 <template>
+  <div>
+    <v-col cols="6" md="3" style="position:absolute; left: 0; top:50px; z-index:999; width:800px">
+      <v-btn color="#41b883" class="mt-2" @click="clearServerCache">
+        Clear server cache
+      </v-btn>
 
-  <v-col  cols="6" md="3"  style="position:absolute; left: 0; top:50px; z-index:999; width:800px">
-    <v-btn color="#41b883" class="mt-2" @click="clearServerCache">
-      Clear server cache
-    </v-btn>
-    
-    <!-- <v-btn color="success" class="ml-1" @click="getFilteredCommentData">
+      <!-- <v-btn color="success" class="ml-1" @click="getFilteredCommentData">
       Show filtered comments
     </v-btn> -->
-    <v-btn color="#41b883" class="mt-2" @click="dropCommentData">
-      Delete project comments 
-    </v-btn>
-    <v-btn color="#41b883" class="mt-2" @click="ShoQuestsFulfillment">
-      Show quest data 
-    </v-btn>
-    <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
-      Import from OSM
-    </v-btn>
-    <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
-      Import from OSM
-    </v-btn>
-    
-    <v-btn color="#41b883" @click="emit('startPopulate')" class="mt-2">
-      Load from DB
-    </v-btn>
+      <v-btn color="#41b883" class="mt-2" @click="dropCommentData">
+        Delete project comments
+      </v-btn>
+      <v-btn color="#41b883" class="mt-2" @click="ShoQuestsFulfillment">
+        Show quest data
+      </v-btn>
+      <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
+        Import from OSM
+      </v-btn>
+      <v-btn color="#41b883" @click="loadAllProjectObjectsFromOSM()" class="mt-2">
+        Import from OSM
+      </v-btn>
 
-  </v-col>
+      <v-btn color="#41b883" @click="emit('startPopulate')" class="mt-2">
+        Load from DB
+      </v-btn>
 
-  <v-col cols="6" md="3"  style="position: absolute; right: 0; top: 50px; z-index: 999">
-  
-    <v-select :items="['get', 'retrieve']" label="building" variant="outlined" @update:modelValue="sendBuildingRequest">
-    </v-select>
-    <v-select :items="['get', 'retrieve']" :label="$t('AOI.greenery')" variant="outlined"
-      @update:modelValue="sendGreeneryRequest"></v-select>
-    <v-select :items="['get', 'retrieve']" label="tree" variant="outlined" @update:modelValue="sendTreeRequest">
-    </v-select>
-    <v-select :items="['get', 'retrieve']" label="driving lane" variant="outlined"
-      @update:modelValue="sendDrivingLaneRequest"></v-select>
-    <v-select :items="['get', 'retrieve']" label="traffic signal" variant="outlined"
-      @update:modelValue="sendTrafficSignalRequest"></v-select>
-    <v-select :items="['get', 'retrieve']" label="tram lines" variant="outlined"
-      @update:modelValue="sendTramLineRequest"></v-select>
+    </v-col>
 
-    <v-select :items="['get', 'retrieve']" label="water" variant="outlined"
-      @update:modelValue="sendwaterRequest"></v-select>
+    <v-col cols="6" md="3" style="position: absolute; right: 0; top: 50px; z-index: 999">
 
-    <v-select :items="['get', 'retrieve']" label="sidewalk" variant="outlined"
-      @update:modelValue="sendSideWalkRequest"></v-select>
+      <v-select :items="['get', 'retrieve']" label="building" variant="outlined"
+        @update:modelValue="sendBuildingRequest">
+      </v-select>
+      <v-select :items="['get', 'retrieve']" :label="$t('AOI.greenery')" variant="outlined"
+        @update:modelValue="sendGreeneryRequest"></v-select>
+      <v-select :items="['get', 'retrieve']" label="tree" variant="outlined" @update:modelValue="sendTreeRequest">
+      </v-select>
+      <v-select :items="['get', 'retrieve']" label="driving lane" variant="outlined"
+        @update:modelValue="sendDrivingLaneRequest"></v-select>
+      <v-select :items="['get', 'retrieve']" label="traffic signal" variant="outlined"
+        @update:modelValue="sendTrafficSignalRequest"></v-select>
+      <v-select :items="['get', 'retrieve']" label="tram lines" variant="outlined"
+        @update:modelValue="sendTramLineRequest"></v-select>
 
-    <v-select :items="['get', 'retrieve']" label="bike" variant="outlined"
-      @update:modelValue="sendBikeRequest"></v-select>
-    <v-select :items="['get']" label="amenities" variant="outlined"
-      @update:modelValue="getAmenitiesFromOsm"></v-select>
-    <v-alert type="success" v-if="store.state.aoi.dataIsLoaded">
-      stored
-    </v-alert>
-    <v-alert type="info" v-if="store.state.aoi.dataIsLoading">
-      getting data...
-    </v-alert>
-  </v-col>
+      <v-select :items="['get', 'retrieve']" label="water" variant="outlined"
+        @update:modelValue="sendwaterRequest"></v-select>
+
+      <v-select :items="['get', 'retrieve']" label="sidewalk" variant="outlined"
+        @update:modelValue="sendSideWalkRequest"></v-select>
+
+      <v-select :items="['get', 'retrieve']" label="bike" variant="outlined"
+        @update:modelValue="sendBikeRequest"></v-select>
+      <v-select :items="['get']" label="amenities" variant="outlined"
+        @update:modelValue="getAmenitiesFromOsm"></v-select>
+      <v-select :items="['get', 'retrieve']" label="pedestrian area" variant="outlined"
+        @update:modelValue="sendPedestrianAreaRequest"></v-select>
+
+
+      <v-alert type="success" v-if="store.state.aoi.dataIsLoaded">
+        stored
+      </v-alert>
+      <v-alert type="info" v-if="store.state.aoi.dataIsLoading">
+        getting data...
+      </v-alert>
+    </v-col>
+  </div>
 </template>
 
 <script setup>
@@ -84,7 +90,9 @@ import {
   getSidewalkFromDB,
   getBikeFromDB,
   getQuestsFulfillmentFromDB,
-  getAmenitiesFromOSM
+  getAmenitiesFromOSM,
+  getPedestrianAreaFromOSM,
+  getPedestrianAreaFromDB
 } from "../service/backend.service";
 
 const store = useStore();
@@ -97,9 +105,9 @@ const clearServerCache = async () => {
 }
 
 const ShoQuestsFulfillment = async () => {
-  let message = getQuestsFulfillmentFromDB(store.state.aoi.projectId,store.state.aoi.userId)
+  let message = getQuestsFulfillmentFromDB(store.state.aoi.projectId, store.state.aoi.userId)
   console.log(message)
-}  
+}
 
 
 
@@ -110,7 +118,7 @@ const dropCommentData = async () => {
   let question = "Do you want to delete the comments of project: " + thisProjectId + "?";
   let deleteCommentsAnswer = confirm(question);
   if (deleteCommentsAnswer === true) {
-        deleteComments(thisProjectId)
+    deleteComments(thisProjectId)
   }
 };
 
@@ -139,7 +147,7 @@ const loadAllProjectObjectsFromOSM = async (mode) => {
     store.state.aoi.projectSpecification.project_id
   );
 
-// NEW: tram, water, sidewalks, bike
+  // NEW: tram, water, sidewalks, bike
 
   getTramLineFromOSM(
     store.state.aoi.projectSpecification.bbox,
@@ -152,6 +160,11 @@ const loadAllProjectObjectsFromOSM = async (mode) => {
   );
 
   getSideWalkFromOSM(
+    store.state.aoi.projectSpecification.bbox,
+    store.state.aoi.projectSpecification.project_id
+  );
+
+  getPedestrianAreaFromOSM(
     store.state.aoi.projectSpecification.bbox,
     store.state.aoi.projectSpecification.project_id
   );
@@ -392,14 +405,45 @@ const getAmenitiesFromOsm = async () => {
       store.state.aoi.projectSpecification.project_id
     );
   }
+
+const sendPedestrianAreaRequest = async (mode) => {
+  if (mode == "get") {
+    store.dispatch("aoi/setDataIsLoading");
+     
+     getPedestrianAreaFromOSM(
+      store.state.aoi.projectSpecification.bbox,
+      store.state.aoi.projectSpecification.project_id
+    );
+
+  }
+  else {
+    const pedestrianData = await getPedestrianAreaFromDB(store.state.aoi.projectSpecification.project_id);
+    store.commit("map/addSource", {
+      id: "pedestrian_polygon",
+      geojson: {
+        type: "geojson",
+        data: pedestrianData.data,
+      },
+    });
+    store.commit("map/addLayer", {
+      id: "pedestrian_polygon",
+      type: "fill",
+      source: "pedestrian_polygon",
+      paint: {
+        "fill-color": "#FF0000",
+        "fill-opacity": 1,
+      },
+    });
+  }
+}
 </script>
 <style scoped>
-.v-btn{
+.v-btn {
   min-width: fit-content;
 }
-.v-input--density-default {
-    --v-input-control-height: 33px;
-    --v-input-padding-top: 3px;
-}
 
+.v-input--density-default {
+  --v-input-control-height: 33px;
+  --v-input-padding-top: 3px;
+}
 </style>

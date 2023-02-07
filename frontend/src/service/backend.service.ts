@@ -432,4 +432,18 @@ export async function getCommentsDataFromDB(projectId: string) {
   return response;
 }
 
+export function getPedestrianAreaFromOSM(bbox: BoundingBox,projectId: string) {
+  HTTP.post("get-pedestrian-area-from-osm", {
+    bbox: bbox,
+    projectId: projectId,
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  
+}
+
+export async function getPedestrianAreaFromDB(projectId: string) {
+  const response = await HTTP.post("get-pedestrian-area-from-db", projectId)
+  return response;
+}
+
+
 

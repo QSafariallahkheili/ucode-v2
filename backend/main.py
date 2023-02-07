@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
 from features.buildings import create_building_holes_polygons, create_building_polygons, get_buildings_from_db, persist_building_polygons, refine_persisted_buildings, transform_building_with_hole
+from features.pedestrian_area import create_pedestrian_area, persist_pedestrian_area_polygons, get_pedestrian_area_from_db
 from features.amenities import create_amenities_polygons, persist_amenities_polygons, get_amenities_from_db
 from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 delete_comment_by_id, delete_comments, dislike_comment,
@@ -23,7 +24,7 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 get_traffic_signal_from_db, get_tram_line_from_db,
                 get_trees_from_db, get_water_from_db, like_comment,
                 prepare_quests_user_table, undislike_comment, unlike_comment,
-                update_voting_status)
+                update_voting_status, drop_pedestrian_area_table)
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
 from services.open_street_map import getDriveNetwork
@@ -32,7 +33,8 @@ from services.overpass import (interpreter, query_bike, query_building_parts,
                                query_greenery, query_serviceroad,
                                query_traffic_signals, query_tram_lines,
                                query_tree_row, query_trees, query_walk,
-                               query_water, query_amenities)
+                               query_water, query_pedestrian_area,
+                               query_pedestrian_area_multipolygon, query_amenities)
 from utils import sure_float
 from repository.db import db_pool, get_table_names
 
@@ -840,6 +842,26 @@ async def delete_comment_by_id_api(request: Request):
     orderId = delete_comment_by_id(data["commentId"])
     return orderId
 
+@app.post("/get-pedestrian-area-from-osm")
+async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
+    drop_pedestrian_area_table(project_spec.projectId)
+    pedestrian_area_data = interpreter(query_pedestrian_area(project_spec.bbox))
+    data_pedestrian_area_geojson = osmtogeojson.process_osm_json(pedestrian_area_data)
+    pedestrian_area_polygons = create_pedestrian_area(project_spec.projectId,  data_pedestrian_area_geojson)
+    persist_pedestrian_area_polygons(db_pool, pedestrian_area_polygons)
+
+    pedestrian_area_data_multipolygon = interpreter(query_pedestrian_area_multipolygon(project_spec.bbox))
+    data_pedestrian_area_multipolygon_geojson = osmtogeojson.process_osm_json(pedestrian_area_data_multipolygon)
+    pedestrian_area_multipolygons = create_pedestrian_area(project_spec.projectId,  data_pedestrian_area_multipolygon_geojson)
+    persist_pedestrian_area_polygons(db_pool, pedestrian_area_multipolygons)
+
+    return "ok"
+
+@app.post("/get-pedestrian-area-from-db")
+async def get_pedestrian_are_from_db_api(request: Request):
+    projectId = await request.json()
+    print(projectId)
+    return get_pedestrian_area_from_db(db_pool, projectId)
 
 if __name__ == "__main__":
     import uvicorn

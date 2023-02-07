@@ -27,3 +27,6 @@ create table if not exists bike (id SERIAL PRIMARY KEY, project_id TEXT, oneway 
 
 create table if not exists bike_polygon (id SERIAL PRIMARY KEY, project_id TEXT, geom geometry(Geometry, 4326));
 
+create table if not exists pedestrian_area (id SERIAL PRIMARY KEY, project_id TEXT, surface text, geom geometry(Geometry, 4326));
+
+

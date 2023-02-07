@@ -160,6 +160,23 @@ def query_bike(bbox: BoundingBox | str) -> str:
             out geom;
      """
 
+def query_pedestrian_area(bbox: BoundingBox | str) -> str:
+    return f"""
+         [out:json];
+            way["highway"="pedestrian"]({bbox});
+            (._;>;);
+            out geom;
+     """
+
+def query_pedestrian_area_multipolygon(bbox: BoundingBox | str) -> str:
+    return f"""
+         [out:json];
+            relation["highway"="pedestrian"]({bbox});
+            (._;>;);
+            out geom;
+     """
+
+
 def query_amenities(bbox: BoundingBox| str)->str:
     return f"""
          [out:json];

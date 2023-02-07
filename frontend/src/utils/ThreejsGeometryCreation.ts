@@ -20,7 +20,7 @@ type Mesh = {
   material: [];
 };
 export interface THREEGeoSettings {
-  scene: THREE.Scene, bbox: BoundingBox, geoJson: FeatureCollection, color: string | string[], height: number, extrude: number
+  scene: THREE.Scene, bbox: BoundingBox, geoJson: FeatureCollection, color: string | string[], height: number, extrude: number, textureURL: any
 }
 
 export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
@@ -61,8 +61,11 @@ export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
   // console.log(geoms)
   geoms.forEach((geom, index) => {
     polygeom = BufferGeometryUtils.mergeBufferGeometries(geom)
-    let material = new THREE.MeshStandardMaterial({ color: geoms.length == 1 ? settings.color : settings.color[index], side: DoubleSide, roughness: 1 })
-
+    const texture = new THREE.TextureLoader().load( settings.textureURL );
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.offset.set( 0, 0 );
+    texture.repeat.set( 0.2, 0.2 );
+    let material = new THREE.MeshStandardMaterial({ color: geoms.length == 1 ? settings.color : settings.color[index], side: DoubleSide, roughness: 1, map: settings.textureURL? texture : null })
     const mesh = new THREE.Mesh(polygeom, material);
     if (settings.extrude == .99) {
       // mesh.translateY(feature.properties?.estimatedheight)

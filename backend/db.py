@@ -812,3 +812,12 @@ def delete_comment_by_id(comment_id):
   cursor.close()
   connection.close()
   return orderId
+
+def drop_pedestrian_area_table(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  drop_pedestrian_areatable__query =f''' delete from pedestrian_area where project_id='{projectId}';'''
+  cursor.execute(drop_pedestrian_areatable__query)
+  connection.commit()
+  cursor.close()
+  connection.close()
