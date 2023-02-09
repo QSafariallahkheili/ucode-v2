@@ -26,7 +26,8 @@ import {
   getSidewalkFromDB,
   getBikeFromDB,
   getBikeLaneDataFromDB,
-  getPedestrianAreaFromDB
+  getPedestrianAreaFromDB,
+  getZerbraCrossFromDB
 
 } from "../service/backend.service";
 import type { FeatureCollection } from "@turf/helpers";
@@ -58,6 +59,7 @@ const populateMap = async () => {
   await sendSidewalkRequest();
   await sendBikeRequest()
   await sendPedestrianAreaRequest()
+  await sendZerbraCrossRequest ()
   
  
   store.dispatch("aoi/setMapIsPopulated");
@@ -369,7 +371,7 @@ const sendBikeRequest = async () =>{
     geoJson: bikeData.data,
     color: "#f75d52",
     height: 0,
-    extrude: 0.32
+    extrude: 0.28
   })  
    
 }
@@ -427,6 +429,18 @@ const sendPedestrianAreaRequest = async () => {
     extrude: 0.2,
     textureURL: "pattern-pedestrian.jpeg"
   }) 
+}
+
+const sendZerbraCrossRequest = async () => {
+  const zerbraCrossData = await getZerbraCrossFromDB(store.state.aoi.projectSpecification.project_id)
+  addPolygonsFromCoordsAr({
+    scene: threeJsSceneFlat.scene,
+    bbox: store.state.aoi.projectSpecification.bbox,
+    geoJson: zerbraCrossData.data,
+    color: "#ffffff",
+    height: 0,
+    extrude: 0.32
+  })  
 }
 </script>
 

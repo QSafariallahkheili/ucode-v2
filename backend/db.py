@@ -821,3 +821,83 @@ def drop_pedestrian_area_table(projectId):
   connection.commit()
   cursor.close()
   connection.close()
+
+def drop_zebra_crossing_table(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  delete_zebra_crossing_query =f''' delete from zebra_crossing where project_id='{projectId}';'''
+  cursor.execute(delete_zebra_crossing_query)
+  connection.commit()
+  cursor.close()
+  connection.close()
+
+def generate_zebra_crossing_table(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  insert_zebra_crossing_query = f''' 
+    with a as (select ST_collect(geom) as geom from sidewalk where st_isvalid(geom) and project_id='{projectId}'
+    ),
+    b as (select st_union(geom) as geom from driving_lane_polygon where project_id='{projectId}'
+    ),
+    c as (select ST_collect(geom) as geom from bike where st_isvalid(geom) and project_id='{projectId}'
+    ),
+
+    merged as (SELECT geom FROM a
+    UNION 
+    SELECT geom FROM c ),
+
+
+    dumps as (select (st_dump(st_intersection(merged.geom, b.geom))).geom as geom from merged, b where st_intersects(merged.geom, b.geom) ),
+
+
+    detected as (select ROW_NUMBER() OVER (ORDER BY dumps.geom) AS gid, dumps.geom from dumps, traffic_signal 
+    where st_length(dumps.geom::geography)<14 and st_length(dumps.geom::geography)>2
+    and 
+    ST_DWithin(dumps.geom::geography,traffic_signal.geom::geography, 4) group by dumps.geom),
+
+
+
+
+    firstoffset as (select detected.gid, st_transform(ST_OffsetCurve(st_transform(ST_SetSRID(geom, 4326), 26986), 1),4326) as geom  from detected),
+
+    secondoffset as (select detected.gid, st_transform(ST_OffsetCurve(st_transform(ST_SetSRID(geom, 4326), 26986), -1),4326) as geom  from detected),
+
+
+    snappedone as (select firstoffset.gid, st_setsrid((ST_DumpPoints(ST_AsText(ST_Segmentize(ST_SetSRID(geom, 4326)::geography, 0.9)))).geom,4326)  as geom from firstoffset),
+    snappedsecond as (select secondoffset.gid, st_setsrid((ST_DumpPoints(ST_AsText(ST_Segmentize(ST_SetSRID(geom, 4326)::geography, 0.9)))).geom,4326)  as geom from secondoffset),
+
+
+
+    generatedlines as (select snappedone.gid, st_makeline(
+      snappedone.geom,
+      st_closestpoint( snappedsecond.geom, snappedone.geom)) as geom from snappedone, snappedsecond  where snappedone.gid = snappedsecond.gid),
+  
+
+    stripes as (select st_buffer(geom::geography, 0.1, 'endcap=square') as geom from generatedlines where st_length(geom::geography)<1.99)
+
+    insert into zebra_crossing (project_id, geom)
+    select '{projectId}' as project_id, geom from stripes
+  
+  '''
+  cursor.execute(insert_zebra_crossing_query)
+  connection.commit()
+  cursor.close()
+  connection.close()
+
+@lru_cache
+def get_zebra_cross_from_db(projectId):
+  connection = connect()
+  cursor = connection.cursor()
+  get_zebra_crossing_query = f''' select json_build_object(
+        'type', 'FeatureCollection',
+        'features', json_agg(ST_AsGeoJSON(zebra_crossing.*)::json)
+        )
+        from zebra_crossing
+        where project_id = '{projectId}'
+      ;
+  '''
+  cursor.execute(get_zebra_crossing_query)
+  get_zebra = cursor.fetchall()[0][0]
+  cursor.close()
+  connection.close()
+  return get_zebra

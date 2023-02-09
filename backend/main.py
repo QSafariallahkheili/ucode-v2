@@ -24,7 +24,8 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 get_traffic_signal_from_db, get_tram_line_from_db,
                 get_trees_from_db, get_water_from_db, like_comment,
                 prepare_quests_user_table, undislike_comment, unlike_comment,
-                update_voting_status, drop_pedestrian_area_table)
+                update_voting_status, drop_pedestrian_area_table, drop_zebra_crossing_table, generate_zebra_crossing_table,
+                get_zebra_cross_from_db)
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
 from services.open_street_map import getDriveNetwork
@@ -851,6 +852,20 @@ async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
 async def get_pedestrian_are_from_db_api(request: Request):
     projectId = await request.json()    
     return get_pedestrian_area_from_db(db_pool, projectId)
+
+@app.post("/generate-zebra-crossing-table")
+async def generate_zebra_crossing_table_api(request: Request):
+    data = await request.json()
+    projectId = data["projectId"]
+    drop_zebra_crossing_table(projectId)
+    generate_zebra_crossing_table(projectId)
+    return "orderId"
+
+@app.post("/get-zebra-cross-from-db")
+async def get_zebra_crossing_from_db_api(request: Request):
+    projectId = await request.json()
+    zebra_crossing = get_zebra_cross_from_db(projectId)
+    return zebra_crossing
 
 if __name__ == "__main__":
     import uvicorn

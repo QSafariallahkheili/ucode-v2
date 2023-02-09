@@ -8,7 +8,13 @@ import { PROJECTION_MODE } from "@deck.gl/core/typed/lib/constants";
 import * as turf from '@turf/turf';
 import { IconLayer, TextLayer } from '@deck.gl/layers/typed';
 import type { Feature, FeatureCollection, Geometries } from "@turf/turf";
+import { ref, computed, watch } from 'vue'
+
 let buildingresponse: any
+let OSMTrafficSignalSaved = ref(false)
+let OSMDrivingLanesSaved = ref(false)
+let OSMSidewalkSaved = ref(false)
+let OSMBikeLanesSaved = ref(false)
 
 export async function prepareQuestsUserTable(projectId: string, userId: string) {
   const response = await HTTP.get("prepare-quests-user-table",{
@@ -324,7 +330,10 @@ export async function getDrivingLaneFromOSM(bbox: BoundingBox, projectId: string
   HTTP.post("get-driving-lane-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
+  .then(()=>{
+    OSMDrivingLanesSaved.value=true
+  });
 }
 
 export async function getDrivingLaneFromDB(projectId: string) {
@@ -340,7 +349,10 @@ export async function getTrafficLightsFromOSM(bbox: BoundingBox, projectId: stri
   HTTP.post("get-traffic-lights-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
+  .then(()=>{
+    OSMTrafficSignalSaved.value=true
+  })
 }
 
 export async function getTrafficSignalDataFromDB(projectId: string) {
@@ -401,7 +413,10 @@ export async function getSideWalkFromOSM(bbox: BoundingBox,projectId: string) {
   HTTP.post("get-side-walk-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
+  .then(()=>{
+    OSMSidewalkSaved.value = true
+  });
 }
 
 export async function getBikeFromOSM(bbox: BoundingBox,projectId: string) {
@@ -409,7 +424,10 @@ export async function getBikeFromOSM(bbox: BoundingBox,projectId: string) {
   HTTP.post("get-bike-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
+  .then(()=>{
+    OSMBikeLanesSaved.value = true
+  });
 }
 
 export async function getSidewalkFromDB(projectId: string) {
@@ -444,6 +462,37 @@ export async function getPedestrianAreaFromDB(projectId: string) {
   const response = await HTTP.post("get-pedestrian-area-from-db", projectId)
   return response;
 }
+
+export async function getZerbraCrossFromDB (projectId: string) {
+  const response = await HTTP.post("get-zebra-cross-from-db", projectId)
+  return response;
+}
+
+const sendZebraCrossingRequest = computed (()=>{
+  return { 
+    OSMTrafficSignalSaved: OSMTrafficSignalSaved.value, 
+    OSMDrivingLanesSaved: OSMDrivingLanesSaved.value,
+    OSMSidewalkSaved: OSMSidewalkSaved.value,
+    OSMBikeLanesSaved: OSMBikeLanesSaved.value  }
+})
+
+watch(sendZebraCrossingRequest, function () {
+
+    if (
+      sendZebraCrossingRequest.value.OSMTrafficSignalSaved == true
+      && sendZebraCrossingRequest.value.OSMDrivingLanesSaved == true
+      && sendZebraCrossingRequest.value.OSMSidewalkSaved == true
+      && sendZebraCrossingRequest.value.OSMBikeLanesSaved == true
+        
+      ) 
+      { 
+        store.dispatch("aoi/setDataIsLoaded")
+        HTTP.post("generate-zebra-crossing-table", {
+          projectId: store.state.aoi.projectSpecification.project_id,
+        }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+        
+      }
+})
 
 
 
