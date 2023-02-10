@@ -1,6 +1,5 @@
 import json
 
-import requests
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
@@ -791,6 +790,7 @@ async def clear_cache():
     get_bike_from_db_cache_stats = get_bike_from_db.cache_info()
     get_bike_lane_from_db_cache_stats = get_bike_lane_from_db.cache_info()
     get_amenities_from_db_cache_stats = get_amenities_from_db.cache_info()
+    get_zebra_cross_from_db_cache_stats = get_zebra_cross_from_db.cache_info()
     get_buildings_from_db.cache_clear()
     get_greenery_from_db.cache_clear()
     get_trees_from_db.cache_clear()
@@ -803,6 +803,7 @@ async def clear_cache():
     get_bike_from_db.cache_clear()
     get_bike_lane_from_db.cache_clear()
     get_amenities_from_db.cache_clear()
+    get_zebra_cross_from_db.cache_clear()
     result = {
         "get_buildings_from_db_cache_stats": get_buildings_from_db_cache_stats,
         "get_greenery_from_db_cache_stats": get_greenery_from_db_cache_stats,
@@ -816,6 +817,7 @@ async def clear_cache():
         "get_bike_from_db_cache_stats": get_bike_from_db_cache_stats,
         "get_bike_lane_from_db_cache_stats": get_bike_lane_from_db_cache_stats,
         "get_amenities_from_db_cache_stats": get_amenities_from_db_cache_stats,
+        "get_zebra_cross_from_db_cache_stats": get_zebra_cross_from_db_cache_stats,
         "result": "Cache cleared"
     }
 #    print(result)
@@ -858,6 +860,7 @@ async def generate_zebra_crossing_table_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     drop_zebra_crossing_table(projectId)
+    get_zebra_cross_from_db.cache_clear()
     generate_zebra_crossing_table(projectId)
     return "orderId"
 
