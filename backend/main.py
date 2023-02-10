@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
 from features.buildings import create_building_holes_polygons, create_building_polygons, get_buildings_from_db, persist_building_polygons, refine_persisted_buildings, transform_building_with_hole
+from features.driving_lane import create_driving_lane_polygons, create_service_road_polygons, persist_driving_lane, persist_driving_lane_polygon
 from features.pedestrian_area import create_pedestrian_area, persist_pedestrian_area_polygons, get_pedestrian_area_from_db
 from features.amenities import create_amenities_polygons, persist_amenities_polygons, get_amenities_from_db
 from db import (add_comment, add_drawn_line, add_fulfillment, connect,
@@ -343,11 +344,14 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
         drop_driving_lane_table(projectId)
     except:
         print("Could not drop_driving_lane_table ")
-    
+    finally:
+        get_driving_lane_from_db.cache_clear()
+        get_driving_lane_polygon_from_db.cache_clear()
+
     xmin = sure_float(project_spec.bbox.xmin)
     ymin = sure_float(project_spec.bbox.ymin)
     xmax = sure_float(project_spec.bbox.xmax)
-    ymax = sure_float(project_spec.bbox.ymax) 
+    ymax = sure_float(project_spec.bbox.ymax)
     try:
         road = getDriveNetwork(project_spec.bbox)
     except ValueError:
@@ -355,85 +359,16 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
             status_code=412,
             detail="Found no graph nodes within the requested polygon"
         )
-    
-    connection = connect()
-    cursor = connection.cursor()
-
-    insert_query_driving_lane= '''
-        INSERT INTO driving_lane (project_id,lanes,length,maxspeed,width, highway, geom) VALUES (%s,%s,%s,%s,%s,%s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
-
-    '''
-
-    insert_query_driving_lane_polygon= '''
-        
-        INSERT INTO driving_lane_polygon (project_id,lanes,length,maxspeed,width,highway, geom) VALUES (%s,%s,%s,%s,%s,%s,
-        st_buffer(
-            ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)::geography,
-            (%s::double precision)/2 ,
-            'endcap=round join=round quad_segs=2')::geometry
-        );
-        
-
-    '''
-    for f in road['features']:
-        #print(f)
-        geom = json.dumps(f['geometry'])
-        lanes=None
-        if 'lanes' in f['properties']: lanes =f['properties']['lanes']
-        length=None
-        if 'length' in f['properties']: length =f['properties']['length']
-        maxspeed=None
-        if 'maxspeed' in f['properties']: maxspeed =f['properties']['maxspeed']
-
-        highway=None
-        if 'highway' in f['properties']: highway =f['properties']['highway']
-
-        width=None
-        if 'width' in f['properties'] and f['properties']["width"] is not None and isinstance(f['properties']["width"], str):
-            width =f['properties']['width']
-            width = sure_float(width)
-        elif f['properties']["highway"]== 'primary':
-            width =10
-        elif f['properties']["highway"]== 'secondary' or f['properties']["highway"]== 'secondary_link':
-            width =8
-        elif f['properties']["highway"]== 'tertiary' or f['properties']["highway"]== 'tertiary_link':
-            width =6
-        elif f['properties']["highway"]== 'residential' or f['properties']["highway"]== 'living_street':
-            width =4
-        else:
-            width =4
-        cursor.execute(insert_query_driving_lane, (projectId,lanes,length,maxspeed,width,highway, geom,))
-        cursor.execute(insert_query_driving_lane_polygon, (projectId,lanes,length,maxspeed,width,highway, geom,width))
-    
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-    connection = connect()
-    cursor = connection.cursor()
+    driving_lane_polygons = create_driving_lane_polygons(projectId, road)
+    persist_driving_lane(db_pool, driving_lane_polygons)
+    persist_driving_lane_polygon(db_pool, driving_lane_polygons)
 
     bbox = f"""{ymin},{xmin},{ymax},{xmax}"""
     data_serviceroad_osm = interpreter(query_serviceroad(bbox))
     data_serviceroad_geojson = osmtogeojson.process_osm_json(data_serviceroad_osm)
-    for f in data_serviceroad_geojson["features"]:
-
-        if f["geometry"]['type'] == "LineString":
-           
-            lanes=None
-            if 'lanes' in f['properties']: lanes =f['properties']['lanes']
-            length=None
-            if 'length' in f['properties']: length =f['properties']['length']
-            maxspeed=None
-            if 'maxspeed' in f['properties']: maxspeed =f['properties']['maxspeed']
-            highway=None
-            if 'highway' in f['properties']: highway =f['properties']['highway']
-            width = 2
-            geom = json.dumps(f['geometry'])
-            cursor.execute(insert_query_driving_lane_polygon, (projectId,lanes,length,maxspeed,width,highway, geom, width))
-
-    connection.commit()
-    cursor.close()
-    connection.close()
+    
+    service_road_polygons = create_service_road_polygons(projectId, data_serviceroad_geojson)
+    persist_driving_lane_polygon(db_pool, service_road_polygons)
 
     return "true"
 
