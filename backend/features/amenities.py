@@ -55,12 +55,12 @@ def persist_amenities_polygons(
 @lru_cache
 def get_amenities_from_db(conn_pool: ConnectionPool, projectId:str):
     with conn_pool.connection() as connection:
-        get_amenities_query =f'''
+        get_amenities_query ='''
             with candidate_buildings as 
             (select building.geom, building.estimatedheight, amenities.amenity, amenities.id as amenityid 
             from amenities, building 
             where st_isvalid(building.geom) and
-                    st_isvalid(amenities.geom) and building.project_id='{projectId}' and amenities.project_id='{projectId}'
+                    st_isvalid(amenities.geom) and building.project_id=%(projectId)s and amenities.project_id=%(projectId)s
                     and st_within(building.geom,amenities.geom) or st_within(amenities.geom, building.geom)
             )
 
@@ -78,5 +78,5 @@ def get_amenities_from_db(conn_pool: ConnectionPool, projectId:str):
                 ) amenities
             ;
         '''
-        amenities = connection.execute(get_amenities_query).fetchall()[0][0]
+        amenities = connection.execute(get_amenities_query, {'projectId':projectId}).fetchall()[0][0]
         return amenities
