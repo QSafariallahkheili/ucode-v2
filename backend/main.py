@@ -105,6 +105,7 @@ async def add_fulfillment_api(questId: int, userId: str):
 async def get_greenery_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"] 
+    get_greenery_from_db.cache_clear()
     drop_greenery_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
     tags = data["usedTagsForGreenery"]["tags"]
