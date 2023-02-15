@@ -7,7 +7,8 @@ const myCustomLightTheme = {
   dark: false,
   colors: {
     primary: '#333132',
-    secondary: '#0089B5'
+    secondary: '#0089B5',
+    warning: '#FFA500'
   }
 }
 

@@ -37,11 +37,19 @@ import { useStore } from 'vuex';
 import { HTTP } from '@/utils/http-common';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import type { FeatureCollection } from 'geojson';
+import bboxPolygon from "@turf/bbox-polygon"
+import booleanIntersects from "@turf/boolean-intersects";
+import type { Feature } from '@turf/helpers';
+import { Popup } from "maplibre-gl";
+
+
 const store = useStore()
 let commentText = ref<string>("")
 let isFocused = ref<boolean>(false)
 let allMarker = reactive<FeatureCollection>({ type: "FeatureCollection", features: [] })
 let taLineCount = ref<number>(1)
+
+let commentValidationPopup = new Popup({ closeButton: false, closeOnClick: false, offset: [0, -50] })
 
 const props = defineProps({
     showCommentDialog: {
@@ -49,7 +57,7 @@ const props = defineProps({
         default: false
     }
 })
-const emit = defineEmits(["addComment", "hideQuests","closeCommentDialog", "placeComment"])
+const emit = defineEmits(["addComment", "hideQuests","closeCommentDialog", "placeComment", "addPopup"])
 /*const currentQuestType = computed(() => {
   if (Object.keys(store.state.quests.questList).length === 0) {
   }
@@ -114,27 +122,62 @@ function createComment(){
 }
 
 const saveComment = () => {
-    let quest =  store.state.quests.questList[store.state.quests.current_order_id]
-    store.state.freecomment.moveableCommentMarker.remove()
-    createComment()
-    const submitComment = () => {
-        HTTP
-            .post('add-comment', {
-                projectId: store.state.aoi.projectSpecification.project_id,
-                comment: commentText.value,
-                //@ts-ignore
-                position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
-                userId: store.state.aoi.userId,
-                questId: quest.quest_id,
-                routeId: store.state.quests.selectedRouteId
-            })
-    }
-    submitComment()
-    commentText.value = ""
-    // store.commit('freecomment/setMoveComment', false)
 
-    emit('closeCommentDialog')
-    store.state.quests.questList[store.state.quests.current_order_id].fulfillment++
+    /* check if the position of the comment intersects with the AOI */
+
+    const coords = store.state.freecomment.moveableCommentMarker.getLngLat()
+    let marker  = <Feature>{
+        type: "Feature",
+        geometry: {
+            type: "Point",
+            coordinates:[coords.lng, coords.lat]
+        }
+    }
+    let bbox = store.state.aoi.projectSpecification.bbox
+    let AOIPolygon = <Feature> bboxPolygon([bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax]);
+    let intersects = <Boolean> booleanIntersects(AOIPolygon, marker);
+    
+    if (intersects){
+        let quest =  store.state.quests.questList[store.state.quests.current_order_id]
+        store.state.freecomment.moveableCommentMarker.remove()
+        createComment()
+        const submitComment = () => {
+            HTTP
+                .post('add-comment', {
+                    projectId: store.state.aoi.projectSpecification.project_id,
+                    comment: commentText.value,
+                    //@ts-ignore
+                    position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
+                    userId: store.state.aoi.userId,
+                    questId: quest.quest_id,
+                    routeId: store.state.quests.selectedRouteId
+                })
+        }
+        submitComment()
+        commentText.value = ""
+        // store.commit('freecomment/setMoveComment', false)
+
+        emit('closeCommentDialog')
+        store.state.quests.questList[store.state.quests.current_order_id].fulfillment++
+    }
+    else {
+
+        commentValidationPopup.setLngLat(coords)
+        commentValidationPopup.setHTML(`Bitte platziere deinen Kommentar im gekennzeichneten Bereich!`
+        )
+        emit("addPopup", commentValidationPopup)
+        const el = document.getElementsByClassName('maplibregl-popup-tip')[0] as HTMLElement;
+        el.style.display="none"
+        const popupContent = document.getElementsByClassName('maplibregl-popup-content')[0] as HTMLElement;
+        popupContent.style.borderRadius="8px"
+        popupContent.style.backgroundColor='#FFA500'
+        popupContent.style.color="black"
+        popupContent.style.textAlign="center"
+        setTimeout(function(){
+ 	        commentValidationPopup.remove()
+        }, 3000);
+    }
+    
 }
 /************************************************/
 /*   handle Commenting Dialog for IOS, IPadOS   */
@@ -346,6 +389,12 @@ onMounted(() => {
 @keyframes slide-right {
     0%   {margin-right: 4em;}
     100% {margin-right: 1em;}
+}
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip, .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    align-self: center;
+    border-bottom: none;
+    border-top-color: #fff;
+    display: none;
 }
 
 </style>

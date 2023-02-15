@@ -11,7 +11,7 @@
         @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap" @fitBoundsToBBOX="fitBoundsToBBOX"
         @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
       <FreeComment v-show="tabIndex == 'planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog"
-        @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog"
+        @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog" @addPopup="addPopupToMap"
         @hideQuests="() => { hideQuests = true }" />
       <CommentGallery :show="tabIndex == 'discussion'" @deleteQuestCommentFromSource="deleteQuestCommentFromSource"
         @scaleUpComment="scaleUpComment" @toggleLayerVisibility="togglelayerVisibility"
