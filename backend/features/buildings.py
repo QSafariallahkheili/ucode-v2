@@ -98,8 +98,14 @@ def persist_building_polygons(
 ):
     with conn_pool.connection() as connection:
         with connection.cursor() as cur:
+
+            '''
             insert_query_building = """
                 INSERT INTO building (project_id,wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, amenity, geom) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
+            """
+            '''
+            insert_query_building = """
+                INSERT INTO building (project_id,wallcolor,wallmaterial, roofcolor,roofmaterial,roofshape,roofheight, height, floors, estimatedheight, amenity, geom) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, (st_buffer(st_buffer(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326)::geography, 1,'side=right'),1, 'quad_segs=2')::geography)::geometry);
             """
             cur.executemany(insert_query_building, building_polygons)
             # batching doesn't bare much performance differences here because of the GIS operations involved
