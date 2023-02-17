@@ -200,6 +200,7 @@ async def get_quests_and_fulfillment_from_db_api(projectId: str, userId: str):
 async def get_trees_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
+    get_trees_from_db.cache_clear()
     drop_tree_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
@@ -384,6 +385,7 @@ async def get_traffic_lights_from_osm_api(request: Request):
     drop_traffic_signal_table(projectId)
     data = await request.json()
     projectId = data["projectId"]
+    get_traffic_signal_from_db.cache_clear()
     drop_traffic_signal_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
@@ -438,6 +440,7 @@ async def get_water_from_db_api(request: Request):
 async def get_water_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"] 
+    get_water_from_db.cache_clear()
     drop_water_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
@@ -507,6 +510,7 @@ async def get_tram_lines_from_osm_api(request: Request):
     
     data = await request.json()
     projectId = data["projectId"]
+    get_tram_line_from_db.cache_clear()
     drop_tram_line_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
@@ -579,6 +583,7 @@ async def get_side_walk_from_osm_api(request: Request):
     data = await request.json()
     
     projectId = data["projectId"]
+    get_sidewalk_from_db.cache_clear()
     drop_sidewalk_table(projectId)
 
     drop_sidewalk_polygon(projectId)
@@ -631,6 +636,8 @@ async def get_side_walk_from_osm_api(request: Request):
 async def get_bike_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
+    get_bike_from_db.cache_clear()
+    get_bike_lane_from_db.cache_clear()
     drop_bike_table(projectId)
     drop_bike_polygon_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
@@ -727,6 +734,7 @@ async def clear_cache():
     get_bike_lane_from_db_cache_stats = get_bike_lane_from_db.cache_info()
     get_amenities_from_db_cache_stats = get_amenities_from_db.cache_info()
     get_zebra_cross_from_db_cache_stats = get_zebra_cross_from_db.cache_info()
+    get_pedestrian_area_from_db_cache_stats = get_pedestrian_area_from_db.cache_info()
     get_buildings_from_db.cache_clear()
     get_greenery_from_db.cache_clear()
     get_trees_from_db.cache_clear()
@@ -740,6 +748,7 @@ async def clear_cache():
     get_bike_lane_from_db.cache_clear()
     get_amenities_from_db.cache_clear()
     get_zebra_cross_from_db.cache_clear()
+    get_pedestrian_area_from_db.cache_clear()
     result = {
         "get_buildings_from_db_cache_stats": get_buildings_from_db_cache_stats,
         "get_greenery_from_db_cache_stats": get_greenery_from_db_cache_stats,
@@ -754,6 +763,7 @@ async def clear_cache():
         "get_bike_lane_from_db_cache_stats": get_bike_lane_from_db_cache_stats,
         "get_amenities_from_db_cache_stats": get_amenities_from_db_cache_stats,
         "get_zebra_cross_from_db_cache_stats": get_zebra_cross_from_db_cache_stats,
+       " get_pedestrian_area_from_db_cache_stats":get_pedestrian_area_from_db_cache_stats,
         "result": "Cache cleared"
     }
 #    print(result)
@@ -783,6 +793,7 @@ async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
     data_pedestrian_area_multipolygon_geojson = osmtogeojson.process_osm_json(pedestrian_area_data_multipolygon)
     pedestrian_area_multipolygons = create_pedestrian_area(project_spec.projectId,  data_pedestrian_area_multipolygon_geojson)
     persist_pedestrian_area_polygons(db_pool, pedestrian_area_multipolygons)
+    get_pedestrian_area_from_db.cache_clear()
 
     return "ok"
 
