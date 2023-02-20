@@ -4,25 +4,26 @@
         <DeletingDialog v-if="(commentsAreLoaded && props.show)" :deleteDialog="deleteDialog"
             @cnacelDeleteDialog="cnacelDeleteDialog" @confirmDeleteCommentDialog="confirmDeleteCommentDialog" />
 
-        <transition name="card">
+       
             <div v-if="(commentsAreLoaded && props.show && mapView == false)" className="comment-list">
                 <CommentSortAndFilter @sortComment="sortComment" @multifFilterComment="multifFilterComment"
                     :bottomPositionSortFilter="bottomPositionSortFilter" :activfilterOptions="activfilterOptions" />
-                <div>
-                    <CommentCard v-for="comment in filteredCommentList" :id="comment.properties.id"
-                        :created_at="comment.properties.created_at" :comment="comment.properties.comment"
-                        :user_id="comment.properties.user_id" :likes="comment.properties.likes"
-                        :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
-                        :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment"
-                        @zoomToComment="zoomToComment" />
-                </div>
-
+                <transition name="card">
+                    <div>
+                        <CommentCard v-for="comment in filteredCommentList" :id="comment.properties.id"
+                            :created_at="comment.properties.created_at" :comment="comment.properties.comment"
+                            :user_id="comment.properties.user_id" :likes="comment.properties.likes"
+                            :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
+                            :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment"
+                            @zoomToComment="zoomToComment" />
+                    </div>
+                </transition>
                 <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
                     v-if="mapView == false" size="large" icon class="map-comment-view-toggle">
                     <v-icon>mdi-map-outline</v-icon>
                 </v-btn>
             </div>
-        </transition>
+       
         <transition name="fade">
             <div v-if="props.show && mapView == false" className="backdrop">
                 <div v-if="(!commentsAreLoaded && props.show)" class="comment-list">
