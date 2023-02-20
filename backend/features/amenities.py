@@ -25,8 +25,11 @@ def create_amenities_polygons(projectId: str, data_amenities) -> List[AmenitiesP
         if "amenity" in f['properties']:
             amenity = f['properties']["amenity"]
         estimatedHeight = None
-
-        
+        amenityName = None
+        if "name" in f['properties']:
+            amenityName = f['properties']["name"]
+        else:
+            amenityName =f['properties']['amenity']
         geom = json.dumps(f["geometry"])
        
         tpl = tuple(
@@ -35,6 +38,7 @@ def create_amenities_polygons(projectId: str, data_amenities) -> List[AmenitiesP
                 buildingId,
                 estimatedHeight,
                 amenity,
+                amenityName,
                 geom,
             )
         )
@@ -47,7 +51,7 @@ def persist_amenities_polygons(
     with conn_pool.connection() as connection:
         with connection.cursor() as cur:
             insert_query_amenities = """
-                INSERT INTO amenities (project_id,building_id,estimatedheight,amenity,geom) VALUES (%s,%s, %s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
+                INSERT INTO amenities (project_id,building_id,estimatedheight,amenity, amenity_name,geom) VALUES (%s,%s, %s, %s, %s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
             """
             cur.executemany(insert_query_amenities, amenity_polygons)
             connection.commit()
@@ -57,7 +61,7 @@ def get_amenities_from_db(conn_pool: ConnectionPool, projectId:str):
     with conn_pool.connection() as connection:
         get_amenities_query ='''
             with candidate_buildings as 
-            (select building.geom, building.estimatedheight, amenities.amenity, amenities.id as amenityid 
+            (select building.geom, building.estimatedheight, amenities.amenity, amenities.amenity_name, amenities.id as amenityid
             from amenities, building 
             where st_isvalid(building.geom) and
                     st_isvalid(amenities.geom) and building.project_id=%(projectId)s and amenities.project_id=%(projectId)s
@@ -70,7 +74,7 @@ def get_amenities_from_db(conn_pool: ConnectionPool, projectId:str):
                 )
                 from  (
                     select distinct on 
-                    (amenityid) amenityid, geom, estimatedheight, amenity FROM candidate_buildings Y 
+                    (amenityid) amenityid, amenity_name, geom, estimatedheight, amenity FROM candidate_buildings Y 
                     WHERE estimatedheight = 
                     (SELECT max(estimatedheight) FROM candidate_buildings X
                     WHERE X.amenityid = Y.amenityid

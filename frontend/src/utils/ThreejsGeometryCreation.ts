@@ -1,18 +1,20 @@
 import type { BoundingBox } from "@/store/modules/aoi";
 import type { Feature, FeatureCollection, Geometry, Position, Properties } from "@turf/turf";
-import maplibregl, { MercatorCoordinate, type Coordinates, type LngLatLike } from "maplibre-gl";
-import { BufferGeometry, DoubleSide, Vector2, type Group } from "three";
+import maplibregl, { Map, MercatorCoordinate, type Coordinates, type LngLatLike } from "maplibre-gl";
+import { BufferGeometry, DoubleSide, Vector2, Vector3 } from "three";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer'
 
 type TransformationWrapper = {
   position: number[];
   rotation: number;
   scale: number;
+  userData?: { name: string };
 };
 
 type Mesh = {
@@ -30,6 +32,10 @@ export interface THREEGeoSettings {
 }
 
 export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
+  if (settings.geoJson.features == null) {
+    console.error("No Data in GeoJson")
+    return
+  }
   let polygeom = new THREE.BufferGeometry()
   //let shapes: THREE.Shape[] =[]
   // console.log(settings.scene)
@@ -74,7 +80,7 @@ export function addPolygonsFromCoordsAr(settings: THREEGeoSettings): void {
       texture.offset.set(0, 0);
       texture.repeat.set(0.2, 0.2);
     }
-    let material = new THREE.MeshStandardMaterial({ color: geoms.length == 1 ? settings.color : settings.color[index], side: DoubleSide, roughness: 1, map: settings.textureURL? texture : null })
+    let material = new THREE.MeshStandardMaterial({ color: geoms.length == 1 ? settings.color : settings.color[index], side: DoubleSide, roughness: 1, map: settings.textureURL ? texture : null })
     const mesh = new THREE.Mesh(polygeom, material);
     if (settings.extrude != .99) {
       mesh.translateY(settings.extrude)
@@ -122,13 +128,31 @@ export function addGeoOnPointsToThreejsScene(
           }
         }
       })
-      const clusters = createGeoInstances(
-        localCoordinates,
-        currentMeshes,
-        hasRandomSize,
-        hasRandomRot
-      );
-      clusters.forEach((cluster) => scene.add(cluster));
+      if (glbModel.startsWith('poiIcons')) {
+        localCoordinates.map(coordinates => {
+          let instance = gltf.scene.clone();
+          instance.position.set(coordinates.position[2], coordinates.position[1], coordinates.position[0])
+          instance.scale.set(coordinates.scale, coordinates.scale, coordinates.scale)
+          instance.setRotationFromEuler(new THREE.Euler(0, coordinates.rotation, 0, "XYZ"))
+          if (coordinates.userData?.name) {
+            instance.userData = coordinates.userData
+          }
+          // console.log(instance)
+          scene.add(instance);
+          // console.log('Placed POI(' + glbModel + ') at: ' + instance.position.toArray())
+          // console.log(coordinates.position)
+
+        })
+      }
+      else {
+        const clusters = createGeoInstances(
+          localCoordinates,
+          currentMeshes,
+          hasRandomSize,
+          hasRandomRot
+        );
+        clusters.forEach((cluster) => scene.add(cluster));
+      }
     }
   );
 }
@@ -158,29 +182,19 @@ function worldPointInRelativeCoord(LngLatPoint: LngLatLike, bbox: BoundingBox) {
   // );
   return relativePosition
 }
+function getAllMeshes(scene: THREE.Group): THREE.Mesh[] {
+  const meshes: THREE.Mesh[] = [];
 
-function getAllMeshes(scene: Group): Mesh[] {
-  const extractMesh = (scene: Group, meshes: Mesh[] = []): Mesh[] => {
-    if (scene.children == undefined) {
-      console.log("no more Children...");
-      return meshes;
+  const extractMesh = (node: THREE.Object3D) => {
+
+    if (node instanceof THREE.Mesh) {
+      meshes.push(node);
+    } else if (node instanceof THREE.Group) {
+      node.children.forEach((child) => extractMesh(child));
     }
-    scene.children.forEach((sceneChild: any) => {
-      if (sceneChild.geometry != undefined) {
-        //console.log("geo is: " + element.geometry)
-        // console.log(sceneChild.material.side)
-        sceneChild.material.side = 0
-        meshes.push({
-          geometry: sceneChild.geometry,
-          material: sceneChild.material,
-        });
-      } else {
-        extractMesh(sceneChild, meshes);
-      }
-    });
-    return meshes;
   };
-  return extractMesh(scene);
+  extractMesh(scene);
+  return meshes;
 }
 
 function createGeoInstances(
@@ -207,12 +221,12 @@ function createMeshInstance(
   hasRandomSize: number[] | undefined,
   hasRandomRot: boolean
 ) {
-  const cluster = new THREE.InstancedMesh(
+  const instance = new THREE.InstancedMesh(
     mesh,
     material,
     localSceneCoordinates.length
   );
-
+  const instanceDataAttribute = new THREE.InstancedBufferAttribute(new Float32Array(localSceneCoordinates.length), 1);
   localSceneCoordinates.forEach((localSceneCoordinate, index) => {
     let scale = new THREE.Vector3(1, 1, 1);
     let rotation = new THREE.Quaternion();
@@ -234,17 +248,51 @@ function createMeshInstance(
       let eulerRot = new THREE.Euler(0, rot, 0, "XYZ");
       rotation = rotation.setFromEuler(eulerRot);
     }
+    if (localSceneCoordinate.userData?.name) {
+      instanceDataAttribute.setX(index, addString(localSceneCoordinate.userData?.name))
+    }
 
     const matrix = new THREE.Matrix4();
     matrix.compose(position, rotation, scale);
-    cluster.setMatrixAt(index, matrix);
+    instance.setMatrixAt(index, matrix);
   });
+  instance.geometry.setAttribute('userData', instanceDataAttribute);
+  return instance;
+}
+const stringToHash: { [key: string]: number } = {}; // object to store hash values of strings
+const hashToString: { [key: string]: string } = {}; // object to store strings corresponding to hash values
 
-  return cluster;
+function hashString(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash += str.charCodeAt(i);
+  }
+  return hash;
+}
+function addString(str: string) {
+  const hash = hashString(str);
+  stringToHash[str] = hash;
+  hashToString[hash] = str;
+  return hash;
+}
+export function getString(hash: number) {
+  return hashToString[hash];
+}
+function encodeStringAsFloat(str: string | undefined) {
+  if (str) {
+    let float = 0;
+    for (let i = 0; i < str.length; i++) {
+      const charCode = str.charCodeAt(i);
+      const exponent = 3 - i;
+      float += (charCode / 255) * Math.pow(10, exponent);
+    }
+    return float;
+  }
+  else { return 0 }
 }
 
 function generateLocalCoordinates(
-  _geoJson: any,
+  _geoJson: { features: { geometry: { coordinates: [number, number] }[], properties: { estimatedheight: number, amenity_name?: string } }[] } | null,
   bbox: BoundingBox,
   hasRandomSize?: number[]
 ): TransformationWrapper[] {
@@ -272,22 +320,9 @@ function generateLocalCoordinates(
         ],
         rotation: rot,
         scale: scl,
+        userData: { 'name': _geoJson.features[index].properties.amenity_name }
       };
       localSceneCoordinates.push(localPos);
-    }
-  } else {
-    let _lat = 0;
-    let _long = 0;
-    for (let i = 0; i < 500; i++) {
-      _long = i * 10;
-      for (let index = 0; index < 100; index++) {
-        _lat = index * 10;
-        localSceneCoordinates.push({
-          position: [_lat, _long],
-          rotation: 0,
-          scale: 1,
-        });
-      }
     }
   }
   return localSceneCoordinates;
@@ -462,4 +497,55 @@ function createLinesegments(coords: any, settings: THREEGeoSettings) {
   const polygeom = BufferGeometryUtils.mergeBufferGeometries(geoms)
   polygeom.translate(0, 0, settings.height)
   return polygeom
+}
+export function createCSS2DElement(intersect: THREE.Intersection, map: Map, scene: THREE.Scene) {
+  const obj = getHighestParent(intersect.object)
+  const hasNotCSS2DObject = () => {
+    let hasNot = true
+    scene.children.map(child => {
+      if (child.isCSS2DObject !== undefined) {
+        // hasNot = false
+        scene.remove(child)
+        return true
+      }
+    })
+    return hasNot
+
+  }
+  if (obj instanceof THREE.Object3D && obj && hasNotCSS2DObject()) {
+    const userData = obj.userData
+    let text = userData.name;
+    const textDiv = document.createElement('h1');
+    textDiv.className = 'textDiv';
+    textDiv.textContent = text;
+    textDiv.style.backgroundColor = 'white';
+    textDiv.style.borderRadius = '8px';
+    textDiv.style.padding = '0.5rem';
+    textDiv.style.textAlign = 'center';
+
+    // create a CSS2DObject with the div element
+    const textObject = new CSS2DObject(textDiv);
+    // set the position of the CSS2DObject
+    var box = new THREE.Box3().setFromObject(obj);
+    let height = box.max.y
+    textObject.position.copy(obj.position)
+    textObject.position.add(new Vector3(0,height,0))
+    
+    // add the CSS2DObject to the scene
+    scene.add(textObject);
+
+    setTimeout(function () {
+      scene.remove(textObject);
+      map.triggerRepaint();
+    }, 5000);
+
+  }
+}
+function getHighestParent(obj: THREE.Object3D) {
+  var parent = obj.parent;
+  while (parent && parent.type !== "Scene") {
+    obj = parent;
+    parent = obj.parent;
+  }
+  return obj;
 }

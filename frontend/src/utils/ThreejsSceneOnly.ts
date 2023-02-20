@@ -4,12 +4,20 @@ import maplibregl, {
   type LngLatLike,
 } from "maplibre-gl";
 import * as THREE from "three";
-import { Scene } from "three";
+import { Scene, Vector3 } from "three";
 import type * as glMatrix from "gl-matrix";
+import { createCSS2DElement } from '@/utils/ThreejsGeometryCreation'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import { distance } from "@turf/turf";
+import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer'
+
 //import { relativeCoordInWorldPoint } from "./ThreejsGeometryCreation";
 
 
 let ThreeScenes: ThreeJsScene[] = []
+let textMesh: THREE.Object3D;
+let planeMesh: THREE.Object3D;
 export class ThreeJsScene extends Scene {
   constructor() {
     super();
@@ -87,12 +95,12 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
   let camInverseProjection: THREE.Matrix4
   let cameraPosition: THREE.Vector3
   let cameraTransform: any
-  let raycaster: any
-  let mainMap: any
+  let raycaster: THREE.Raycaster
+  let mainMap: Map
   const mainScene = new ThreeJsScene();
   const mainCamera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
-  
 
+  let cssRenderer = new CSS2DRenderer();
   let mainRenderer = new THREE.WebGLRenderer();
   mainScene.add(hemiLight);
   mainScene.add(dirLight);
@@ -134,7 +142,10 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
       raycaster = new THREE.Raycaster();
       raycaster.near = -1;
       raycaster.far = 1e6;
-      raycaster.layers.set(1);
+      // raycaster.layers.set(1);
+
+      cssRenderer.setSize(mainMap.getCanvas().clientWidth, mainMap.getCanvas().clientHeight);
+      mainMap.getCanvas().parentElement.appendChild(cssRenderer.domElement);
 
 
     },
@@ -145,16 +156,11 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
       // console.log(matrix)
       mainRenderer.resetState();
       mainRenderer.render(mainScene, mainCamera);
+      cssRenderer.render(mainScene, mainCamera);
       // console.count("triggerRepaint")
       //this.map.triggerRepaint();
       camInverseProjection = mainCamera.projectionMatrix.invert();
       cameraPosition = new THREE.Vector3().applyMatrix4(camInverseProjection);
-      if(layerName == 'ownComments'){
-        mainScene.children.forEach((child) =>{
-          child.lookAt(cameraPosition)
-          // console.log(cameraPosition)
-        })
-      }
     },
     //@ts-ignore
     raycast(point: any) {
@@ -163,32 +169,20 @@ export const ThreejsSceneOnly = (lng: number, lat: number, layerName: string) =>
       // // scale mouse pixel position to a percentage of the screen's width and height
       mouse.x = (point.x / mainMap.transform.width) * 2 - 1;
       mouse.y = 1 - (point.y / mainMap.transform.height) * 2;
-      
+
       const mousePosition = new THREE.Vector3(mouse.x, mouse.y, 1).applyMatrix4(camInverseProjection);
       const viewDirection = mousePosition.clone().sub(cameraPosition).normalize();
 
       raycaster.set(cameraPosition, viewDirection);
 
       // calculate objects intersecting the picking ray
-      // var intersects = raycaster.intersectObjects(mainScene.children, true);
-      // console.log("Layers: " + ThreeScenes.length )
-      for (const scene of ThreeScenes) {
-        var intersects = raycaster.intersectObjects(scene.children, true);
-        if (intersects.length > 0) {
-          // console.log(mainScene.children)
-          const obj = mainScene.children[mainScene.children.length-1]
-          obj.position.x = intersects[0].point.x
-          obj.position.z = intersects[0].point.z
-          obj.position.y = intersects[0].point.y
-          mainMap.triggerRepaint()
-          break;
-        }
-       
-      };
-      
+      var intersects = raycaster.intersectObjects(mainScene.children, true);
+
+      if (intersects.length > 0 && intersects[0].object.parent?.userData.name) {
+        // console.log('click')
+        createCSS2DElement(intersects[0],mainMap, mainScene)
+      }
     },
-
-
   };
   ThreeScenes.push(mainScene)
   return { layer: customLayer, scene: mainScene };

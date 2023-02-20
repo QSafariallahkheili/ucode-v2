@@ -127,13 +127,20 @@ onMounted(() => {
     //  getCommentData()
 
   });
+  map.on('click',function (mapClick) {
+    
+    let layer = map.getLayer('threeJsScene3d')
+    layer.implementation.raycast(mapClick.point)
+    
+  });
   map.on('click', function (mapClick) {
-    // @ts-ignore
-    mapClicks.clickedCoordinates = [mapClick.lngLat.lng, mapClick.lngLat.lat]
-    if (store.state.comment.toggle) {
-      //@ts-ignore
-      addLayerToMap(pulseLayer(store.state.pulse.pulseCoordinates.geometry.coordinates))
-    }
+    // // @ts-ignore
+    // mapClicks.clickedCoordinates = [mapClick.lngLat.lng, mapClick.lngLat.lat]
+    // if (store.state.comment.toggle) {
+    //   //@ts-ignore
+    //   addLayerToMap(pulseLayer(store.state.pulse.pulseCoordinates.geometry.coordinates))
+    // }
+    // console.log("click")
 
   });
 
