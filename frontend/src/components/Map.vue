@@ -9,7 +9,7 @@
 
       <PlanningIdeas v-show="store.state.ui.intro == false && tabIndex == 'planning'" v-if="mapStyleLoaded"
         @activateSelectedPlanningIdea="activateSelectedPlanningIdeaInMap" @fitBoundsToBBOX="fitBoundsToBBOX"
-        @addPopup="addPopupToMap" @flyToLocation="flyToLocation" />
+        @addPopup="addPopupToMap" @flyToLocation="flyToLocation" @hideQuests="(value) => { hideQuests = value }" />
       <FreeComment v-show="tabIndex == 'planning'" @placeComment="placeComment" :showCommentDialog="showCommentDialog"
         @addComment="addCommentToMap" @closeCommentDialog="closeCommentDialog" @addPopup="addPopupToMap"
         @hideQuests="() => { hideQuests = true }" />

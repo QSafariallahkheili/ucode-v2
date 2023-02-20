@@ -37,7 +37,7 @@ import { HTTP } from "@/utils/http-common";
 
 const store = useStore();
 
-const emit = defineEmits(["activateSelectedPlanningIdea", "fitBoundsToBBOX", "addPopup", "flyToLocation", "flyToLocation"])
+const emit = defineEmits(["activateSelectedPlanningIdea", "fitBoundsToBBOX", "addPopup", "flyToLocation", "flyToLocation", "hideQuests"])
 
 let planningData = reactive<{routes: Feature[]}>({ routes: [] })
 
@@ -182,14 +182,18 @@ const activateSelectedPlanningIdea = (route: Feature) => {
 
 const exploreSelectedPlanningIdea = (routeId: number) => {
   if (store.state.quests.current_order_id == 0 && exploredPlanningIdeaId.indexOf(routeId) == -1) {
+    emit("hideQuests", true)
     let data = store.state.quests.questList[0].content.detailedDescription["route" + routeId]
     let start = 0
     let dataLength = data.length
     planningIdeaPopup.setLngLat(data[0].location.coordinates)
-    planningIdeaPopup.setHTML(`<div id="planning-idea-popup-content">
+    planningIdeaPopup.setHTML(`
+                <div id="planning-idea-popup-content">
                   <div id="description">${data[start].description} </div>
                   <div class="mt-4">
-                    <button style="color: green; outline: none !important; box-shadow: none;" id="next" class="btn btn-sm mt-2">Weiter</button>
+                    <button style="color: green; outline: none !important; box-shadow: none;" id="next" class="btn btn-sm mt-2">
+                      Weiter
+                    </button>
                   </div>
                 </div>`
     )
@@ -221,6 +225,7 @@ const exploreSelectedPlanningIdea = (routeId: number) => {
             planningIdeaPopup.remove()
             exploredPlanningIdeaId.push(routeId)
             store.state.quests.questList[0].fulfillment++
+            emit("hideQuests", false)
             addQuestFulfillment()
           }
         }
