@@ -18,13 +18,18 @@
       />
     </v-window-item>
   </v-window>
-  <div class="quest-action-area">
-    <v-btn @click="hideBtnClicked">
-      <v-icon icon="mdi-chevron-up" size="large" :class="props.hide?'rotate hide-btn-icon':'hide-btn-icon'"></v-icon>
-    </v-btn>
-    <transition name="fade">
-      <QuestStepper v-if="!props.hide" :quests="store.state.quests.questList"/>
-    </transition>
+  <div>
+    <div class="quest-action-area">
+      <v-btn @click="hideBtnClicked">
+        <v-icon icon="mdi-chevron-up" size="large" :class="props.hide?'rotate hide-btn-icon':'hide-btn-icon'"></v-icon>
+      </v-btn>
+    </div>
+    <div>
+      <transition name="fade">
+        <QuestStepper v-if="!props.hide" :quests="store.state.quests.questList"/>
+      </transition>
+    </div>
+   
   </div>
   <QuestsCompletedDialog :show="showAllQuestsCompletedDialog" @allQuestsCompletedWasShown="() => { showAllQuestsCompletedDialog = false;}"/>
 </div>
@@ -116,7 +121,12 @@ const hideBtnClicked = () => {
 
 .quest-action-area{
   display: flex;
+  position: absolute;
+  
 }
+.quest-action-area > * {
+        flex: 1 1 1;
+      }
 
 .fade-enter-active{
     opacity: 0;
