@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 
 from fastapi import FastAPI, HTTPException, Request
@@ -25,7 +26,7 @@ from db import (add_comment, add_drawn_line, add_fulfillment, connect,
                 get_trees_from_db, get_water_from_db, like_comment,
                 prepare_quests_user_table, undislike_comment, unlike_comment,
                 update_voting_status, drop_pedestrian_area_table, drop_zebra_crossing_table, generate_zebra_crossing_table,
-                get_zebra_cross_from_db)
+                get_zebra_cross_from_db, update_project_starting_orientation)
 from db_migrations import run_database_migrations
 from models import ProjectSpecification
 from services.open_street_map import getDriveNetwork
@@ -91,6 +92,19 @@ async def root():
 @app.get("/project-specification")
 async def get_project_specification_from_db_api(projectId: str):
     return get_project_specification_from_db(projectId)
+
+@dataclass
+class MapOrientation:
+    center: dict[str, float]
+    zoom: float
+    bearing: float
+    pitch: float
+    
+@app.post("/update-starting-orientation")
+async def update_project_starting_orientation_api(request: Request):
+    data = await request.json()
+    response = update_project_starting_orientation(data["projectId"] , data["startingOrientation"])
+    return response
        
 @app.get("/prepare-quests-user-table")
 async def prepare_quests_user_table_api(projectId: str, userId:str):

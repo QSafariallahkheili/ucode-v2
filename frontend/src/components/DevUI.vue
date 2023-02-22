@@ -24,6 +24,9 @@
       <v-btn color="#41b883" @click="emit('startPopulate')" class="mt-2">
         Load from DB
       </v-btn>
+      <v-btn color="#41b883" @click="emit('getMapOrientation')" class="mt-2">
+        Update starting Orienation
+      </v-btn>
 
     </v-col>
 
@@ -96,7 +99,7 @@ import {
 } from "../service/backend.service";
 
 const store = useStore();
-const emit = defineEmits(["startPopulate"])
+const emit = defineEmits(["startPopulate", "getMapOrientation"])
 
 const clearServerCache = async () => {
   const result = await clearCache()
@@ -108,8 +111,6 @@ const ShoQuestsFulfillment = async () => {
   let message = getQuestsFulfillmentFromDB(store.state.aoi.projectId, store.state.aoi.userId)
   console.log(message)
 }
-
-
 
 // drops the comments of the current project
 const dropCommentData = async () => {

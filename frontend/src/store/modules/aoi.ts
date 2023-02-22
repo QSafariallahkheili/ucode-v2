@@ -1,3 +1,4 @@
+
 export interface BoundingBox {
   xmin: number;
   ymin: number;
@@ -30,6 +31,14 @@ export interface ProjectSpecification {
   bbox: BoundingBox;
   project_name: string;
   project_goal: string;
+  starting_position: MapOrientation
+}
+
+export interface MapOrientation {
+  center: {'lng': number, 'lat': number},
+  zoom: number,
+  bearing: number,
+  pitch: number
 }
 
 const aoi = {

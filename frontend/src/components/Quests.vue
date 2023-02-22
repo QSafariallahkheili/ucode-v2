@@ -48,7 +48,7 @@ const store = useStore();
 const props = defineProps({
   hide: {
     type: Boolean,
-    default: false
+    default: true
   }
 })
 

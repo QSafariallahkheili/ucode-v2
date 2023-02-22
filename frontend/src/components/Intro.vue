@@ -44,7 +44,7 @@ const store = useStore();
 let onboarding = ref(0)
 let sections = reactive(store.state.aoi.projectInformation)
 let sectionsLength = ref(Object.keys(sections).length)
-
+const emit=defineEmits(['hideQuests'])
 const next = () => {
     onboarding.value = onboarding.value + 1 > sectionsLength.value
         ? 1
@@ -57,6 +57,9 @@ const prev = () => {
 }
 const closeIntro = () => {
     store.state.ui.intro = false
+    setTimeout(() => {
+    emit('hideQuests');
+  }, 3000);
 }
 </script>
 

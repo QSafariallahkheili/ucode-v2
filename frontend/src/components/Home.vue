@@ -21,7 +21,7 @@ const store = useStore();
 // initProjects
 HTTP.get("project-specification", {
   params:
-  { 
+  {
     projectId: store.state.aoi.projectId
   }
 }).then((response) => {
@@ -43,6 +43,4 @@ const hideLoadingScreen = computed<boolean>(
 
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

@@ -1,5 +1,5 @@
 <template>
-  <DevUI @startPopulate="populateMap()" v-if="devMode" />
+  <DevUI @startPopulate="populateMap()" v-if="devMode" @getMapOrientation="emit('getMapOrientation')" />
 </template>
 
 <script lang="ts" setup>
@@ -36,7 +36,7 @@ const devMode = computed(() => store.getters["ui/devMode"]);
 let threeJsScene3d: any;
 let threeJsSceneFlat: any;
 
-const emit = defineEmits(["addLayer", "addImage", "triggerRepaint"]);
+const emit = defineEmits(["addLayer", "addImage", "triggerRepaint", "getMapOrientation"]);
 const populateMap = async () => {
   // await sendBuildingRequest();
   await createEmptyThreeJsScene();

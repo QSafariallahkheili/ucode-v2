@@ -1,7 +1,8 @@
 <template>
   <div class="map-wrap" ref="mapContainer">
     <div class="map" id="map">
-      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint" />
+      <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint"
+        @getMapOrientation="getMapOrientation" />
       <ProjectInfo :show="tabIndex == 'projectInfo'" />
       <Suspense>
         <Quests v-show="tabIndex == 'planning'" :hide="hideQuests" @hideQuests="() => { hideQuests = !hideQuests }" />
@@ -24,7 +25,7 @@
         @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
         :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
       <Comment @removePulseLayer="removePulseLayerFromMap" />
-      <Intro v-show="store.state.ui.intro" />
+      <Intro v-show="store.state.ui.intro" @hideQuests="()=>{hideQuests=false}" />
     </div>
 
   </div>
@@ -42,7 +43,7 @@ import BottomNavigation from "@/components/BottomNavigation.vue";
 import CommentGallery from "@/components/CommentGallery.vue";
 import Intro from "@/components/Intro.vue";
 import ProjectInfo from "@/components/ProjectInfo.vue"
-import type { ProjectSpecification } from "@/store/modules/aoi";
+import type { ProjectSpecification, MapOrientation } from "@/store/modules/aoi";
 import { HTTP } from "@/utils/http-common";
 import { pulseLayer } from "@/utils/pulseLayer";
 import { MapboxLayer } from "@deck.gl/mapbox/typed";
@@ -66,7 +67,7 @@ let lineDrawCreated = ref(0)
 let mapStyleLoaded = ref(false)
 let tabIndex = ref("planning")
 let showCommentDialog = ref(false)
-let hideQuests = ref(false)
+let hideQuests = ref(true)
 //let activeMarker = reactive<any>({});
 
 
@@ -97,7 +98,9 @@ onMounted(() => {
     maxZoom: store.state.map.maxZoom,
     maxPitch: store.state.map.maxPitch,
     attributionControl: false,
-    antialias: true
+    antialias: true,
+    // bearing: store.state.aoi.projectSpecification.starting_position.bearing,
+    // pitch: store.state.aoi.projectSpecification.starting_position.pitch
   });
 
 
@@ -115,11 +118,21 @@ onMounted(() => {
 
     const projectSpecification: ProjectSpecification = store.state.aoi.projectSpecification;
 
-    map.fitBounds([projectSpecification.bbox.xmin,
-    projectSpecification.bbox.ymin,
-    projectSpecification.bbox.xmax,
-    projectSpecification.bbox.ymax]);
-
+    if (!projectSpecification.starting_position) {
+      map.fitBounds([projectSpecification.bbox.xmin,
+      projectSpecification.bbox.ymin,
+      projectSpecification.bbox.xmax,
+      projectSpecification.bbox.ymax]);
+    }
+    else {
+      let starting_Position = projectSpecification.starting_position
+      map.flyTo({
+        center: starting_Position.center.coordinates,
+        bearing: starting_Position.bearing,
+        zoom: starting_Position.zoom,
+        pitch: starting_Position.pitch
+      });
+    }
     HTTP.get("").then((response) => {
       // console.log(response);
     })
@@ -133,16 +146,7 @@ onMounted(() => {
     layer.implementation.raycast(mapClick.point)
     
   });
-  map.on('click', function (mapClick) {
-    // // @ts-ignore
-    // mapClicks.clickedCoordinates = [mapClick.lngLat.lng, mapClick.lngLat.lat]
-    // if (store.state.comment.toggle) {
-    //   //@ts-ignore
-    //   addLayerToMap(pulseLayer(store.state.pulse.pulseCoordinates.geometry.coordinates))
-    // }
-    // console.log("click")
-
-  });
+ 
 
   map.on('click', 'allComments', function (e) {
     // @ts-ignore
@@ -180,7 +184,7 @@ onMounted(() => {
   })
 
 });
-const animateIconScale = (start: number, end: number, duration: number, id:any) => {
+const animateIconScale = (start: number, end: number, duration: number, id: any) => {
   let startTime = performance.now();
   let animationId = requestAnimationFrame(function animate(time) {
     let timeElapsed = time - startTime;
@@ -512,6 +516,16 @@ const deleteQuestCommentFromSource = (deletedComment: Feature[]) => {
   }
 }
 
+const getMapOrientation = async () => {
+  var currentView: MapOrientation = {
+    center: map.getCenter(),
+    zoom: map.getZoom(),
+    bearing: map.getBearing(),
+    pitch: map.getPitch()
+  };
+
+  const response = await HTTP.post('update-starting-orientation', { projectId: store.state.aoi.projectSpecification.project_id, startingOrientation: currentView })
+}
 
 onUnmounted(() => {
   map?.remove();

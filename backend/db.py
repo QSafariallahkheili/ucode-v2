@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 import psycopg2
+from dataclasses import dataclass
 
 from configuration import dbConfig
 
@@ -28,7 +29,33 @@ def connect():
 #   cursor.close()
 #   connection.close()
 #   return "ok"
+@dataclass
+class MapOrientation:
+    center: dict[str, float]
+    zoom: float
+    bearing: float
+    pitch: float
 
+def update_project_starting_orientation(projectId: str, startingOrientation: MapOrientation):
+    connection = connect()
+    cursor = connection.cursor()
+    insert_query_starting_Orientation = f'''
+    UPDATE project
+    SET starting_position = json_build_object(
+        'center', ST_SetSRID(ST_MakePoint({startingOrientation["center"]["lng"]}, {startingOrientation["center"]["lat"]}), 4326)::geometry, 
+        'zoom', {startingOrientation['zoom']}, 
+        'bearing', {startingOrientation['bearing']}, 
+        'pitch', {startingOrientation['pitch']}
+    )
+    WHERE project_id = '{projectId}';
+'''
+  
+    cursor.execute(insert_query_starting_Orientation)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return 'fine'
 
 def add_comment(userId, projectId, comment, lng, lat, questId,routeId):
 
@@ -668,10 +695,10 @@ def get_project_specification_from_db(projectId):
       select json_agg(project.*) from project where project_id = '{projectId}';
   '''
   cursor.execute(get_project_specification_from_db_query)
-  bbox = cursor.fetchall()[0][0]
+  projectSpec = cursor.fetchall()[0][0]
   cursor.close()
   connection.close()
-  return bbox
+  return projectSpec
 
 def get_routes_from_db(projectId):
   connection = connect()
