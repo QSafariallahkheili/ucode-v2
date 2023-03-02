@@ -150,7 +150,7 @@ onMounted(() => {
 
   map.on('click', 'allComments', function (e) {
     // @ts-ignore
-    document.getElementById(e.features[0].properties.id).scrollIntoView({ behavior: 'smooth', inline: 'center' }, true);
+    document.getElementById(e.features[0].properties.id).scrollIntoView({ block: 'end', behavior: 'smooth', inline: 'center' }, true);
     // @ts-ignore
     animateIconScale(0.15, 0.4, 50, e.features[0].properties.id);
   });
