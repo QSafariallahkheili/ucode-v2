@@ -9,7 +9,7 @@ services:
       - DB_HOST=database
       - DB_NAME=ucode
       - DB_USER=postgres
-      - API_KEY=XXX_API_KEY_XXX
+      - API_KEY=${API_KEY}
     ports:
       - 8000:8000
     volumes:
@@ -40,6 +40,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    environment:
+      - VITE_APP_API_BASE_URL="${APP_API_BASE_URL}"
     ports:
       - '8080:80'
 

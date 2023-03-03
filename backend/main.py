@@ -111,6 +111,8 @@ app = FastAPI()
 origins = [
     "https://api.v2.urban-codesign.com",
     "https://v2.urban-codesign.com",
+    "https://demo.urban-codesign.com",
+    "https://api.demo.urban-codesign.com",
     "http://localhost",
     "http://localhost:8080",
 ]

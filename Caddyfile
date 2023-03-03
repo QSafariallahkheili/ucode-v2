@@ -1,14 +1,14 @@
-https://v2.urban-codesign.com {
+https://v2.urban-codesign.com, https://demo.urban-codesign.com {
   encode gzip  
   reverse_proxy frontend:80
 }
 
-https://api.v2.urban-codesign.com {  
+https://api.v2.urban-codesign.com, https://api.demo.urban-codesign.com {  
   encode gzip
   reverse_proxy backend:8000
 }
 
-https://tileserv.v2.urban-codesign.com {  
+https://tileserv.v2.urban-codesign.com, https://tileserv.demo.urban-codesign.com {  
   encode gzip
   reverse_proxy cache:80
 }
