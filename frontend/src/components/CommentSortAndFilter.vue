@@ -8,7 +8,7 @@
             variant="solo" class="sort-select" density="compact" flat @update:modelValue="sortComment">
          </v-select>
          <div v-for="filterOption, index in props.activfilterOptions" :key="index">
-            <v-btn height="40px" width="110px" size="medium" :class="filterOption.isActive?' filter-btn-is-active ml-2':'ml-2'" rounded="lg" :value="filterOption"
+            <v-btn height="40px" min-width="110px" size="medium" :class="filterOption.isActive?' filter-btn-is-active ml-2 p-2':'ml-2 p-2'" rounded="lg" :value="filterOption"
                 flat
                @click="updateCommentFilters(filterOption)">
                <v-icon v-if="filterOption.isActive">
@@ -22,7 +22,7 @@
                </div>
                <div v-if="filterOption.filterOptions.filterType == 'planningIdea'">
                   <v-icon
-                     :color="store.state.planningIdeas.planningIdeasFeatures.features.filter((f: any) => f.properties.id == filterOption.filterOptions.filterValue)[0].properties?.color">
+                     :color="store.state.planningIdeas.planningIdeasFeatures.features?.filter((f: any) => f.properties.id == filterOption.filterOptions.filterValue)[0].properties?.color">
                      mdi-checkbox-blank-circle
                   </v-icon>
                   route {{ filterOption.filterOptions.filterValue }}

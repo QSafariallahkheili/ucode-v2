@@ -1,6 +1,6 @@
 <template>
     <div class="comment-container">
-        <v-btn v-show="store.state.quests.current_quest_type==2" id="comment-btn" size="large" height="48px" rounded="pill" color="primary"
+        <v-btn v-show="showCommentButton" id="comment-btn" size="large" height="48px" rounded="pill" color="primary"
             @click="placeComment">
             Kommentieren
         </v-btn>
@@ -41,6 +41,7 @@ import bboxPolygon from "@turf/bbox-polygon"
 import booleanIntersects from "@turf/boolean-intersects";
 import type { Feature } from '@turf/helpers';
 import { Popup } from "maplibre-gl";
+import type { Quest } from '@/store/modules/quests';
 
 
 const store = useStore()
@@ -49,6 +50,23 @@ let isFocused = ref<boolean>(false)
 let allMarker = reactive<FeatureCollection>({ type: "FeatureCollection", features: [] })
 let taLineCount = ref<number>(1)
 
+const showCommentButton = computed(()=>{
+    if(store.state.quests.current_quest_type==2 || !store.state.quests.hasQuests){
+        return true
+    }
+    else{
+        return false
+    }
+})
+const commentBtnBottom = computed(()=>{
+    if(store.state.ui.planningIdeasLoaded){
+        return '8rem'
+    }
+    else{
+        return '5rem'
+    }
+
+})
 let commentValidationPopup = new Popup({ closeButton: false, closeOnClick: false, offset: [0, -50] })
 
 const props = defineProps({
@@ -138,7 +156,15 @@ const saveComment = () => {
     let intersects = <Boolean> booleanIntersects(AOIPolygon, marker);
     
     if (intersects){
-        let quest =  store.state.quests.questList[store.state.quests.current_order_id]
+        let quest: Quest = store.state.quests.questList[store.state.quests.current_order_id]
+        let questId:number|null;
+        if(quest){
+            questId = quest.quest_id
+            store.state.quests.questList[store.state.quests.current_order_id].fulfillment++
+        }
+        else{
+            questId = null
+        }
         store.state.freecomment.moveableCommentMarker.remove()
         createComment()
         const submitComment = () => {
@@ -149,16 +175,15 @@ const saveComment = () => {
                     //@ts-ignore
                     position: allMarker.features[allMarker.features.length-1].geometry.coordinates,
                     userId: store.state.aoi.userId,
-                    questId: quest.quest_id,
+                    questId: questId,
                     routeId: store.state.quests.selectedRouteId
                 })
         }
         submitComment()
         commentText.value = ""
         // store.commit('freecomment/setMoveComment', false)
-
         emit('closeCommentDialog')
-        store.state.quests.questList[store.state.quests.current_order_id].fulfillment++
+        
     }
     else {
 
@@ -311,7 +336,7 @@ onMounted(() => {
     order: -1 !important;
     z-index: 998;
     position: absolute;
-    bottom: 8rem
+    bottom: v-bind(commentBtnBottom)
 }
 .v-card {
     position: relative;

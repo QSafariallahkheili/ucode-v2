@@ -320,7 +320,7 @@ function generateLocalCoordinates(
         ],
         rotation: rot,
         scale: scl,
-        userData: { 'name': _geoJson.features[index].properties.amenity_name }
+        userData: { 'name': _geoJson.features[index].properties.amenity_name!}
       };
       localSceneCoordinates.push(localPos);
     }

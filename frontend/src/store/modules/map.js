@@ -50,6 +50,9 @@ const map = {
         },
         addSource(state, newSource) {
             state.sources = [...state.sources, newSource]
+        },
+        updateMapCenter(state,center){
+            state.center=center
         }
     },
     actions: {

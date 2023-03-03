@@ -1,44 +1,106 @@
-from dataclasses import dataclass
 import json
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from osmtogeojson import osmtogeojson
 
-from features.buildings import create_building_holes_polygons, create_building_polygons, get_buildings_from_db, persist_building_polygons, refine_persisted_buildings, transform_building_with_hole
-from features.driving_lane import create_driving_lane_polygons, create_service_road_polygons, persist_driving_lane, persist_driving_lane_polygon
-from features.pedestrian_area import create_pedestrian_area, persist_pedestrian_area_polygons, get_pedestrian_area_from_db
-from features.amenities import create_amenities_polygons, persist_amenities_polygons, get_amenities_from_db
-from db import (add_comment, add_drawn_line, add_fulfillment, connect,
-                delete_comment_by_id, delete_comments, dislike_comment,
-                drop_bike_polygon_table, drop_bike_table, drop_building_table,
-                drop_driving_lane_table, drop_greenery_table,
-                drop_sidewalk_polygon, drop_sidewalk_table,
-                drop_traffic_signal_table, drop_tram_line_table,
-                drop_tree_table, drop_water_table, drop_amenities_table, get_bike_from_db,
-                get_bike_lane_from_db, get_comments,
-                get_driving_lane_from_db, get_driving_lane_polygon_from_db,
-                get_filtered_comments, get_filtered_comments_with_status,
-                get_greenery_from_db, get_project_specification_from_db,
-                get_quests_and_fulfillment_from_db, get_quests_from_db,
-                get_routes_from_db, get_sidewalk_from_db,
-                get_traffic_signal_from_db, get_tram_line_from_db,
-                get_trees_from_db, get_water_from_db, like_comment,
-                prepare_quests_user_table, undislike_comment, unlike_comment,
-                update_voting_status, drop_pedestrian_area_table, drop_zebra_crossing_table, generate_zebra_crossing_table,
-                get_zebra_cross_from_db, update_project_starting_orientation)
+from features.buildings import (
+    create_building_holes_polygons,
+    create_building_polygons,
+    get_buildings_from_db,
+    persist_building_polygons,
+    refine_persisted_buildings,
+    transform_building_with_hole,
+)
+from features.driving_lane import (
+    create_driving_lane_polygons,
+    create_service_road_polygons,
+    persist_driving_lane,
+    persist_driving_lane_polygon,
+)
+from features.pedestrian_area import (
+    create_pedestrian_area,
+    persist_pedestrian_area_polygons,
+    get_pedestrian_area_from_db,
+)
+from features.amenities import (
+    create_amenities_polygons,
+    persist_amenities_polygons,
+    get_amenities_from_db,
+)
+from db import (
+    add_comment,
+    add_drawn_line,
+    add_fulfillment,
+    connect,
+    delete_comment_by_id,
+    delete_comments,
+    dislike_comment,
+    drop_bike_polygon_table,
+    drop_bike_table,
+    drop_building_table,
+    drop_driving_lane_table,
+    drop_greenery_table,
+    drop_sidewalk_polygon,
+    drop_sidewalk_table,
+    drop_traffic_signal_table,
+    drop_tram_line_table,
+    drop_tree_table,
+    drop_water_table,
+    drop_amenities_table,
+    get_bike_from_db,
+    get_bike_lane_from_db,
+    get_comments,
+    get_driving_lane_from_db,
+    get_driving_lane_polygon_from_db,
+    get_filtered_comments,
+    get_filtered_comments_with_status,
+    get_greenery_from_db,
+    get_project_specification_from_db,
+    get_quests_and_fulfillment_from_db,
+    get_quests_from_db,
+    get_routes_from_db,
+    get_sidewalk_from_db,
+    get_traffic_signal_from_db,
+    get_tram_line_from_db,
+    get_trees_from_db,
+    get_water_from_db,
+    like_comment,
+    prepare_quests_user_table,
+    undislike_comment,
+    unlike_comment,
+    update_voting_status,
+    drop_pedestrian_area_table,
+    drop_zebra_crossing_table,
+    generate_zebra_crossing_table,
+    get_zebra_cross_from_db,
+    update_project_starting_orientation,
+    setup_new_project,
+)
 from db_migrations import run_database_migrations
-from models import ProjectSpecification
+from models import ProjectSpecification, UpdateStartingOrientation
 from services.open_street_map import getDriveNetwork
-from services.overpass import (interpreter, query_bike, query_building_parts,
-                               query_building_with_hole, query_fountain,
-                               query_greenery, query_serviceroad,
-                               query_traffic_signals, query_tram_lines,
-                               query_tree_row, query_trees, query_walk,
-                               query_water, query_pedestrian_area,
-                               query_pedestrian_area_multipolygon, query_amenities)
+from services.overpass import (
+    interpreter,
+    query_bike,
+    query_building_parts,
+    query_building_with_hole,
+    query_fountain,
+    query_greenery,
+    query_serviceroad,
+    query_traffic_signals,
+    query_tram_lines,
+    query_tree_row,
+    query_trees,
+    query_walk,
+    query_water,
+    query_pedestrian_area,
+    query_pedestrian_area_multipolygon,
+    query_amenities,
+)
 from utils import sure_float
 from repository.db import db_pool, get_table_names
+from configuration import appConfig
 
 try:
     run_database_migrations()
@@ -50,7 +112,7 @@ origins = [
     "https://api.v2.urban-codesign.com",
     "https://v2.urban-codesign.com",
     "http://localhost",
-    "http://localhost:8080"
+    "http://localhost:8080",
 ]
 
 app.add_middleware(
@@ -63,14 +125,15 @@ app.add_middleware(
 )
 
 
-
 @app.on_event("startup")
 def open_pool():
     db_pool.open()
 
+
 @app.on_event("shutdown")
 def close_pool():
     db_pool.close()
+
 
 @app.get("/")
 async def root():
@@ -89,37 +152,37 @@ async def root():
         print(f"Unexpected {err=}, {type(err)=}")
         raise HTTPException(status_code=500, detail=f"Something went wrong: {err}")
 
+
 @app.get("/project-specification")
 async def get_project_specification_from_db_api(projectId: str):
     return get_project_specification_from_db(projectId)
 
-@dataclass
-class MapOrientation:
-    center: dict[str, float]
-    zoom: float
-    bearing: float
-    pitch: float
-    
+
 @app.post("/update-starting-orientation")
-async def update_project_starting_orientation_api(request: Request):
-    data = await request.json()
-    response = update_project_starting_orientation(data["projectId"] , data["startingOrientation"])
+def update_project_starting_orientation_api(request: UpdateStartingOrientation):
+
+    response = update_project_starting_orientation(
+        db_pool, request.projectId, request.startingOrientation
+    )
     return response
-       
+
+
 @app.get("/prepare-quests-user-table")
-async def prepare_quests_user_table_api(projectId: str, userId:str):
-    response = prepare_quests_user_table(projectId,userId)
+async def prepare_quests_user_table_api(projectId: str, userId: str):
+    response = prepare_quests_user_table(projectId, userId)
     return response
+
 
 @app.get("/add-quest-fulfillment")
 async def add_fulfillment_api(questId: int, userId: str):
     response = add_fulfillment(questId, userId)
     return response
-    
+
+
 @app.post("/get-greenery-from-osm")
 async def get_greenery_from_osm_api(request: Request):
     data = await request.json()
-    projectId = data["projectId"] 
+    projectId = data["projectId"]
     get_greenery_from_db.cache_clear()
     drop_greenery_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
@@ -128,7 +191,7 @@ async def get_greenery_from_osm_api(request: Request):
     for i in tags:
         _tags += "way.all[" + i.replace(":", "=") + "]" + ";\n"
 
-    data_greenery = interpreter(query_greenery(bbox,_tags))
+    data_greenery = interpreter(query_greenery(bbox, _tags))
 
     connection = connect()
     cursor = connection.cursor()
@@ -162,12 +225,11 @@ async def get_greenery_from_osm_api(request: Request):
     connection.close()
     return "gg"
 
+
 @app.post("/get-greenery-from-db")
 async def get_greenery_from_db_api(request: Request):
     data = await request.json()
     return get_greenery_from_db(data)
-
-
 
 
 @app.post("/get-buildings-from-osm")
@@ -176,33 +238,41 @@ async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
     drop_building_table(projectId)
 
     response_building = interpreter(query_building_parts(project_spec.bbox))
-    building_polygons = create_building_polygons(project_spec.projectId,  response_building)
+    building_polygons = create_building_polygons(
+        project_spec.projectId, response_building
+    )
     persist_building_polygons(db_pool, building_polygons)
 
-    response_building_with_hole = interpreter(query_building_with_hole(project_spec.bbox))
+    response_building_with_hole = interpreter(
+        query_building_with_hole(project_spec.bbox)
+    )
     transform_building_with_hole(response_building_with_hole)
-                
+
     bhole = osmtogeojson.process_osm_json(response_building_with_hole)
     building_holes_polygons = create_building_holes_polygons(projectId, bhole)
     persist_building_polygons(db_pool, building_holes_polygons)
 
     refine_persisted_buildings(db_pool, projectId)
-    
+
     get_buildings_from_db.cache_clear()
     return "fine"
+
 
 @app.get("/get-buildings-from-db")
 def get_buildings_from_db_api(projectId: str):
     return get_buildings_from_db(db_pool, projectId)
+
 
 @app.post("/get-quests-from-db")
 async def get_quests_from_db_api(request: Request):
     projectId = await request.json()
     return get_quests_from_db(projectId)
 
+
 @app.get("/get-quests-from-db")
 async def get_quests_from_db_api(projectId: str):
     return get_quests_from_db(projectId)
+
 
 ##TH new quest request with userId in order to get the fullfillment-data from the user and provide it wit
 @app.get("/get-quests-and-fulfillment-from-db")
@@ -229,7 +299,13 @@ async def get_trees_from_osm_api(request: Request):
     for f in data_tree["elements"]:
 
         geom = json.dumps(f["geometry"])
-        cursor.execute(insert_query_tree, (projectId,geom,))
+        cursor.execute(
+            insert_query_tree,
+            (
+                projectId,
+                geom,
+            ),
+        )
 
     connection.commit()
     cursor.close()
@@ -245,7 +321,13 @@ async def get_trees_from_osm_api(request: Request):
     for f in data_tree_row["elements"]:
 
         geom = json.dumps(f["geometry"])
-        cursor.execute(insert_query_tree_row, (projectId,geom,))
+        cursor.execute(
+            insert_query_tree_row,
+            (
+                projectId,
+                geom,
+            ),
+        )
 
     connection.commit()
     cursor.close()
@@ -258,24 +340,31 @@ async def get_trees_from_db_api(request: Request):
     projectId = await request.json()
     return get_trees_from_db(projectId)
 
+
 @app.post("/add-comment")
 async def add_comment_api(request: Request):
     data = await request.json()
     userId = data["userId"]
     projectId = data["projectId"]
     comment = data["comment"]
-    questId = data["questId"]
-    
+
     routeId = None
     if data["routeId"] != None:
         routeId = data["routeId"]
-    else: 
+    else:
         routeId = "NULL"
+
+    questId = None
+    if data["routeId"] != None:
+        questId = data["questId"]
+    else:
+        questId = "NULL"
 
     lng = sure_float(data["position"][0])
     lat = sure_float(data["position"][1])
-    response = add_comment(userId,projectId,comment,lng,lat,questId,routeId)
+    response = add_comment(userId, projectId, comment, lng, lat, questId, routeId)
     return response
+
 
 @app.post("/add-drawn-line")
 async def add_drawn_line_api(request: Request):
@@ -289,69 +378,77 @@ async def add_drawn_line_api(request: Request):
     )
     return "added"
 
-#delete-comments
+
+# delete-comments
 @app.get("/delete-comments")
 async def delete_comments_api(projectId: str):
     return delete_comments(projectId)
+
 
 @app.post("/get-comments")
 async def get_comments_api(request: Request):
     data = await request.json()
     return get_comments(data)
 
+
 @app.get("/get-comments")
 async def get_comments_api(projectId: str):
     return get_comments(projectId)
 
+
 @app.get("/get-filtered-comments-with-status")
-async def get_filtered_comments_with_status_api(projectId: str, userId:str):
-    commentDataWithStatus = get_filtered_comments_with_status(projectId,userId)
+async def get_filtered_comments_with_status_api(projectId: str, userId: str):
+    commentDataWithStatus = get_filtered_comments_with_status(projectId, userId)
     return commentDataWithStatus
+
 
 @app.get("/get-filtered-comments")
 async def get_filtered_comments_api(projectId: str, userId: str):
-        return get_filtered_comments(projectId,userId)
+    return get_filtered_comments(projectId, userId)
+
 
 @app.post("/get-filtered-comments")
 async def get_filtered_comments_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
     userId = data["userId"]
-    return get_filtered_comments(projectId,userId)
+    return get_filtered_comments(projectId, userId)
 
 
 @app.get("/update-voting-status")
-async def update_voting_status_api(commentId: str, userId:str, action:str):
+async def update_voting_status_api(commentId: str, userId: str, action: str):
     response = update_voting_status(commentId, userId, action)
     return response
+
 
 @app.post("/like-comment")
 async def like_comment_api(request: Request):
     data = await request.json()
-    like_comment(data["id"],data["projectId"])
+    like_comment(data["id"], data["projectId"])
     return "added"
 
 
 @app.post("/unlike-comment")
 async def unlike_comment_api(request: Request):
     data = await request.json()
-    unlike_comment(data["id"],data["projectId"])
+    unlike_comment(data["id"], data["projectId"])
     return "added"
 
 
 @app.post("/dislike-comment")
 async def dislike_comment_api(request: Request):
     data = await request.json()
-    dislike_comment(data["id"],data["projectId"])
+    dislike_comment(data["id"], data["projectId"])
     return "added"
 
 
 @app.post("/undislike-comment")
 async def undislike_comment_api(request: Request):
     data = await request.json()
-    undislike_comment(data["id"],data["projectId"])
+    undislike_comment(data["id"], data["projectId"])
     return "added"
-  
+
+
 @app.post("/get-driving-lane-from-osm")
 async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
@@ -371,8 +468,7 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
         road = getDriveNetwork(project_spec.bbox)
     except ValueError:
         raise HTTPException(
-            status_code=412,
-            detail="Found no graph nodes within the requested polygon"
+            status_code=412, detail="Found no graph nodes within the requested polygon"
         )
     driving_lane_polygons = create_driving_lane_polygons(projectId, road)
     persist_driving_lane(db_pool, driving_lane_polygons)
@@ -381,22 +477,27 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     bbox = f"""{ymin},{xmin},{ymax},{xmax}"""
     data_serviceroad_osm = interpreter(query_serviceroad(bbox))
     data_serviceroad_geojson = osmtogeojson.process_osm_json(data_serviceroad_osm)
-    
-    service_road_polygons = create_service_road_polygons(projectId, data_serviceroad_geojson)
+
+    service_road_polygons = create_service_road_polygons(
+        projectId, data_serviceroad_geojson
+    )
     persist_driving_lane_polygon(db_pool, service_road_polygons)
 
     return "true"
 
+
 @app.post("/get-driving-lane-from-db")
 async def get_driving_lane_from_db_api(request: Request):
     projectId = await request.json()
-    return {"lane": get_driving_lane_from_db(projectId), "polygon": get_driving_lane_polygon_from_db(projectId)}
+    return {
+        "lane": get_driving_lane_from_db(projectId),
+        "polygon": get_driving_lane_polygon_from_db(projectId),
+    }
 
-#TH:add projectId to insert command
+
+# TH:add projectId to insert command
 @app.post("/get-traffic-lights-from-osm")
 async def get_traffic_lights_from_osm_api(request: Request):
-    projectId ="0"
-    drop_traffic_signal_table(projectId)
     data = await request.json()
     projectId = data["projectId"]
     get_traffic_signal_from_db.cache_clear()
@@ -427,17 +528,26 @@ async def get_traffic_lights_from_osm_api(request: Request):
     for f in data_traffic_signal["elements"]:
 
         geom = json.dumps(f["geometry"])
-        cursor.execute(insert_query_traffic_signal, (geom, projectId, geom,))
+        cursor.execute(
+            insert_query_traffic_signal,
+            (
+                geom,
+                projectId,
+                geom,
+            ),
+        )
 
     connection.commit()
     cursor.close()
     connection.close()
     return "ok"
 
+
 @app.post("/get-traffic-signal-from-db")
 async def get_traffic_lights_from_db_api(request: Request):
     projectId = await request.json()
     return get_traffic_signal_from_db(projectId)
+
 
 @app.post("/get-routes-from-db")
 async def get_routes_from_db_api(request: Request):
@@ -450,19 +560,19 @@ async def get_water_from_db_api(request: Request):
     projectId = await request.json()
     return get_water_from_db(projectId)
 
+
 @app.post("/get-water-from-osm")
 async def get_water_from_osm_api(request: Request):
     data = await request.json()
-    projectId = data["projectId"] 
+    projectId = data["projectId"]
     get_water_from_db.cache_clear()
     drop_water_table(projectId)
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
-    
     response_fountain = interpreter(query_fountain(bbox))
     response_water = interpreter(query_water(bbox))
     # print(response_water)
-    
+
     data_fountain = osmtogeojson.process_osm_json(response_fountain)
     data_water = osmtogeojson.process_osm_json(response_water)
     # print(data_fountain)
@@ -473,55 +583,44 @@ async def get_water_from_osm_api(request: Request):
         INSERT INTO water (project_id, geom) VALUES (%s, ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326));
 
     """
-    
+
     for f in data_fountain["features"]:
         geom = json.dumps(f["geometry"])
-        cursor.execute(
-        insert_query_water,
-        (projectId,
-        geom
-        ))
+        cursor.execute(insert_query_water, (projectId, geom))
     for f in data_water["features"]:
-        if(f["geometry"]["type"]=="GeometryCollection"):
+        if f["geometry"]["type"] == "GeometryCollection":
             polygon = {"type": "Polygon", "coordinates": []}
             outerPolygon = {"type": "Polygon", "coordinates": []}
             for g in f["geometry"]["geometries"]:
-                if(g["type"]=="LineString"):
+                if g["type"] == "LineString":
                     outerPolygon["coordinates"] += g["coordinates"]
                 # if(g["type"]=="Polygon"):
                 #     multipolygon["coordinates"].append(g["coordinates"])
             polygon["coordinates"] = [outerPolygon["coordinates"]]
-            
+
             for g in f["geometry"]["geometries"]:
-                if(g["type"]=="Polygon"):
+                if g["type"] == "Polygon":
                     polygon["coordinates"].append(g["coordinates"][0])
 
             # print(polygon)
             geom = json.dumps(polygon)
-            cursor.execute(
-            insert_query_water,
-            (projectId,
-            geom
-            ))
-        elif(f["geometry"]["type"]=="Polygon"):
-            
+            cursor.execute(insert_query_water, (projectId, geom))
+        elif f["geometry"]["type"] == "Polygon":
+
             geom = json.dumps(f["geometry"])
-            cursor.execute(
-            insert_query_water,
-            (projectId,
-            geom
-            ))
+            cursor.execute(insert_query_water, (projectId, geom))
         else:
-            print(f'''Some other type in Waterpolygons: {f["geometry"]["type"]}''')
+            print(f"""Some other type in Waterpolygons: {f["geometry"]["type"]}""")
 
     connection.commit()
     cursor.close()
     connection.close()
     return "gg"
 
+
 @app.post("/get-tram-lines-from-osm")
 async def get_tram_lines_from_osm_api(request: Request):
-    
+
     data = await request.json()
     projectId = data["projectId"]
     get_tram_line_from_db.cache_clear()
@@ -529,40 +628,67 @@ async def get_tram_lines_from_osm_api(request: Request):
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_tram_lines = interpreter(query_tram_lines(bbox))
-   
+
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_tram_lane= '''
+    insert_query_tram_lane = """
         INSERT INTO tram_line (project_id,lane_name,starts_from,arrives_to, geom) VALUES (%s,%s,%s,%s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
 
-    '''
+    """
 
     for elem in data_tram_lines["elements"]:
-       
-        lane_name=None
-        if 'name' in elem["tags"]: lane_name = elem["tags"]['name']
-        starts_from=None
-        if 'from' in elem["tags"]: starts_from = elem["tags"]['from']
-        arrives_to=None
-        if 'to' in elem["tags"]: arrives_to = elem["tags"]['to']
-        
-        for geom in elem["geometry"]['geometries']:
-            
-            if geom["type"]=='LineString':
+
+        lane_name = None
+        if "name" in elem["tags"]:
+            lane_name = elem["tags"]["name"]
+        starts_from = None
+        if "from" in elem["tags"]:
+            starts_from = elem["tags"]["from"]
+        arrives_to = None
+        if "to" in elem["tags"]:
+            arrives_to = elem["tags"]["to"]
+
+        for geom in elem["geometry"]["geometries"]:
+
+            if geom["type"] == "LineString":
                 tram_geom = json.dumps(geom)
-                
-                cursor.execute(insert_query_tram_lane, (projectId,lane_name,starts_from,arrives_to, tram_geom,))
+
+                cursor.execute(
+                    insert_query_tram_lane,
+                    (
+                        projectId,
+                        lane_name,
+                        starts_from,
+                        arrives_to,
+                        tram_geom,
+                    ),
+                )
 
     connection.commit()
     cursor.close()
     connection.close()
-    
-    
+
     connection = connect()
     cursor = connection.cursor()
-    
-    delete_station_geometries_query= '''
+
+    delete_station_geometries_query = f"""
+        DELETE FROM tram_line WHERE ST_IsClosed(geom) AND project_id = '{projectId}';
+
+        DELETE FROM tram_line a
+        WHERE project_id = '{projectId}' AND NOT EXISTS 
+        (SELECT 1 FROM tram_line b 
+        WHERE a.id != b.id
+        AND ST_Intersects(a.geom, b.geom) AND ST_Touches(a.geom, b.geom));
+
+        UPDATE tram_line SET geom = ST_AsText(ST_Transform(ST_SetSRID(ST_Collect(
+            ST_OffsetCurve(ST_Transform(ST_SetSRID(geom, 4326), 26986), 0.4, 'quad_segs=4 join=mitre mitre_limit=2.2'),
+            ST_OffsetCurve(ST_Transform(ST_SetSRID(geom, 4326), 26986), -0.4, 'quad_segs=4 join=mitre mitre_limit=2.2')
+        ),26986),4326))
+        WHERE project_id = '{projectId}';
+
+    """
+    delete_station_geometries_query1 = """
 
         delete from tram_line where ST_IsClosed(geom);
         
@@ -578,73 +704,85 @@ async def get_tram_lines_from_osm_api(request: Request):
         ),26986),4326));
 
        
-    '''
+    """
+
     cursor.execute(delete_station_geometries_query)
-    
+
     connection.commit()
     cursor.close()
     connection.close()
-    
+
     return "tram lanes retrieved"
+
 
 @app.post("/get-tram-line-from-db")
 async def get_tram_line_from_db_api(request: Request):
     projectId = await request.json()
     return get_tram_line_from_db(projectId)
 
+
 @app.post("/get-side-walk-from-osm")
 async def get_side_walk_from_osm_api(request: Request):
     data = await request.json()
-    
+
     projectId = data["projectId"]
     get_sidewalk_from_db.cache_clear()
     drop_sidewalk_table(projectId)
 
     drop_sidewalk_polygon(projectId)
-    
+
     ##### ############## overpass ###################
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
-    
+
     data_walk_osm = interpreter(query_walk(bbox))
     data_walk_geojson = osmtogeojson.process_osm_json(data_walk_osm)
-    
+
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_sidewalk= '''
+    insert_query_sidewalk = """
         INSERT INTO sidewalk (project_id, highway, geom) VALUES (%s, %s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
-    '''
-    
+    """
+
     for f in data_walk_geojson["features"]:
-        if f["geometry"]['type'] == "LineString":
-            highway=None
-            if 'highway' in f['properties']: highway =f['properties']['highway']
-            geom = json.dumps(f['geometry'])
-            cursor.execute(insert_query_sidewalk, (projectId,highway, geom,))
-            
+        if f["geometry"]["type"] == "LineString":
+            highway = None
+            if "highway" in f["properties"]:
+                highway = f["properties"]["highway"]
+            geom = json.dumps(f["geometry"])
+            cursor.execute(
+                insert_query_sidewalk,
+                (
+                    projectId,
+                    highway,
+                    geom,
+                ),
+            )
+
     connection.commit()
     cursor.close()
     connection.close()
-    
+
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_driving_lane_polygon= '''
+    insert_query_driving_lane_polygon = """
         
         INSERT INTO sidewalk_polygon(project_id, geom)
         SELECT project_id, st_buffer(
             ST_SetSRID(geom, 4326)::geography,
             1 ,
             'endcap=round join=round quad_segs=2')::geometry FROM sidewalk where project_id=%s;
-    '''
-    
-    cursor.execute(insert_query_driving_lane_polygon, (projectId, ))
-    
+    """
+
+    cursor.execute(insert_query_driving_lane_polygon, (projectId,))
+
     connection.commit()
     cursor.close()
     connection.close()
-    
+
     return "okk"
+
 
 @app.post("/get-bike-from-osm")
 async def get_bike_from_osm_api(request: Request):
@@ -657,28 +795,42 @@ async def get_bike_from_osm_api(request: Request):
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_bike = interpreter(query_bike(bbox))
-        
+
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_bike= '''
+    insert_query_bike = """
         INSERT INTO bike (project_id,oneway,highway,service_type,lanes, geom) VALUES (%s,%s,%s,%s,%s, ST_SetSRID(st_astext(st_geomfromgeojson(%s)), 4326));
 
-    '''
+    """
 
     for elem in data_bike["elements"]:
-       
-        oneway=None
-        if 'oneway' in elem["tags"]: oneway = elem["tags"]['oneway']
-        highway=None
-        if 'highway' in elem["tags"]: highway = elem["tags"]['highway']
-        service_type=None
-        if 'service_type' in elem["tags"]: service_type = elem["tags"]['service_type']
-        lanes=None
-        if 'lanes' in elem["tags"]: lanes = elem["tags"]['lanes']
-        geom= json.dumps(elem['geometry'])
-       
-        cursor.execute(insert_query_bike, (projectId,oneway,highway,service_type,lanes, geom,))
+
+        oneway = None
+        if "oneway" in elem["tags"]:
+            oneway = elem["tags"]["oneway"]
+        highway = None
+        if "highway" in elem["tags"]:
+            highway = elem["tags"]["highway"]
+        service_type = None
+        if "service_type" in elem["tags"]:
+            service_type = elem["tags"]["service_type"]
+        lanes = None
+        if "lanes" in elem["tags"]:
+            lanes = elem["tags"]["lanes"]
+        geom = json.dumps(elem["geometry"])
+
+        cursor.execute(
+            insert_query_bike,
+            (
+                projectId,
+                oneway,
+                highway,
+                service_type,
+                lanes,
+                geom,
+            ),
+        )
     connection.commit()
     cursor.close()
     connection.close()
@@ -686,7 +838,7 @@ async def get_bike_from_osm_api(request: Request):
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_bike_polygon= '''
+    insert_query_bike_polygon = """
     
         INSERT INTO bike_polygon(project_id, geom)
         SELECT project_id, st_buffer(
@@ -694,9 +846,9 @@ async def get_bike_from_osm_api(request: Request):
             0.5 ,
             'endcap=round join=round quad_segs=2')::geometry FROM bike where project_id=%s;
 
-    '''
-        
-    cursor.execute(insert_query_bike_polygon, (projectId, ))
+    """
+
+    cursor.execute(insert_query_bike_polygon, (projectId,))
 
     connection.commit()
     cursor.close()
@@ -704,10 +856,12 @@ async def get_bike_from_osm_api(request: Request):
 
     return "okk"
 
+
 @app.post("/get-sidewalk-from-db")
 async def get_sidewalk_from_db_api(request: Request):
     projectId = await request.json()
     return get_sidewalk_from_db(projectId)
+
 
 @app.post("/get-bike-from-db")
 async def get_bike_from_db_api(request: Request):
@@ -715,18 +869,24 @@ async def get_bike_from_db_api(request: Request):
     bike_poly = get_bike_from_db(projectId)
     return bike_poly
 
+
 @app.post("/get-amenities-from-osm")
 async def get_amenities_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
     drop_amenities_table(projectId)
 
-    response_amenities =  osmtogeojson.process_osm_json(interpreter(query_amenities(project_spec.bbox)))
-    amenity_polygons = create_amenities_polygons(project_spec.projectId,  response_amenities)
+    response_amenities = osmtogeojson.process_osm_json(
+        interpreter(query_amenities(project_spec.bbox))
+    )
+    amenity_polygons = create_amenities_polygons(
+        project_spec.projectId, response_amenities
+    )
     persist_amenities_polygons(db_pool, amenity_polygons)
 
     get_amenities_from_db.cache_clear()
-    return 'amenities from osm fine'
-    
+    return "amenities from osm fine"
+
+
 @app.get("/get-amenities-from-db")
 def get_amenities_from_db_api(projectId: str):
     return get_amenities_from_db(db_pool, projectId)
@@ -739,8 +899,10 @@ async def clear_cache():
     get_greenery_from_db_cache_stats = get_greenery_from_db.cache_info()
     get_trees_from_db_cache_stats = get_trees_from_db.cache_info()
     get_driving_lane_from_db_cache_stats = get_driving_lane_from_db.cache_info()
-    get_driving_lane_polygon_from_db_cache_stats = get_driving_lane_polygon_from_db.cache_info()
-    get_traffic_signal_from_db_cache_stats =get_traffic_signal_from_db.cache_info()
+    get_driving_lane_polygon_from_db_cache_stats = (
+        get_driving_lane_polygon_from_db.cache_info()
+    )
+    get_traffic_signal_from_db_cache_stats = get_traffic_signal_from_db.cache_info()
     get_tram_line_from_db_cache_stats = get_tram_line_from_db.cache_info()
     get_water_from_db_cache_stats = get_water_from_db.cache_info()
     get_sidewalk_from_db_cache_stats = get_sidewalk_from_db.cache_info()
@@ -777,11 +939,12 @@ async def clear_cache():
         "get_bike_lane_from_db_cache_stats": get_bike_lane_from_db_cache_stats,
         "get_amenities_from_db_cache_stats": get_amenities_from_db_cache_stats,
         "get_zebra_cross_from_db_cache_stats": get_zebra_cross_from_db_cache_stats,
-       " get_pedestrian_area_from_db_cache_stats":get_pedestrian_area_from_db_cache_stats,
-        "result": "Cache cleared"
+        " get_pedestrian_area_from_db_cache_stats": get_pedestrian_area_from_db_cache_stats,
+        "result": "Cache cleared",
     }
-#    print(result)
+    #    print(result)
     return result
+
 
 @app.post("/get-bike-lanes-from-db")
 async def get_bike_lanes_from_db_api(request: Request):
@@ -789,32 +952,44 @@ async def get_bike_lanes_from_db_api(request: Request):
     bike_lanes = get_bike_lane_from_db(projectId)
     return bike_lanes
 
+
 @app.post("/delete-comment-by-id")
 async def delete_comment_by_id_api(request: Request):
     data = await request.json()
     orderId = delete_comment_by_id(data["commentId"])
     return orderId
 
+
 @app.post("/get-pedestrian-area-from-osm")
 async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
     drop_pedestrian_area_table(project_spec.projectId)
     pedestrian_area_data = interpreter(query_pedestrian_area(project_spec.bbox))
     data_pedestrian_area_geojson = osmtogeojson.process_osm_json(pedestrian_area_data)
-    pedestrian_area_polygons = create_pedestrian_area(project_spec.projectId,  data_pedestrian_area_geojson)
+    pedestrian_area_polygons = create_pedestrian_area(
+        project_spec.projectId, data_pedestrian_area_geojson
+    )
     persist_pedestrian_area_polygons(db_pool, pedestrian_area_polygons)
 
-    pedestrian_area_data_multipolygon = interpreter(query_pedestrian_area_multipolygon(project_spec.bbox))
-    data_pedestrian_area_multipolygon_geojson = osmtogeojson.process_osm_json(pedestrian_area_data_multipolygon)
-    pedestrian_area_multipolygons = create_pedestrian_area(project_spec.projectId,  data_pedestrian_area_multipolygon_geojson)
+    pedestrian_area_data_multipolygon = interpreter(
+        query_pedestrian_area_multipolygon(project_spec.bbox)
+    )
+    data_pedestrian_area_multipolygon_geojson = osmtogeojson.process_osm_json(
+        pedestrian_area_data_multipolygon
+    )
+    pedestrian_area_multipolygons = create_pedestrian_area(
+        project_spec.projectId, data_pedestrian_area_multipolygon_geojson
+    )
     persist_pedestrian_area_polygons(db_pool, pedestrian_area_multipolygons)
     get_pedestrian_area_from_db.cache_clear()
 
     return "ok"
 
+
 @app.post("/get-pedestrian-area-from-db")
 async def get_pedestrian_are_from_db_api(request: Request):
-    projectId = await request.json()    
+    projectId = await request.json()
     return get_pedestrian_area_from_db(db_pool, projectId)
+
 
 @app.post("/generate-zebra-crossing-table")
 async def generate_zebra_crossing_table_api(request: Request):
@@ -825,12 +1000,28 @@ async def generate_zebra_crossing_table_api(request: Request):
     generate_zebra_crossing_table(projectId)
     return "orderId"
 
+
 @app.post("/get-zebra-cross-from-db")
 async def get_zebra_crossing_from_db_api(request: Request):
     projectId = await request.json()
     zebra_crossing = get_zebra_cross_from_db(projectId)
     return zebra_crossing
 
+
+@app.post("/setup_new_project")
+async def setup_new_project_api(request: Request):
+    api_key = request.headers.get("X-API-KEY")
+    if api_key == appConfig["apiKey"]:
+        data = await request.json()
+        return setup_new_project(data)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect API key",
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

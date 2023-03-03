@@ -9,6 +9,7 @@ services:
       - DB_HOST=database
       - DB_NAME=ucode
       - DB_USER=postgres
+      - API_KEY=XXX_API_KEY_XXX
     ports:
       - 8000:8000
     volumes:

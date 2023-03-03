@@ -4,25 +4,20 @@ import { ScenegraphLayer } from "@deck.gl/mesh-layers/typed";
 import store from "@/store/store";
 import { HTTP } from "@/utils/http-common.js";
 import type { BoundingBox } from "@/store/modules/aoi"
-import { PROJECTION_MODE } from "@deck.gl/core/typed/lib/constants";
 import * as turf from '@turf/turf';
 import { IconLayer, TextLayer } from '@deck.gl/layers/typed';
 import type { Feature, FeatureCollection, Geometries } from "@turf/turf";
-import { ref, computed, watch } from 'vue'
 
 let buildingresponse: any
-let OSMTrafficSignalSaved = ref(false)
-let OSMDrivingLanesSaved = ref(false)
-let OSMSidewalkSaved = ref(false)
-let OSMBikeLanesSaved = ref(false)
 
 export async function prepareQuestsUserTable(projectId: string, userId: string) {
-  const response = await HTTP.get("prepare-quests-user-table",{
+  const response = await HTTP.get("prepare-quests-user-table", {
     params: {
       projectId: projectId,
-      userId: userId}
-    },)
-    return response.data;
+      userId: userId
+    }
+  },)
+  return response.data;
 }
 
 export async function getQuestsFromDB(projectId: string) {
@@ -30,47 +25,49 @@ export async function getQuestsFromDB(projectId: string) {
   return response.data;
 }
 
-export async function getQuestsFulfillmentFromDB(projectId: string, userId: string){
-  const response = await HTTP.get("get-quests-and-fulfillment-from-db",{
+export async function getQuestsFulfillmentFromDB(projectId: string, userId: string) {
+  const response = await HTTP.get("get-quests-and-fulfillment-from-db", {
     params: {
       projectId: projectId,
-      userId: userId}
-    })
+      userId: userId
+    }
+  })
   return response.data;
-  }
+}
 
 export async function getbuildingsDataFromDB(projectId: string) {
   buildingresponse = await HTTP.get("get-buildings-from-db", { params: { projectId } });
   return buildingresponse.data;
 }
 export async function getAmenityDataFromDB(projectId: string) {
-  
+
   const response = await HTTP.get("get-amenities-from-db", { params: { projectId } });
-  
 
   const amenity_tags = ["theatre", "arts_center", "clinic", "townhall", "library", "cinema"]
-  let amenityGeojson: FeatureCollection = {type: "FeatureCollection", features: []}
-  response.data.features.forEach((feat: Feature<Geometries>) => {
-    // console.log(feat.properties.amenity)
-    if (feat.geometry?.coordinates.length == 1 && amenity_tags.includes(feat.properties?.amenity)) {
+  let amenityGeojson: FeatureCollection = { type: "FeatureCollection", features: [] }
+  if (response.data.features) {
+    response.data.features.forEach((feat: Feature<Geometries>) => {
       // console.log(feat.properties.amenity)
-      let centroid = turf.centroid((feat.geometry))
-      centroid.properties = feat.properties
-      amenityGeojson.features.push(centroid)
-    }
-  });
+      if (feat.geometry?.coordinates.length == 1 && amenity_tags.includes(feat.properties?.amenity)) {
+        // console.log(feat.properties.amenity)
+        let centroid = turf.centroid((feat.geometry))
+        centroid.properties = feat.properties
+        amenityGeojson.features.push(centroid)
+      }
+    });
+  }
   return amenityGeojson;
 
 }
 
 export async function getbuildingsFromDB(projectId: string) {
-  const response = await HTTP.get("get-buildings-from-db", { params: { projectId } } );
+  const response = await HTTP.get("get-buildings-from-db", { params: { projectId } });
   // @ts-ignore
 
   const emptygeom = (d: Feature) => d?.geometry?.coordinates?.length == 1;
   const nonEmptyFeatures = response.data.features.filter(emptygeom);
   // const colorPalette = ['#7bdef2', '#b2f7ef','#eff7f6', '#f7d6e0', '#f2b5d3'];
-  const colorPalette = ['#f7f3ee', '#f8f2e9','#f7f3ee', '#EEE9E2', '#f7f3ee'];
+  const colorPalette = ['#f7f3ee', '#f8f2e9', '#f7f3ee', '#EEE9E2', '#f7f3ee'];
 
   const randomColoreFromColorPalette = () => {
     const lengthColors = colorPalette.length - 1;
@@ -131,16 +128,16 @@ export async function getAmenities() {
     pickable: true,
     iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
     iconMapping: ICON_MAPPING,
-    getIcon: (d:Feature) => 'marker',
+    getIcon: (d: Feature) => 'marker',
     sizeScale: 5,
     //sizeUnits: "meters",
-     // @ts-ignore
-    getPosition: (d:Feature) => [...d.geometry.coordinates, d.properties.estimatedheight+20],
+    // @ts-ignore
+    getPosition: (d: Feature) => [...d.geometry.coordinates, d.properties.estimatedheight + 20],
     getSize: 5,
-    getColor: [255,0,0,255],
-   
+    getColor: [255, 0, 0, 255],
+
   },
-  ) 
+  )
   const amenityTextlayer = new MapboxLayer({
     id: 'amenity-text-layer',
     // @ts-ignore
@@ -148,30 +145,30 @@ export async function getAmenities() {
     data: amenityGeojson,
     pickable: true,
     // @ts-ignore
-    getPosition: (d:Feature) => [...d.geometry.coordinates, d.properties.estimatedheight+20],
-    getText:(d:Feature) => d.properties.amenity,
+    getPosition: (d: Feature) => [...d.geometry.coordinates, d.properties.estimatedheight + 20],
+    getText: (d: Feature) => d.properties.amenity,
     getSize: 10,
     //sizeUnits: "meters",
     getAngle: 0,
     getTextAnchor: 'start',
     getAlignmentBaseline: 'bottom',
-    
+
   })
-  
-  return {amenityIconlayer, amenityTextlayer}
+
+  return { amenityIconlayer, amenityTextlayer }
 }
 
 export async function getAmenitiesFromOSM(bbox: BoundingBox, projectId: string) {
-  HTTP.post("get-amenities-from-osm", {
+  await HTTP.post("get-amenities-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  });
 }
 export async function getbuildingsFromOSM(bbox: BoundingBox, projectId: string) {
-  HTTP.post("get-buildings-from-osm", {
+  await HTTP.post("get-buildings-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  })
 }
 export async function getGreeneryFromDB() {
   const response = await HTTP.get("get-greenery-from-db");
@@ -213,38 +210,38 @@ export async function storeGreeneryFromOSM(
   usedTagsForGreenery: unknown[],
   projectId: string
 ) {
-  HTTP.post("get-greenery-from-osm", {
+  await HTTP.post("get-greenery-from-osm", {
     bbox: bbox,
     usedTagsForGreenery: usedTagsForGreenery,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  })
 }
 
-//TH
-
-export async function deleteComments(projectId: string){
-  const response = await  HTTP.get("delete-comments", {
-    params: {projectId: projectId}
-    }
+export async function deleteComments(projectId: string) {
+  const response = await HTTP.get("delete-comments", {
+    params: { projectId: projectId }
+  }
   )
 }
 
 export async function getFilteredCommentsFromDB(projectId: string, userId: string) {
-  const response = await  HTTP.get("get-filtered-comments-with-status", {
+  const response = await HTTP.get("get-filtered-comments-with-status", {
     params: {
       projectId: projectId,
-      userId: userId}
-    })    
-    return response.data;
-  }
+      userId: userId
+    }
+  })
+  return response.data;
+}
 
 
 export async function getCommentsFromDB(projectId: string) {
   const response = await HTTP.get("get-comments", {
     params: {
-      projectId:   projectId
-    },})
-  
+      projectId: projectId
+    },
+  })
+
   const iconlayer = new MapboxLayer({
     id: "comments",
     // @ts-ignore
@@ -292,10 +289,10 @@ export async function getCommentsFromDB(projectId: string) {
 }
 
 export async function getTreesFromOSM(bbox: BoundingBox, projectId: string) {
-  HTTP.post("get-trees-from-osm", {
+  await HTTP.post("get-trees-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  });
 }
 export async function getTreeJsonFromDB(projectId: string) {
   const response = await HTTP.post("get-trees-from-db", projectId);
@@ -326,14 +323,11 @@ export async function getTreesFromDB(projectId: string) {
 }
 
 export async function getDrivingLaneFromOSM(bbox: BoundingBox, projectId: string) {
-  console.log("Backend-ProjectID: " + projectId)
-  HTTP.post("get-driving-lane-from-osm", {
+  // console.log("Backend-ProjectID: " + projectId)
+  await HTTP.post("get-driving-lane-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
-  .then(()=>{
-    OSMDrivingLanesSaved.value=true
-  });
+  })
 }
 
 export async function getDrivingLaneFromDB(projectId: string) {
@@ -346,12 +340,9 @@ export async function getWaterFromDB(projectId: string) {
 }
 
 export async function getTrafficLightsFromOSM(bbox: BoundingBox, projectId: string) {
-  HTTP.post("get-traffic-lights-from-osm", {
+  await HTTP.post("get-traffic-lights-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
-  .then(()=>{
-    OSMTrafficSignalSaved.value=true
   })
 }
 
@@ -385,64 +376,58 @@ export async function getRoutesFromDB(projectId: string) {
 }
 
 export async function getTramLineFromOSM(bbox: BoundingBox, projectId: string) {
-  HTTP.post("get-tram-lines-from-osm", {
+  await HTTP.post("get-tram-lines-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
+  });
 }
 
 export async function getTramLineDataFromDB(projectId: string) {
   const response = await HTTP.post("get-tram-line-from-db", projectId);
-  return response;
+  return response.data;
 }
 
-export async function clearCache(){
+export async function clearCache() {
   const response = await HTTP.get("admin/clear-cache");
   return response;
 }
 
-export async function getWaterFromOSM(bbox: BoundingBox,projectId: string) {
-  HTTP.post("get-water-from-osm", {
+export async function getWaterFromOSM(bbox: BoundingBox, projectId: string) {
+  await HTTP.post("get-water-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
-}
-
-export async function getSideWalkFromOSM(bbox: BoundingBox,projectId: string) {
-
-  HTTP.post("get-side-walk-from-osm", {
-    bbox: bbox,
-    projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
-  .then(()=>{
-    OSMSidewalkSaved.value = true
   });
 }
 
-export async function getBikeFromOSM(bbox: BoundingBox,projectId: string) {
-  console.log("bike")
-  HTTP.post("get-bike-from-osm", {
+export async function getSideWalkFromOSM(bbox: BoundingBox, projectId: string) {
+
+  await HTTP.post("get-side-walk-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"))
-  .then(()=>{
-    OSMBikeLanesSaved.value = true
-  });
+  })
+}
+
+export async function getBikeFromOSM(bbox: BoundingBox, projectId: string) {
+  // console.log("bike")
+  await HTTP.post("get-bike-from-osm", {
+    bbox: bbox,
+    projectId: projectId,
+  })
 }
 
 export async function getSidewalkFromDB(projectId: string) {
   const response = await HTTP.post("get-sidewalk-from-db", projectId);
-  return response;
+  return response.data;
 }
 
 export async function getBikeFromDB(projectId: string) {
   const response = await HTTP.post("get-bike-from-db", projectId);
-  return response;
+  return response.data;
 }
 
 export async function getBikeLaneDataFromDB(projectId: string) {
   const response = await HTTP.post("get-bike-lanes-from-db", projectId);
-  return response;
+  return response.data;
 }
 
 export async function getCommentsDataFromDB(projectId: string) {
@@ -450,49 +435,23 @@ export async function getCommentsDataFromDB(projectId: string) {
   return response;
 }
 
-export function getPedestrianAreaFromOSM(bbox: BoundingBox,projectId: string) {
-  HTTP.post("get-pedestrian-area-from-osm", {
+export async function getPedestrianAreaFromOSM(bbox: BoundingBox, projectId: string) {
+  await HTTP.post("get-pedestrian-area-from-osm", {
     bbox: bbox,
     projectId: projectId,
-  }).then(() => store.dispatch("aoi/setDataIsLoaded"));
-  
+  });
 }
 
 export async function getPedestrianAreaFromDB(projectId: string) {
   const response = await HTTP.post("get-pedestrian-area-from-db", projectId)
-  return response;
+  return response.data;
 }
 
-export async function getZerbraCrossFromDB (projectId: string) {
+export async function getZerbraCrossFromDB(projectId: string) {
   const response = await HTTP.post("get-zebra-cross-from-db", projectId)
-  return response;
+  return response.data;
 }
 
-const sendZebraCrossingRequest = computed (()=>{
-  return { 
-    OSMTrafficSignalSaved: OSMTrafficSignalSaved.value, 
-    OSMDrivingLanesSaved: OSMDrivingLanesSaved.value,
-    OSMSidewalkSaved: OSMSidewalkSaved.value,
-    OSMBikeLanesSaved: OSMBikeLanesSaved.value  }
-})
-
-watch(sendZebraCrossingRequest, function () {
-
-    if (
-      sendZebraCrossingRequest.value.OSMTrafficSignalSaved == true
-      && sendZebraCrossingRequest.value.OSMDrivingLanesSaved == true
-      && sendZebraCrossingRequest.value.OSMSidewalkSaved == true
-      && sendZebraCrossingRequest.value.OSMBikeLanesSaved == true
-        
-      ) 
-      { 
-        store.dispatch("aoi/setDataIsLoaded")
-        HTTP.post("generate-zebra-crossing-table", {
-          projectId: store.state.aoi.projectSpecification.project_id,
-        }).then(() => store.dispatch("aoi/setDataIsLoaded"));
-        
-      }
-})
 
 
 

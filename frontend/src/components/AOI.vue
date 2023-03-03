@@ -1,5 +1,5 @@
 <template>
-  <DevUI @startPopulate="populateMap()" v-if="devMode" @getMapOrientation="emit('getMapOrientation')" />
+  <DevUI v-if="devMode" @getMapOrientation="emit('getMapOrientation')" @addDrawControl="addDrawControl" :drawnPolygon="props.drawnPolygon"/>
 </template>
 
 <script lang="ts" setup>
@@ -30,13 +30,16 @@ import {
   getZerbraCrossFromDB
 
 } from "../service/backend.service";
+import type { IControl } from "maplibre-gl";
 import type { FeatureCollection } from "@turf/helpers";
 const store = useStore();
 const devMode = computed(() => store.getters["ui/devMode"]);
 let threeJsScene3d: any;
 let threeJsSceneFlat: any;
 
-const emit = defineEmits(["addLayer", "addImage", "triggerRepaint", "getMapOrientation"]);
+const emit = defineEmits(["addLayer", "addImage", "triggerRepaint", "getMapOrientation", "addDrawControl"]);
+const props=defineProps(['drawnPolygon'])
+
 const populateMap = async () => {
   // await sendBuildingRequest();
   await createEmptyThreeJsScene();
@@ -76,6 +79,10 @@ const createEmptyThreeJsScene = async () => {
 
 const sendBuildingRequestTHREE = async () => {
   const buildingData = await getbuildingsDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(!buildingData.features){
+    console.log('No Data in bd for buildings!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsScene3d.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
@@ -92,6 +99,10 @@ const sendBuildingRequest = async () => {
 };
 const addAmenities =  async () => {
   const amenityData = await getAmenityDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(amenityData.features.length == 0){
+    console.log('No Data in bd for amenities!')
+    return
+  }
   const amenitiesAr: string[] = []
   const groupedAmenities: {"type": string , "featureCollection":FeatureCollection}[]= []
   amenityData.features.forEach((feat)=>{
@@ -119,7 +130,10 @@ const sendGreeneryRequest = async () => {
 const sendGreeneryRequestTHREE = async () => {
   const greeneryJson: FeatureCollection = await getGreeneryJsonFromDB(store.state.aoi.projectSpecification.project_id);
   // console.log(greeneryJson)
-
+  if(!greeneryJson.features){
+    console.log('No Data in bd for greenery!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
@@ -134,7 +148,10 @@ const sendGreeneryRequestTHREE = async () => {
 const sendWaterRequestTHREE = async () => {
   const waterJson: FeatureCollection = await getWaterFromDB(store.state.aoi.projectSpecification.project_id);
   // console.log(waterJson)
-
+  if(!waterJson.features){
+    console.log('No Data in bd for water!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
@@ -177,7 +194,10 @@ const createAoiPlane = async () => {
 const sendTreeRequest = async () => {
 
   const treeJson: FeatureCollection = await getTreeJsonFromDB(store.state.aoi.projectSpecification.project_id);
-
+  if(!treeJson.features){
+    console.log('No Data in bd for trees!')
+    return
+  }
   let trees: string[] = ["Tree_01.glb", "Tree_02.glb", "Tree_03.glb"]
   let ArrayIndex: number[] = []
   treeJson.features.forEach(() => {
@@ -200,7 +220,10 @@ const sendTreeRequest = async () => {
 
 const sendDrivingLaneRequestTHREE = async () => {
   const drivingLanedata: { lane: FeatureCollection, polygon: FeatureCollection } = await getDrivingLaneFromDB(store.state.aoi.projectSpecification.project_id)
-  // console.log(drivingLanedata.lane)
+  if(!drivingLanedata.polygon.features){
+    console.log('No Data in bd for driving lanes!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
@@ -297,13 +320,15 @@ const sendTrafficSignalRequest = async () => {
 }
 
 const sendTramLineRequestTHREE = async () => {
-
-
   const tramLaneData = await getTramLineDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(!tramLaneData.features){
+    console.log('No Data in bd for tram lines!')
+    return
+  }
   addLineFromCoordsAr1({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
-    geoJson: tramLaneData.data,
+    geoJson: tramLaneData,
     color: "#676767",
     height: 0.2,
     extrude: .12
@@ -341,16 +366,24 @@ const sendTramLineRequest = async () => {
 const sendTrafficSignalRequestTHREE = async () => {
 
   const trafficSignalData = await getTrafficSignalDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(!trafficSignalData.features){
+    console.log('No Data in bd for traffic signals!')
+    return
+  }
   addGeoOnPointsToThreejsScene(threeJsScene3d.scene, trafficSignalData, "TrafficLight.glb", store.state.aoi.projectSpecification.bbox)
 }
 
 const sendSidewalkRequest = async () =>{
   
   const sidewalkData = await getSidewalkFromDB(store.state.aoi.projectSpecification.project_id)
+  if(!sidewalkData.features){
+    console.log('No Data in bd for side walks!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
-    geoJson: sidewalkData.data,
+    geoJson: sidewalkData,
     color: "#bdb8aa",
     height: 0,
     extrude: 0.25
@@ -359,11 +392,15 @@ const sendSidewalkRequest = async () =>{
 
 const sendBikeRequest = async () =>{
   
-  const bikeData = await getBikeFromDB(store.state.aoi.projectSpecification.project_id)
+  const bikeLaneData = await getBikeFromDB(store.state.aoi.projectSpecification.project_id)
+  if(!bikeLaneData.features){
+    console.log('No Data in bd for bike lanes!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
-    geoJson: bikeData.data,
+    geoJson: bikeLaneData,
     color: "#f75d52",
     height: 0,
     extrude: 0.28
@@ -373,15 +410,18 @@ const sendBikeRequest = async () =>{
 
 const sendBikeLaneIconRequest = async () => {
 
-  const bikelane = await getBikeLaneDataFromDB(store.state.aoi.projectSpecification.project_id);
-  
+  const bikeLaneData = await getBikeLaneDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(!bikeLaneData.features){
+    console.log('No Data in bd for bike lanes!')
+    return
+  }
   let baseWidth = 0.0011
   let baseZoomm = 15
   store.commit("map/addSource", {
     id: "bike-icon",
     geojson: {
       type: "geojson",
-      data: bikelane.data,
+      data: bikeLaneData,
     },
   });
   store.commit("map/addLayer", {
@@ -414,11 +454,15 @@ const sendBikeLaneIconRequest = async () => {
 }
 
 const sendPedestrianAreaRequest = async () => {
-  const pedestrianData = await getPedestrianAreaFromDB(store.state.aoi.projectSpecification.project_id)
+  const pedestrianAreaData = await getPedestrianAreaFromDB(store.state.aoi.projectSpecification.project_id)
+  if(!pedestrianAreaData.features){
+    console.log('No Data in bd for pedestrian areas!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
-    geoJson: pedestrianData.data,
+    geoJson: pedestrianAreaData,
     color: "",
     height: 0,
     extrude: 0.2,
@@ -427,15 +471,24 @@ const sendPedestrianAreaRequest = async () => {
 }
 
 const sendZerbraCrossRequest = async () => {
-  const zerbraCrossData = await getZerbraCrossFromDB(store.state.aoi.projectSpecification.project_id)
+  const zerbraCrossingData = await getZerbraCrossFromDB(store.state.aoi.projectSpecification.project_id)
+  if(!zerbraCrossingData.features){
+    console.log('No Data in bd for zebra crossings!')
+    return
+  }
   addPolygonsFromCoordsAr({
     scene: threeJsSceneFlat.scene,
     bbox: store.state.aoi.projectSpecification.bbox,
-    geoJson: zerbraCrossData.data,
+    geoJson: zerbraCrossingData,
     color: "#ffffff",
     height: 0,
     extrude: 0.32
   })  
+}
+
+const addDrawControl = (control: IControl) =>{
+  emit('addDrawControl', control)
+
 }
 </script>
 

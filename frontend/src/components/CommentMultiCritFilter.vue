@@ -13,11 +13,11 @@
                         Meine
                     </v-btn>
                 </v-btn-toggle>
-                <div class="filter-sub-headline text-subtitle-1 font-weight-bold"> Planungsvarianten </div>
+                <div v-if="store.state.planningIdeas.planningIdeasFeatures.features" class="filter-sub-headline text-subtitle-1 font-weight-bold"> Planungsvarianten </div>
                 <v-btn-toggle v-model="filterPlanningIdeas" multiple>
                     <div v-for="route in store.state.planningIdeas.planningIdeasFeatures.features"
                         :key="route.properties.id">
-                        <v-btn height="32px" width="90px" size="small"
+                        <v-btn height="32px" min-width="90px" size="small"
                             :class="filterPlanningIdeas?.map((filter) => filter.filterValue).includes(route.properties.id) ? 'ma-1 filter-btn-is-active' : 'ma-1'"
                             variant="tonal" rounded="lg"
                             :value="{ filterType: 'planningIdea', filterValue: route.properties.id }">
@@ -28,10 +28,10 @@
                         </v-btn>
                     </div>
                 </v-btn-toggle>
-                <div class="filter-sub-headline text-subtitle-1 font-weight-bold"> Quests </div>
+                <div v-if="store.state.quests.questList[0]" class="filter-sub-headline text-subtitle-1 font-weight-bold"> Quests </div>
                 <v-btn-toggle v-model="filterQuests" multiple>
                     <div v-for="quest in store.state.quests.questList" :key="quest.order_id">
-                        <v-btn height="32px" width="90px" size="small"
+                        <v-btn height="32px" min-width="90px" size="small"
                             :class="filterQuests?.map((filter) => filter.filterValue).includes(quest.quest_id) ? 'ma-1 filter-btn-is-active' : 'ma-1'"
                             variant="tonal" rounded="lg" :value="{ filterType: 'quest', filterValue: quest.quest_id }"
                             tonal>
@@ -45,7 +45,7 @@
                     @keyup.native.enter="submitKeyword" v-model="keyword"></v-text-field>
                 <v-btn-toggle v-model="filterKeywords" multiple>
                     <div v-for="keyword in keywords" :key="keyword">
-                        <v-btn calss="keyword-btn" height="32px" width="90px" size="small"
+                        <v-btn calss="keyword-btn" height="32px" size="small"
                             :class="filterKeywords?.map((filter) => filter.filterValue).includes(keyword) ? 'ma-1 filter-btn-is-active' : 'ma-1'"
                             variant="tonal" rounded="lg" :value="{ filterType: 'keyword', filterValue: keyword }">
                             {{ keyword }}
@@ -70,7 +70,7 @@
 
 <script lang="ts" setup>
 import { useStore } from "vuex";
-import { computed, onBeforeUpdate, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 const store = useStore();
 const keyword = ref<string>("")
 const keywords: string[] = reactive([])
@@ -219,6 +219,8 @@ const closeWindow=()=>{
     overflow-y: scroll;
     display: flex;
     flex-direction: column;
+    min-width: 80%;
+    
 }
 
 .v-btn-toggle {
@@ -234,8 +236,8 @@ const closeWindow=()=>{
     flex-direction: column;
     align-items: center;
     max-height: 100vh;
+    min-height: 500px;
     padding: 1rem 1rem 1.5rem 1.5rem;
-
 }
 
 
@@ -256,8 +258,7 @@ const closeWindow=()=>{
     background: rgb(0, 0, 0, 0.8);
     
 }
-.keyword-btn{
+.keyword-btn .v-btn{
     min-width: fit-content
 }
-
 </style>

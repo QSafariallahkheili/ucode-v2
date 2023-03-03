@@ -1,64 +1,60 @@
 <template>
-    
+    <DeletingDialog v-if="(commentsAreLoaded && props.show)" :deleteDialog="deleteDialog"
+        @cnacelDeleteDialog="cnacelDeleteDialog" @confirmDeleteCommentDialog="confirmDeleteCommentDialog" />
 
-        <DeletingDialog v-if="(commentsAreLoaded && props.show)" :deleteDialog="deleteDialog"
-            @cnacelDeleteDialog="cnacelDeleteDialog" @confirmDeleteCommentDialog="confirmDeleteCommentDialog" />
 
-       
-            <div v-if="(commentsAreLoaded && props.show && mapView == false)" className="comment-list">
-                <CommentSortAndFilter @sortComment="sortComment" @multifFilterComment="multifFilterComment"
-                    :bottomPositionSortFilter="bottomPositionSortFilter" :activfilterOptions="activfilterOptions" />
-                <transition name="card">
-                    <div>
-                        <CommentCard v-for="comment in filteredCommentList" :id="comment.properties.id"
-                            :created_at="comment.properties.created_at" :comment="comment.properties.comment"
-                            :user_id="comment.properties.user_id" :likes="comment.properties.likes"
-                            :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
-                            :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment"
-                            @zoomToComment="zoomToComment" />
-                    </div>
-                </transition>
-                <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
-                    v-if="mapView == false" size="large" icon class="map-comment-view-toggle">
-                    <v-icon>mdi-map-outline</v-icon>
-                </v-btn>
-            </div>
-       
-        <transition name="fade">
-            <div v-if="props.show && mapView == false" className="backdrop">
-                <div v-if="(!commentsAreLoaded && props.show)" class="comment-list">
-                    <CardSkeleton v-for="index in 4" :key="index"></CardSkeleton>
-                </div>
+    <div v-if="(commentsAreLoaded && props.show && mapView == false)" className="comment-list">
+        <CommentSortAndFilter @sortComment="sortComment" @multifFilterComment="multifFilterComment"
+            :bottomPositionSortFilter="bottomPositionSortFilter" :activfilterOptions="activfilterOptions" />
+        <transition name="card">
+            <div>
+                <CommentCard v-for="comment in filteredCommentList" :id="comment.properties.id"
+                    :created_at="comment.properties.created_at" :comment="comment.properties.comment"
+                    :user_id="comment.properties.user_id" :likes="comment.properties.likes"
+                    :dislikes="comment.properties.dislikes" :voting_status="comment.properties.voting_status"
+                    :color="comment.properties.color" :key="comment.properties.id" @deleteComment="deleteComment"
+                    @zoomToComment="zoomToComment" />
             </div>
         </transition>
-        <div class="map-comment-container">
-            <v-btn v-if="props.show && mapView == true"
-                @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); " size="large" icon
-                class="list-comment-view-toggle">
-                <v-icon>mdi-format-list-bulleted</v-icon>
-            </v-btn>
-            <div class="map-card" v-if="props.show && mapView == true">
-                <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id">
+        <v-btn @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); buildCommentLayer()"
+            v-if="mapView == false" size="large" icon class="map-comment-view-toggle">
+            <v-icon>mdi-map-outline</v-icon>
+        </v-btn>
+    </div>
 
-                    <CommentCard :id="comment.properties.id" :created_at="comment.properties.created_at"
-                        :comment="comment.properties.comment" :user_id="comment.properties.user_id"
-                        :likes="comment.properties.likes" :dislikes="comment.properties.dislikes"
-                        :voting_status="comment.properties.voting_status" :color="comment.properties.color"
-                        :key="comment.properties.id" @deleteComment="deleteComment"
-                        @mouseenter="mouseEnterOnComment(comment.properties.id)" :mapView="mapView"
-                        @zoomToComment="zoomToComment" @zoomToAllComments="zoomToAllComments" />
-                </div>
+    <transition name="fade">
+        <div v-if="props.show && mapView == false" className="backdrop">
+            <div v-if="(!commentsAreLoaded && props.show)" class="comment-list">
+                <CardSkeleton v-for="index in 4" :key="index"></CardSkeleton>
             </div>
-        
+        </div>
+    </transition>
+    <div class="map-comment-container">
+        <v-btn v-if="props.show && mapView == true" @click="setMapCommentView(); changeCommentSortAndFilterUIPosition(); "
+            size="large" icon class="list-comment-view-toggle">
+            <v-icon>mdi-format-list-bulleted</v-icon>
+        </v-btn>
+        <div class="map-card" v-if="props.show && mapView == true">
+            <div class="set-margin" v-for="comment in filteredCommentList" :key="comment.properties.id">
+
+                <CommentCard :id="comment.properties.id" :created_at="comment.properties.created_at"
+                    :comment="comment.properties.comment" :user_id="comment.properties.user_id"
+                    :likes="comment.properties.likes" :dislikes="comment.properties.dislikes"
+                    :voting_status="comment.properties.voting_status" :color="comment.properties.color"
+                    :key="comment.properties.id" @deleteComment="deleteComment"
+                    @mouseenter="mouseEnterOnComment(comment.properties.id)" :mapView="mapView"
+                    @zoomToComment="zoomToComment" @zoomToAllComments="zoomToAllComments" />
+            </div>
+        </div>
+
         <CommentSortAndFilter v-if="props.show && mapView == true" @sortComment="sortComment"
             @multifFilterComment="multifFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter"
             :activfilterOptions="activfilterOptions" />
     </div>
-
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch, computed, reactive } from 'vue';
+import { onMounted, onUpdated, ref, watch, computed, reactive } from 'vue';
 import { useStore } from "vuex";
 import { getFilteredCommentsFromDB } from "../service/backend.service";
 import CardSkeleton from "@/components/CardSkeleton.vue";
@@ -68,7 +64,7 @@ import CommentSortAndFilter from "@/components/CommentSortAndFilter.vue"
 import { HTTP } from "@/utils/http-common.js";
 import comment from '@/store/modules/comment';
 import type { Feature } from '@turf/helpers';
-import bbox from "@turf/bbox";
+import bbox from "@turf/bbox"; 
 
 const store = useStore();
 const emit = defineEmits(["deleteQuestCommentFromSource", "scaleUpComment", "toggleLayerVisibility", "updateCommentSource", "addImage", "fitBoundsToBBOX", "flyToLocation"]);
@@ -79,11 +75,7 @@ let deleteCommentId = ref()
 let mapView = ref(false)
 let commentLayerBuilt = ref(false)
 let filterArray = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]>()
-let activfilterOptions = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]>([
-    { isActive: false, filterOptions: { filterType: 'meine', filterValue: "" } },
-    { isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: 1 } },
-    { isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: 2 } },
-    { isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: 3 } }])
+let activfilterOptions = ref<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]>([])
 let filteredList = reactive<any[]>([])
 const currentSorting = ref<string>("")
 const props = defineProps({
@@ -96,6 +88,14 @@ const props = defineProps({
 let commentList = ref<any[]>([])
 let commentsAreLoaded = ref<boolean>(false)
 let bottomPositionSortFilter = ref<string>('')
+
+onMounted(() => {
+    sendCommentRequest();
+
+})
+onUpdated(() => {
+    getPlanningideasForQuickFiltering();
+})
 const delay = (time: number) => {
     return new Promise(resolve => setTimeout(resolve, time));
 }
@@ -108,6 +108,12 @@ const sendCommentRequest = async () => {
     var start = performance.now();
 
     const commentData = await getFilteredCommentsFromDB(projectId, userId)
+
+    if (!commentData.features) {
+        console.log('No comments yet in this project!')
+        commentsAreLoaded.value = true;
+        return
+    }
     //@ts-ignore
     commentData.features.forEach(item => {
         item.properties.user_id !== userId ? otherComments.push(item) : myComments.push(item);
@@ -160,7 +166,10 @@ const confirmDeleteCommentDialog = async () => {
         commentId: deleteCommentId.value,
     })
     emit("deleteQuestCommentFromSource", store.state.comment.deletedComments)
-    store.state.quests.questList[response.data].fulfillment--
+    if (store.state.quests.hasQuests) {
+        store.state.quests.questList[response.data].fulfillment--
+    }
+
 }
 
 const sortComment = (sortOption: string) => {
@@ -253,10 +262,26 @@ const filteredCommentList = computed(() => {
     }
     return filteredList
 })
+const getPlanningideasForQuickFiltering = () => {
+    if (!activfilterOptions.value.some(item => item.filterOptions.filterType === 'meine')) {
+        activfilterOptions.value.push({ isActive: false, filterOptions: { filterType: 'meine', filterValue: "" } })
+    }
+    // console.log(store.state.planningIdeas.planningIdeasFeatures)
+    if (store.state.planningIdeas.planningIdeasFeatures.features) {
+        store.state.planningIdeas.planningIdeasFeatures.features.forEach((feature: Feature) => {
+            const id = feature.properties?.id;
 
-onMounted(() => {
-    sendCommentRequest();
-})
+            // Check if the id already exists in activfilterOptions array
+            const exists = activfilterOptions.value.some(item => item.filterOptions.filterValue === id);
+
+            // If id doesn't exist, add it to activfilterOptions array
+            if (!exists) {
+                activfilterOptions.value.push({ isActive: false, filterOptions: { filterType: 'planningIdea', filterValue: id } });
+            }
+        });
+    }
+}
+
 
 const changeCommentSortAndFilterUIPosition = () => {
     if (mapView.value == true) {
@@ -439,7 +464,7 @@ const zoomToComment = (commentId: number) => {
     height: calc(100% - 56px + 10rem);
     z-index: 1001;
     padding: 0em 0em;
-    padding-bottom: 10rem;
+    padding-bottom: 14rem;
     overflow-x: hidden !important;
     overflow-y: scroll !important;
     scrollbar-width: none !important;

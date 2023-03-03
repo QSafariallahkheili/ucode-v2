@@ -27,6 +27,12 @@ HTTP.get("project-specification", {
 }).then((response) => {
   store.commit("aoi/setProjectSpecification", response.data[0]);
   store.commit("ui/loadedProjects", true);
+  const bbox = response.data[0].bbox
+  const center = {
+  lng: (bbox.xmax + bbox.xmin) / 2,
+  lat: (bbox.ymax + bbox.ymin) / 2
+};
+  store.commit("map/updateMapCenter", center)
 });
 
 watch(store.state.ui, function (state: UiState) {

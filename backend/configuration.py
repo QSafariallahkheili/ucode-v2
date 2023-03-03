@@ -7,3 +7,5 @@ dbConfig = {
     "user": getenv("DB_USER", "postgres"),
     "password": getenv("DB_PASSWORD", "postgres"),
 }
+
+appConfig = {"apiKey": getenv("API_KEY", "XXX_API_KEY_XXX")}

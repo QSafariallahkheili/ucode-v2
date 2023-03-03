@@ -2,7 +2,7 @@
   <div class="map-wrap" ref="mapContainer">
     <div class="map" id="map">
       <AOI v-if="mapStyleLoaded" @addLayer="addLayerToMap" @addImage="addImageToMap" @triggerRepaint="triggerRepaint"
-        @getMapOrientation="getMapOrientation" />
+        @getMapOrientation="getMapOrientation" @addDrawControl="addDrawControl" :drawnPolygon="drawnPolygon"/>
       <ProjectInfo :show="tabIndex == 'projectInfo'" />
       <Suspense>
         <Quests v-show="tabIndex == 'planning'" :hide="hideQuests" @hideQuests="() => { hideQuests = !hideQuests }" />
@@ -25,7 +25,7 @@
         @removeDrawnLine="removeDrawnLine" @removeDrawControl="removeDrawControl"
         :clickedCoordinates="mapClicks.clickedCoordinates" :lineDrawCreated="lineDrawCreated" />
       <Comment @removePulseLayer="removePulseLayerFromMap" />
-      <Intro v-show="store.state.ui.intro" @hideQuests="()=>{hideQuests=false}" />
+      <Intro v-show="store.state.ui.intro" @hideQuests="() => { hideQuests = false }" />
     </div>
 
   </div>
@@ -45,7 +45,6 @@ import Intro from "@/components/Intro.vue";
 import ProjectInfo from "@/components/ProjectInfo.vue"
 import type { ProjectSpecification, MapOrientation } from "@/store/modules/aoi";
 import { HTTP } from "@/utils/http-common";
-import { pulseLayer } from "@/utils/pulseLayer";
 import { MapboxLayer } from "@deck.gl/mapbox/typed";
 import { ScenegraphLayer } from "@deck.gl/mesh-layers/typed";
 import * as turf from '@turf/turf';
@@ -68,6 +67,7 @@ let mapStyleLoaded = ref(false)
 let tabIndex = ref("planning")
 let showCommentDialog = ref(false)
 let hideQuests = ref(true)
+const drawnPolygon = ref()
 //let activeMarker = reactive<any>({});
 
 
@@ -127,7 +127,7 @@ onMounted(() => {
     else {
       let starting_Position = projectSpecification.starting_position
       map.flyTo({
-        center: starting_Position.center.coordinates,
+        center: starting_Position.center,
         bearing: starting_Position.bearing,
         zoom: starting_Position.zoom,
         pitch: starting_Position.pitch
@@ -140,13 +140,14 @@ onMounted(() => {
     //  getCommentData()
 
   });
-  map.on('click',function (mapClick) {
-    
+  map.on('click', function (mapClick) {
+
     let layer = map.getLayer('threeJsScene3d')
+    //@ts-ignore
     layer.implementation.raycast(mapClick.point)
-    
+
   });
- 
+
 
   map.on('click', 'allComments', function (e) {
     // @ts-ignore
@@ -173,15 +174,6 @@ onMounted(() => {
       }
     );
   });
-
-
-  map.on('draw.create', () => {
-    lineDrawCreated.value = 1
-  })
-
-  map.on('draw.create', () => {
-    lineDrawCreated.value = 1
-  })
 
 });
 const animateIconScale = (start: number, end: number, duration: number, id: any) => {
@@ -434,8 +426,11 @@ const addPopupToMap = (popup: Popup) => {
   popup?.addTo(map)
 }
 
-const addDrawControl = (draw: IControl) => {
-  map?.addControl(draw, 'bottom-right');
+const addDrawControl = (draw:any) => {
+  map?.addControl(draw, 'top-right');
+  map.once('draw.create', (event) => {
+    drawnPolygon.value = event.features[0];
+  });
 }
 
 const addDrawnLine = (drawnPathlayer: CustomLayerInterface, linePopup: Popup) => {
@@ -517,7 +512,7 @@ const deleteQuestCommentFromSource = (deletedComment: Feature[]) => {
 }
 
 const getMapOrientation = async () => {
-  var currentView: MapOrientation = {
+  const currentView: MapOrientation = {
     center: map.getCenter(),
     zoom: map.getZoom(),
     bearing: map.getBearing(),
@@ -525,6 +520,7 @@ const getMapOrientation = async () => {
   };
 
   const response = await HTTP.post('update-starting-orientation', { projectId: store.state.aoi.projectSpecification.project_id, startingOrientation: currentView })
+
 }
 
 onUnmounted(() => {

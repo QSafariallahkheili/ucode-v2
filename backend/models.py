@@ -15,3 +15,19 @@ class BoundingBox:
 class ProjectSpecification:
     projectId: str
     bbox: BoundingBox
+
+
+@dataclass
+class LatLngPosition:
+    lng: float
+    lat: float
+@dataclass
+class MapOrientation:
+    center: LatLngPosition
+    zoom: float
+    bearing: float
+    pitch: float
+@dataclass
+class UpdateStartingOrientation:
+    projectId: str
+    startingOrientation: MapOrientation
