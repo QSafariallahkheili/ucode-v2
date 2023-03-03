@@ -41,7 +41,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      - VITE_APP_API_BASE_URL="${APP_API_BASE_URL}"
+      - VITE_APP_API_BASE_URL_NOT_WORKING="${APP_API_BASE_URL}"
     ports:
       - '8080:80'
 
