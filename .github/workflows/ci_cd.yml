@@ -46,7 +46,7 @@ jobs:
     if: ${{ github.event_name != 'pull_request' &&  github.ref_name == 'master'}}
     needs: build
     env:
-      APP_API_BASE_URL: "https://api.v2.urban-codesign.com"
+      APP_API_BASE_URL: https://api.v2.urban-codesign.com
       API_KEY: ${{secrets.API_KEY}}
     
     steps:

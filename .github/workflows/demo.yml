@@ -60,7 +60,7 @@ jobs:
     needs: build
     environment: demo
     env:
-      APP_API_BASE_URL: "https://api.demo.urban-codesign.com"
+      APP_API_BASE_URL: https://api.demo.urban-codesign.com
       API_KEY: ${{secrets.API_KEY}}
 
     steps:
