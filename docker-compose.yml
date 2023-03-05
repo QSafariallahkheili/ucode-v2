@@ -78,8 +78,10 @@ services:
       - $PWD/Caddyfile:/etc/caddy/Caddyfile
       - $PWD/site:/srv
       - caddy_config:/config
+      - caddy_data:/data
 volumes:
   caddy_config:
+  caddy_data:
   database_dumps:
   database_data:
       driver: local
