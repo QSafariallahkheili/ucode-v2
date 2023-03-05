@@ -56,7 +56,6 @@ jobs:
 
   build-and-deploy:
     runs-on: [self-hosted, linux, ucode-demo.cloud]
-    if: ${{ github.event_name != 'pull_request' &&  github.ref_name == 'demo'}}
     needs: build
     environment: demo
     env:
