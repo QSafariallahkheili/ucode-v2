@@ -53,8 +53,10 @@
             </v-btn-toggle> -->
 
       </v-sheet>
+      <transition name="slide">
       <CommentMultiCritFilter @multifilterComment="multifilterComment" @toggleWindow="toggleMultiCritFilterDialog"
          v-if="showMultiCritFilter" :activfilterOptions="props.activfilterOptions"/>
+      </transition>
    </div>
 </template>
 
@@ -141,5 +143,22 @@ const toggleMultiCritFilterDialog = () => {
 }
 .v-btn{
     min-width: fit-content
+}
+.slide-enter-active {
+    margin-bottom: -25em;
+    transition: margin-bottom 0.1s ease-out;
+}
+
+.slide-enter-to {
+    margin-bottom: 0px;
+}
+
+.slide-leave-active {
+    margin-bottom: 0px;
+    transition: margin-bottom 0.1s ease-in;
+}
+
+.slide-leave-to {
+    margin-bottom: -25em;
 }
 </style>

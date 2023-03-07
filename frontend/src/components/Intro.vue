@@ -90,7 +90,12 @@ const closeIntro = () => {
     padding-left: 1rem;
     padding-right: 1rem;
     margin: auto;
+    scrollbar-width: none !important;
 }
+.intro-text::-webkit-scrollbar {
+    display: none;
+}
+
 
 .v-item-group {
     margin-top: 1rem;

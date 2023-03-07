@@ -2,14 +2,14 @@
     <div class="filter-container">
         <div class="backdrop"></div>
         <v-card v-click-outside="closeWindow" style="border-radius: 18px 18px 0px 0px">
-            <v-btn @click="closeWindow"  icon="mdi-close" class="close-button"  variant="plain">
+            <v-btn @click="closeWindow" icon="mdi-close" class="close-button" variant="plain">
             </v-btn>
             <div class="filter-headline text-h6 font-weight-bold text-center"> Filter </div>
             <div class="filter-content">
                 <v-btn-toggle v-model="filterMeine">
                     <v-btn height="32px" width="90px" size="small"
-                        :class="filterMeine? 'ma-1 filter-btn-is-active' : 'ma-1'"
-                        variant="tonal" rounded="lg" :value="{ filterType: 'meine', filterValue: '' }">
+                        :class="filterMeine ? 'ma-1 filter-btn-is-active' : 'ma-1'" variant="tonal" rounded="lg"
+                        :value="{ filterType: 'meine', filterValue: '' }">
                         Meine
                     </v-btn>
                 </v-btn-toggle>
@@ -74,10 +74,10 @@ import { computed, onMounted, reactive, ref } from "vue";
 const store = useStore();
 const keyword = ref<string>("")
 const keywords: string[] = reactive([])
-const filterMeine = ref<{ filterType: string, filterValue: number|string }>()
-const filterPlanningIdeas = ref<{ filterType: string, filterValue: number|string }[]>([])
-const filterQuests = ref<{ filterType: string, filterValue: number|string }[]>([])
-const filterKeywords = ref<{ filterType: string, filterValue: number|string }[]>([])
+const filterMeine = ref<{ filterType: string, filterValue: number | string }>()
+const filterPlanningIdeas = ref<{ filterType: string, filterValue: number | string }[]>([])
+const filterQuests = ref<{ filterType: string, filterValue: number | string }[]>([])
+const filterKeywords = ref<{ filterType: string, filterValue: number | string }[]>([])
 const emit = defineEmits(["multifilterComment", "toggleWindow"])
 const props = defineProps({
     show: {
@@ -86,7 +86,7 @@ const props = defineProps({
     },
     shownQuickFilters: Array,
     activfilterOptions: {
-        type: Array<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number|string } }>,
+        type: Array<{ isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }>,
         default: []
     }
 })
@@ -103,8 +103,8 @@ const updateFilterSelection = () => {
         }
         else if (filter.filterOptions.filterType == 'planningIdea') {
             if (filter.isActive) {
-                !filterPlanningIdeas.value.includes(filter.filterOptions)? filterPlanningIdeas.value.push(filter.filterOptions): undefined
-                    
+                !filterPlanningIdeas.value.includes(filter.filterOptions) ? filterPlanningIdeas.value.push(filter.filterOptions) : undefined
+
             }
             else {
                 filterPlanningIdeas.value.includes(filter.filterOptions) ? filterPlanningIdeas.value.splice(filterPlanningIdeas.value.indexOf(filter.filterOptions)) : undefined
@@ -120,21 +120,21 @@ const updateFilterSelection = () => {
         }
         else if (filter.filterOptions.filterType == 'keyword') {
             //@ts-ignore
-            let value:string=filter.filterOptions.filterValue
+            let value: string = filter.filterOptions.filterValue
             if (filter.isActive) {
                 !filterKeywords.value.includes(filter.filterOptions) ? filterKeywords.value.push(filter.filterOptions) : undefined
-                !keywords.includes(value)? keywords.push(value): undefined
+                !keywords.includes(value) ? keywords.push(value) : undefined
             }
             else {
                 filterKeywords.value.includes(filter.filterOptions) ? filterKeywords.value.splice(filterKeywords.value.indexOf(filter.filterOptions)) : undefined
-                !keywords.includes(value)? keywords.push(value): undefined
+                !keywords.includes(value) ? keywords.push(value) : undefined
             }
 
         }
     })
 
 }
-onMounted(()=>{
+onMounted(() => {
     updateFilterSelection();
 
 })
@@ -142,17 +142,17 @@ onMounted(()=>{
 // watch(props.activfilterOptions, function () {
 //     console.log("update")
 //     updateFilterSelection()
-    
+
 // })
 const submitKeyword = () => {
     // console.log(keyword)
-    if(keyword.value == ""){return}
-    !keywords.includes(keyword.value)? keywords.push(keyword.value): undefined
+    if (keyword.value == "") { return }
+    !keywords.includes(keyword.value) ? keywords.push(keyword.value) : undefined
     keyword.value = ""
 }
 
 const filterOptions = computed(() => {
-    let fo = reactive<{ filterType: string, filterValue: number|string }[]>([])
+    let fo = reactive<{ filterType: string, filterValue: number | string }[]>([])
     if (filterMeine.value) {
         fo.push(filterMeine.value)
     }
@@ -171,7 +171,7 @@ const filterOptions = computed(() => {
             fo.push(value)
         })
     }
-    let filter: { isActive: true, filterOptions: { filterType: string, filterValue: number|string } }[] = []
+    let filter: { isActive: true, filterOptions: { filterType: string, filterValue: number | string } }[] = []
     fo.map(filterOption => filter.push({ isActive: true, filterOptions: filterOption }))
     return filter
 })
@@ -180,18 +180,19 @@ const applyMultiCritFilter = () => {
     emit("multifilterComment", filterOptions.value)
     emit("toggleWindow")
 }
-const closeWindow=()=>{
+const closeWindow = () => {
     updateFilterSelection()
     emit('toggleWindow')
 }
 </script>
 
 <style scoped>
-.close-button{
+.close-button {
     touch-action: none;
-    position: relative; 
+    position: relative;
     margin: 0em 0em 0em auto;
 }
+
 .filter-btn-is-active {
     color: #0089B5;
     background: #EDF0FF;
@@ -228,7 +229,6 @@ const closeWindow=()=>{
     align-items: center !important;
     flex-wrap: wrap;
     height: auto
-
 }
 
 .v-card {
@@ -252,11 +252,12 @@ const closeWindow=()=>{
 .backdrop {
     position: fixed;
     top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    background: rgb(0, 0, 0, 0.8);
-    
+    width: 100vw;
+    height: 100%;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    -moz-backdrop-filter: blur(24px);
+    -ms-backdrop-filter: blur(24px);
 }
 .keyword-btn .v-btn{
     min-width: fit-content
