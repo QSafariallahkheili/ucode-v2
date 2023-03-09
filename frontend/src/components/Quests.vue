@@ -47,7 +47,7 @@ const showAllQuestsCompletedDialog = ref(false)
 const emit = defineEmits(["hideQuests"])
 
 watch(store.state.quests, function (state) {
-  if (Object.keys(state.questList).length === 0) {}
+  if (state.questList.length === 0) {}
   else {
     store.state.quests.hasQuests = true;
     let quest = state.questList
@@ -66,7 +66,7 @@ onMounted(() => {
 
 const sendQuestRequest = async () => {
   const questData = await getQuestsFulfillmentFromDB(store.state.aoi.projectId, store.state.aoi.userId)
-  if (Object.keys(questData).length === 0) {
+  if (questData.length === 0) {
     console.log('No Quests in this Project! go crazy!')
     return
   }

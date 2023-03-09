@@ -573,15 +573,13 @@ def get_quests_and_fulfillment_from_db(projectId, userId):
 
     fulfillment_dict = dict(fulfillment_tuple)
 
-    counter = 0
-    quest_with_fulfillment = {}
+    quest_with_fulfillment = []
     for f in quests:
         quest_entry = f[0]
-        quest_with_fulfillment[counter] = quest_entry
-        quest_id = int(quest_with_fulfillment[counter]["quest_id"])
+        quest_id = int(quest_entry["quest_id"])
         fulfillment_value = fulfillment_dict[quest_id]
-        quest_with_fulfillment[counter]["fulfillment"] = fulfillment_value
-        counter = counter + 1
+        quest_entry["fulfillment"] = fulfillment_value
+        quest_with_fulfillment.append(quest_entry)
 
     return quest_with_fulfillment
 

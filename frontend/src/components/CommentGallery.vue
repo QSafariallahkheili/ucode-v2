@@ -4,7 +4,7 @@
 
 
     <div v-if="(commentsAreLoaded && props.show && mapView == false)" className="comment-list">
-        <CommentSortAndFilter @sortComment="sortComment" @multifFilterComment="multifFilterComment"
+        <CommentSortAndFilter @sortComment="sortComment" @multifFilterComment="multiFilterComment"
             :bottomPositionSortFilter="bottomPositionSortFilter" :activfilterOptions="activfilterOptions" />
         <transition name="card">
             <div>
@@ -48,7 +48,7 @@
         </div>
 
         <CommentSortAndFilter v-if="props.show && mapView == true" @sortComment="sortComment"
-            @multifFilterComment="multifFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter"
+            @multifFilterComment="multiFilterComment" :bottomPositionSortFilter="bottomPositionSortFilter"
             :activfilterOptions="activfilterOptions" />
     </div>
 </template>
@@ -194,8 +194,7 @@ const sortComment = (sortOption: string) => {
     }
 }
 
-const multifFilterComment = (filterOption: { isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]) => {
-
+const multiFilterComment = (filterOption: { isActive: boolean, filterOptions: { filterType: string, filterValue: number | string } }[]) => {
     activfilterOptions.value = filterOption
     filterArray.value = activfilterOptions.value
 }

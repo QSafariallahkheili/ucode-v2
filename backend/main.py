@@ -357,7 +357,7 @@ async def add_comment_api(request: Request):
         routeId = "NULL"
 
     questId = None
-    if data["routeId"] != None:
+    if data["questId"] != None:
         questId = data["questId"]
     else:
         questId = "NULL"
