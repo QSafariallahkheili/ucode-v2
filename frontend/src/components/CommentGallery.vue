@@ -310,7 +310,7 @@ const buildCommentLayer = async () => {
                 "type": "geojson",
                 "data": allComments,
                 'cluster': true,
-                'clusterMaxZoom': 24,
+                'clusterMaxZoom': 17,
                 'clusterRadius': 50,
             }
         }
