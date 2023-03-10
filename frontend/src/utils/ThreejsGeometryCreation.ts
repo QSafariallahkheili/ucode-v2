@@ -145,12 +145,14 @@ export function addGeoOnPointsToThreejsScene(
         })
       }
       else {
+
         const clusters = createGeoInstances(
           localCoordinates,
           currentMeshes,
           hasRandomSize,
           hasRandomRot
         );
+        
         clusters.forEach((cluster) => scene.add(cluster));
       }
     }
@@ -186,10 +188,9 @@ function getAllMeshes(scene: THREE.Group): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = [];
 
   const extractMesh = (node: THREE.Object3D) => {
-
     if (node instanceof THREE.Mesh) {
       meshes.push(node);
-    } else if (node instanceof THREE.Group) {
+    } else if (node instanceof THREE.Group||node instanceof THREE.Object3D) {
       node.children.forEach((child) => extractMesh(child));
     }
   };
@@ -320,7 +321,7 @@ function generateLocalCoordinates(
         ],
         rotation: rot,
         scale: scl,
-        userData: { 'name': _geoJson.features[index].properties.amenity_name!}
+        userData: { 'name': _geoJson.features[index].properties.amenity_name! }
       };
       localSceneCoordinates.push(localPos);
     }
@@ -529,8 +530,8 @@ export function createCSS2DElement(intersect: THREE.Intersection, map: Map, scen
     var box = new THREE.Box3().setFromObject(obj);
     let height = box.max.y
     textObject.position.copy(obj.position)
-    textObject.position.add(new Vector3(0,height,0))
-    
+    textObject.position.add(new Vector3(0, height, 0))
+
     // add the CSS2DObject to the scene
     scene.add(textObject);
 
