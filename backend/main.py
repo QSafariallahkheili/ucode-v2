@@ -617,6 +617,34 @@ async def get_water_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    limit_geom_to_bbox = """
+         with projectbbox as 
+            (   select 
+                    (bbox -> 'xmax')::float xmax,
+                    (bbox -> 'xmin')::float xmin,
+                    (bbox -> 'ymax')::float ymax,
+                    (bbox -> 'ymin')::float ymin 
+                from project
+                where project_id=%s
+            )
+        UPDATE water w
+        SET geom = ST_Intersection(w.geom, ST_MakeEnvelope (
+                p.xmin, p.ymin,
+                p.xmax, p.ymax,
+                4326))
+        FROM projectbbox p where project_id=%s;        
+     """
+
+    cursor.execute(limit_geom_to_bbox, (projectId,projectId))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
     return "gg"
 
 
@@ -688,24 +716,6 @@ async def get_tram_lines_from_osm_api(request: Request):
             ST_OffsetCurve(ST_Transform(ST_SetSRID(geom, 4326), 26986), -0.4, 'quad_segs=4 join=mitre mitre_limit=2.2')
         ),26986),4326))
         WHERE project_id = '{projectId}';
-
-    """
-    delete_station_geometries_query1 = """
-
-        delete from tram_line where ST_IsClosed(geom);
-        
-        delete FROM tram_line a
-        WHERE NOT EXISTS 
-        (SELECT 1 FROM tram_line b 
-        WHERE a.id != b.id
-        AND ST_Intersects(a.geom, b.geom) AND ST_Touches(a.geom, b.geom));
-
-        update tram_line set geom = st_astext(st_transform(st_setsrid(ST_Collect(
-            ST_OffsetCurve(st_transform(ST_SetSRID(geom, 4326), 26986), 0.4, 'quad_segs=4 join=mitre mitre_limit=2.2'),
-            ST_OffsetCurve(st_transform(ST_SetSRID(geom, 4326), 26986), -0.4, 'quad_segs=4 join=mitre mitre_limit=2.2')
-        ),26986),4326));
-
-       
     """
 
     cursor.execute(delete_station_geometries_query)
@@ -713,6 +723,36 @@ async def get_tram_lines_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
+
+    connection = connect()
+    cursor = connection.cursor()
+
+    limit_geom_to_bbox = f"""
+         with projectbbox as 
+            (   select 
+                    (bbox -> 'xmax')::float xmax,
+                    (bbox -> 'xmin')::float xmin,
+                    (bbox -> 'ymax')::float ymax,
+                    (bbox -> 'ymin')::float ymin 
+                from project
+                where project_id='{projectId}'
+            )
+        UPDATE tram_line t
+        SET geom = ST_Intersection(t.geom, ST_MakeEnvelope (
+                p.xmin, p.ymin,
+                p.xmax, p.ymax,
+                4326))
+        FROM projectbbox p where project_id='{projectId}';
+
+        delete from tram_line where st_geometrytype(geom) = 'ST_LineString' and project_id='{projectId}'
+     """
+
+    cursor.execute(limit_geom_to_bbox)
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 
     return "tram lanes retrieved"
 
