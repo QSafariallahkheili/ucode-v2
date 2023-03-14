@@ -1023,3 +1023,14 @@ def setup_new_project(data: ProjectInformation):
     cursor.close()
     connection.close()
     return data
+
+def drop_rails_table(projectId):
+    connection = connect()
+    cursor = connection.cursor()
+    drop_rails_table_query = (
+        f""" delete from rails where project_id='{projectId}';"""
+    )
+    cursor.execute(drop_rails_table_query)
+    connection.commit()
+    cursor.close()
+    connection.close()

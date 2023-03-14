@@ -27,7 +27,8 @@ import {
   getBikeFromDB,
   getBikeLaneDataFromDB,
   getPedestrianAreaFromDB,
-  getZerbraCrossFromDB
+  getZerbraCrossFromDB,
+  getRailsDataFromDB
 
 } from "../service/backend.service";
 import type { IControl } from "maplibre-gl";
@@ -63,6 +64,7 @@ const populateMap = async () => {
   await sendBikeRequest()
   await sendPedestrianAreaRequest()
   await sendZerbraCrossRequest ()
+  await sendRailsRequest ()
   
  
   store.dispatch("aoi/setMapIsPopulated");
@@ -484,6 +486,23 @@ const sendZerbraCrossRequest = async () => {
     height: 0,
     extrude: 0.32
   })  
+}
+
+const sendRailsRequest = async () => {
+  const railsData = await getRailsDataFromDB(store.state.aoi.projectSpecification.project_id);
+  if(!railsData.features){
+    console.log('No Data in bd for tram lines!')
+    return
+  }
+  addLineFromCoordsAr1({
+    scene: threeJsSceneFlat.scene,
+    bbox: store.state.aoi.projectSpecification.bbox,
+    geoJson: railsData,
+    color: "#676767",
+    height: 0.2,
+    extrude: .12
+  })
+
 }
 
 const addDrawControl = (control: IControl) =>{

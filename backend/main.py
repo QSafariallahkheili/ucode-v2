@@ -28,6 +28,12 @@ from features.amenities import (
     persist_amenities_polygons,
     get_amenities_from_db,
 )
+from features.rails import (
+    create_rails,
+    persist_rails,
+    refine_rails,
+    get_rails_from_db
+)
 from db import (
     add_comment,
     add_drawn_line,
@@ -76,6 +82,7 @@ from db import (
     get_zebra_cross_from_db,
     update_project_starting_orientation,
     setup_new_project,
+    drop_rails_table
 )
 from db_migrations import run_database_migrations
 from models import ProjectSpecification, UpdateStartingOrientation
@@ -97,6 +104,7 @@ from services.overpass import (
     query_pedestrian_area,
     query_pedestrian_area_multipolygon,
     query_amenities,
+    query_rails
 )
 from utils import sure_float
 from repository.db import db_pool, get_table_names
@@ -953,6 +961,7 @@ async def clear_cache():
     get_amenities_from_db_cache_stats = get_amenities_from_db.cache_info()
     get_zebra_cross_from_db_cache_stats = get_zebra_cross_from_db.cache_info()
     get_pedestrian_area_from_db_cache_stats = get_pedestrian_area_from_db.cache_info()
+    get_rails_from_db_cache_stats =get_rails_from_db.cache_info()
     get_buildings_from_db.cache_clear()
     get_greenery_from_db.cache_clear()
     get_trees_from_db.cache_clear()
@@ -967,6 +976,7 @@ async def clear_cache():
     get_amenities_from_db.cache_clear()
     get_zebra_cross_from_db.cache_clear()
     get_pedestrian_area_from_db.cache_clear()
+    get_rails_from_db.cache_clear()
     result = {
         "get_buildings_from_db_cache_stats": get_buildings_from_db_cache_stats,
         "get_greenery_from_db_cache_stats": get_greenery_from_db_cache_stats,
@@ -982,6 +992,7 @@ async def clear_cache():
         "get_amenities_from_db_cache_stats": get_amenities_from_db_cache_stats,
         "get_zebra_cross_from_db_cache_stats": get_zebra_cross_from_db_cache_stats,
         " get_pedestrian_area_from_db_cache_stats": get_pedestrian_area_from_db_cache_stats,
+        "get_rails_from_db_cache_stats": get_rails_from_db_cache_stats,
         "result": "Cache cleared",
     }
     #    print(result)
@@ -1062,6 +1073,24 @@ async def setup_new_project_api(request: Request):
             detail="Incorrect API key",
         )
 
+@app.post("/get-rails-from-osm")
+async def get_rails_from_osm_api(project_spec: ProjectSpecification):
+    drop_rails_table(project_spec.projectId)
+    get_rails_from_db.cache_clear()
+    rails_data = interpreter(query_rails(project_spec.bbox))
+    rails_data_geojson = osmtogeojson.process_osm_json(rails_data)
+
+    rail_geometries = create_rails(
+        project_spec.projectId, rails_data_geojson
+    )
+    persist_rails(db_pool, rail_geometries)
+    refine_rails(db_pool, project_spec.projectId)
+    return "alright"
+
+@app.post("/get-rails-from-db")
+async def get_rails_from_db_api(request: Request):
+    projectId = await request.json()
+    return get_rails_from_db(db_pool, projectId)
 
 if __name__ == "__main__":
     import uvicorn

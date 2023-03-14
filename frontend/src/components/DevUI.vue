@@ -104,6 +104,8 @@
     <v-select :items="['calculate']" label="zebraCrossings" variant="outlined"
       @update:modelValue="sendZebraCrossingRequest"></v-select>
 
+    <v-select :items="['get from OSM']" label="rails" variant="outlined"
+      @update:modelValue="sendRailsRequest"></v-select>
 
     <v-alert type="success" v-if="store.state.aoi.dataIsLoaded">
       stored
@@ -135,7 +137,8 @@ import {
   getBikeFromOSM,
   getQuestsFulfillmentFromDB,
   getAmenitiesFromOSM,
-  getPedestrianAreaFromOSM
+  getPedestrianAreaFromOSM,
+  getRailsFromOSM
 } from "../service/backend.service";
 import { HTTP } from "@/utils/http-common";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
@@ -292,6 +295,7 @@ const loadAllPoiFeaturesFromOSMall = async () => {
     sendSideWalkRequest(),
     sendPedestrianAreaRequest(),
     getAmenitiesFromOsm(),
+    sendRailsRequest(),
     sendBikeRequest()
   ];
 
@@ -460,6 +464,18 @@ const sendPedestrianAreaRequest = async () => {
   );
   store.dispatch("aoi/setDataIsLoaded");
   logMessage('Pedestrian areas done!')
+}
+
+const sendRailsRequest = async() => {
+
+  store.dispatch("aoi/setDataIsLoading");
+
+  await getRailsFromOSM(
+    store.state.aoi.projectSpecification.bbox,
+    store.state.aoi.projectSpecification.project_id
+  )
+  store.dispatch("aoi/setDataIsLoaded");
+  logMessage('Train rails done!')
 }
 </script>
 <style scoped>

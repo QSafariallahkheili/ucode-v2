@@ -184,3 +184,11 @@ def query_amenities(bbox: BoundingBox| str)->str:
             (._;>;);
             out geom;
      """
+
+def query_rails(bbox: BoundingBox | str) -> str:
+    return f"""
+         [out:json];
+         way["railway"="rail"]({bbox});
+         (._;>;);
+         out geom;
+     """
