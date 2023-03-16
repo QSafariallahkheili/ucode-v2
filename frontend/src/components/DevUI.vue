@@ -426,7 +426,7 @@ const sendSideWalkRequest = async () => {
   store.dispatch("aoi/setDataIsLoading");
   await getSideWalkFromOSM(
     store.state.aoi.projectSpecification.bbox,
-    store.state.aoi.projectSpecification.project_id
+    store.state.aoi.projectSpecification.project_id,
   );
   OSMSidewalkSaved.value = true
   store.dispatch("aoi/setDataIsLoaded");

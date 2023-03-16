@@ -455,7 +455,7 @@ export async function getZerbraCrossFromDB(projectId: string) {
 export async function getRailsFromOSM(bbox: BoundingBox, projectId: string) {
   await HTTP.post("get-rails-from-osm", {
     bbox: bbox,
-    projectId: projectId,
+    projectId: projectId
   });
 }
 

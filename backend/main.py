@@ -42,18 +42,6 @@ from db import (
     delete_comment_by_id,
     delete_comments,
     dislike_comment,
-    drop_bike_polygon_table,
-    drop_bike_table,
-    drop_building_table,
-    drop_driving_lane_table,
-    drop_greenery_table,
-    drop_sidewalk_polygon,
-    drop_sidewalk_table,
-    drop_traffic_signal_table,
-    drop_tram_line_table,
-    drop_tree_table,
-    drop_water_table,
-    drop_amenities_table,
     get_bike_from_db,
     get_bike_lane_from_db,
     get_comments,
@@ -76,13 +64,11 @@ from db import (
     undislike_comment,
     unlike_comment,
     update_voting_status,
-    drop_pedestrian_area_table,
-    drop_zebra_crossing_table,
     generate_zebra_crossing_table,
     get_zebra_cross_from_db,
     update_project_starting_orientation,
     setup_new_project,
-    drop_rails_table
+    delete_table_info_for_project
 )
 from db_migrations import run_database_migrations
 from models import ProjectSpecification, UpdateStartingOrientation
@@ -193,8 +179,15 @@ async def add_fulfillment_api(questId: int, userId: str):
 async def get_greenery_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    get_greenery_from_db.cache_clear()
-    drop_greenery_table(projectId)
+
+    try:
+        tableName = 'greenery'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop greenery table ")
+    finally:
+        get_greenery_from_db.cache_clear()
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
     tags = data["usedTagsForGreenery"]["tags"]
     _tags = ""
@@ -245,7 +238,14 @@ async def get_greenery_from_db_api(request: Request):
 @app.post("/get-buildings-from-osm")
 async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
-    drop_building_table(projectId)
+
+    try:
+        tableName = 'building'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop building table ")
+    finally:
+        get_buildings_from_db.cache_clear()
 
     response_building = interpreter(query_building_parts(project_spec.bbox))
     building_polygons = create_building_polygons(
@@ -264,7 +264,6 @@ async def get_buildings_from_osm_api(project_spec: ProjectSpecification):
 
     refine_persisted_buildings(db_pool, projectId)
 
-    get_buildings_from_db.cache_clear()
     return "fine"
 
 
@@ -294,8 +293,15 @@ async def get_quests_and_fulfillment_from_db_api(projectId: str, userId: str):
 async def get_trees_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    get_trees_from_db.cache_clear()
-    drop_tree_table(projectId)
+    
+    try:
+        tableName = 'tree'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop tree table ")
+    finally:
+        get_trees_from_db.cache_clear()
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_tree = interpreter(query_trees(bbox))
@@ -463,7 +469,11 @@ async def undislike_comment_api(request: Request):
 async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
     try:
-        drop_driving_lane_table(projectId)
+        tableName1 = 'driving_lane'
+        tableName2 = 'driving_lane_polygon'
+
+        delete_table_info_for_project(projectId, tableName1)
+        delete_table_info_for_project(projectId, tableName2)
     except:
         print("Could not drop_driving_lane_table ")
     finally:
@@ -510,8 +520,15 @@ async def get_driving_lane_from_db_api(request: Request):
 async def get_traffic_lights_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    get_traffic_signal_from_db.cache_clear()
-    drop_traffic_signal_table(projectId)
+
+    try:
+        tableName = 'traffic_signal'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop traffic_signal table ")
+    finally:
+        get_traffic_signal_from_db.cache_clear()
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_traffic_signal = interpreter(query_traffic_signals(bbox))
@@ -575,8 +592,15 @@ async def get_water_from_db_api(request: Request):
 async def get_water_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    get_water_from_db.cache_clear()
-    drop_water_table(projectId)
+
+    try:
+        tableName = 'water'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop water table ")
+    finally:
+        get_water_from_db.cache_clear()
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     response_fountain = interpreter(query_fountain(bbox))
@@ -661,8 +685,17 @@ async def get_tram_lines_from_osm_api(request: Request):
 
     data = await request.json()
     projectId = data["projectId"]
-    get_tram_line_from_db.cache_clear()
-    drop_tram_line_table(projectId)
+    
+    try:
+        tableName = 'tram_line'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop tram_line table ")
+    finally:
+        get_tram_line_from_db.cache_clear()
+
+    
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_tram_lines = interpreter(query_tram_lines(bbox))
@@ -776,10 +809,18 @@ async def get_side_walk_from_osm_api(request: Request):
     data = await request.json()
 
     projectId = data["projectId"]
-    get_sidewalk_from_db.cache_clear()
-    drop_sidewalk_table(projectId)
 
-    drop_sidewalk_polygon(projectId)
+    try:
+        tableName1 = 'sidewalk'
+        tableName2 = 'sidewalk_polygon'
+        delete_table_info_for_project(projectId, tableName1)
+        delete_table_info_for_project(projectId, tableName2)
+    except:
+        print("Could not drop sidewalk table ")
+    finally:
+        get_sidewalk_from_db.cache_clear()
+
+
 
     ##### ############## overpass ###################
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
@@ -838,10 +879,19 @@ async def get_side_walk_from_osm_api(request: Request):
 async def get_bike_from_osm_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    get_bike_from_db.cache_clear()
-    get_bike_lane_from_db.cache_clear()
-    drop_bike_table(projectId)
-    drop_bike_polygon_table(projectId)
+    
+    try:
+        tableName1 = 'bike'
+        tableName2 = 'bike_polygon'
+
+        delete_table_info_for_project(projectId, tableName1)
+        delete_table_info_for_project(projectId, tableName2)
+    except:
+        print("Could not drop bike table ")
+    finally:
+        get_bike_from_db.cache_clear()
+        get_bike_lane_from_db.cache_clear()
+
     bbox = f"""{data["bbox"]["ymin"]},{data["bbox"]["xmin"]},{data["bbox"]["ymax"]},{data["bbox"]["xmax"]}"""
 
     data_bike = interpreter(query_bike(bbox))
@@ -923,7 +973,14 @@ async def get_bike_from_db_api(request: Request):
 @app.post("/get-amenities-from-osm")
 async def get_amenities_from_osm_api(project_spec: ProjectSpecification):
     projectId = project_spec.projectId
-    drop_amenities_table(projectId)
+
+    try:
+        tableName = 'amenities'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop amenities table ")
+    finally:
+        get_amenities_from_db.cache_clear()
 
     response_amenities = osmtogeojson.process_osm_json(
         interpreter(query_amenities(project_spec.bbox))
@@ -933,7 +990,7 @@ async def get_amenities_from_osm_api(project_spec: ProjectSpecification):
     )
     persist_amenities_polygons(db_pool, amenity_polygons)
 
-    get_amenities_from_db.cache_clear()
+
     return "amenities from osm fine"
 
 
@@ -1015,7 +1072,15 @@ async def delete_comment_by_id_api(request: Request):
 
 @app.post("/get-pedestrian-area-from-osm")
 async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
-    drop_pedestrian_area_table(project_spec.projectId)
+
+    try:
+        tableName = 'pedestrian_area'
+        delete_table_info_for_project(project_spec.projectId, tableName)
+    except:
+        print("Could not drop pedestrian_area table ")
+    finally:
+        get_pedestrian_area_from_db.cache_clear()
+
     pedestrian_area_data = interpreter(query_pedestrian_area(project_spec.bbox))
     data_pedestrian_area_geojson = osmtogeojson.process_osm_json(pedestrian_area_data)
     pedestrian_area_polygons = create_pedestrian_area(
@@ -1033,7 +1098,7 @@ async def get_pedestrian_area_from_osm_api(project_spec: ProjectSpecification):
         project_spec.projectId, data_pedestrian_area_multipolygon_geojson
     )
     persist_pedestrian_area_polygons(db_pool, pedestrian_area_multipolygons)
-    get_pedestrian_area_from_db.cache_clear()
+
 
     return "ok"
 
@@ -1048,8 +1113,15 @@ async def get_pedestrian_are_from_db_api(request: Request):
 async def generate_zebra_crossing_table_api(request: Request):
     data = await request.json()
     projectId = data["projectId"]
-    drop_zebra_crossing_table(projectId)
-    get_zebra_cross_from_db.cache_clear()
+
+    try:
+        tableName = 'zebra_crossing'
+        delete_table_info_for_project(projectId, tableName)
+    except:
+        print("Could not drop zebra_crossing table")
+    finally:
+        get_zebra_cross_from_db.cache_clear()
+
     generate_zebra_crossing_table(projectId)
     return "orderId"
 
@@ -1075,8 +1147,15 @@ async def setup_new_project_api(request: Request):
 
 @app.post("/get-rails-from-osm")
 async def get_rails_from_osm_api(project_spec: ProjectSpecification):
-    drop_rails_table(project_spec.projectId)
-    get_rails_from_db.cache_clear()
+
+    try:
+        tableName = 'rails'
+        delete_table_info_for_project(project_spec.projectId, tableName)
+    except:
+        print("Could not drop rails table ")
+    finally:
+        get_rails_from_db.cache_clear()
+
     rails_data = interpreter(query_rails(project_spec.bbox))
     rails_data_geojson = osmtogeojson.process_osm_json(rails_data)
 

@@ -584,142 +584,6 @@ def get_quests_and_fulfillment_from_db(projectId, userId):
     return quest_with_fulfillment
 
 
-def drop_greenery_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_greenery_table_query = (
-        f""" delete from greenery where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_greenery_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_building_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_building_table_query = (
-        f""" delete from building where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_building_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_tree_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_tree_table_query = f""" delete from tree where project_id='{projectId}';"""
-    cursor.execute(drop_tree_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_driving_lane_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_driving_lane_table_query = f""" delete from driving_lane where project_id='{projectId}'; delete from driving_lane_polygon where project_id='{projectId}';"""
-    cursor.execute(drop_driving_lane_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_traffic_signal_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_traffic_signal_table_query = (
-        f""" delete from traffic_signal where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_traffic_signal_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_tram_line_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_tram_line_table_query = (
-        f""" delete from tram_line where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_tram_line_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_water_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_water_table_query = f""" delete from water where project_id='{projectId}';"""
-    cursor.execute(drop_water_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_sidewalk_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_sidewalk_table_query = (
-        f""" delete from sidewalk where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_sidewalk_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_sidewalk_polygon(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_sidewalk_polygon_query = (
-        f""" delete from sidewalk_polygon where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_sidewalk_polygon_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_bike_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_bike_query = f""" delete from bike where project_id='{projectId}';"""
-    cursor.execute(drop_bike_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_bike_polygon_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_bike_polygon_query = (
-        f""" delete from bike_polygon where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_bike_polygon_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_amenities_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_amenities_table_query = (
-        f""" delete from amenities where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_amenities_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
 @lru_cache
 def get_traffic_signal_from_db(projectId):
     connection = connect()
@@ -898,30 +762,6 @@ def delete_comment_by_id(comment_id):
     return orderId
 
 
-def drop_pedestrian_area_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    drop_pedestrian_areatable__query = (
-        f""" delete from pedestrian_area where project_id='{projectId}';"""
-    )
-    cursor.execute(drop_pedestrian_areatable__query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
-def drop_zebra_crossing_table(projectId):
-    connection = connect()
-    cursor = connection.cursor()
-    delete_zebra_crossing_query = (
-        f""" delete from zebra_crossing where project_id='{projectId}';"""
-    )
-    cursor.execute(delete_zebra_crossing_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-
 def generate_zebra_crossing_table(projectId):
     connection = connect()
     cursor = connection.cursor()
@@ -1024,13 +864,14 @@ def setup_new_project(data: ProjectInformation):
     connection.close()
     return data
 
-def drop_rails_table(projectId):
+
+def delete_table_info_for_project(projectId, tableName):
     connection = connect()
     cursor = connection.cursor()
-    drop_rails_table_query = (
-        f""" delete from rails where project_id='{projectId}';"""
+    delete_table_query = (
+        f""" delete from {tableName} where project_id='{projectId}';"""
     )
-    cursor.execute(drop_rails_table_query)
+    cursor.execute(delete_table_query)
     connection.commit()
     cursor.close()
     connection.close()
