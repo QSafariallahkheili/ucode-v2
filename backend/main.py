@@ -68,7 +68,8 @@ from db import (
     get_zebra_cross_from_db,
     update_project_starting_orientation,
     setup_new_project,
-    delete_table_info_for_project
+    delete_table_info_for_project,
+    limit_features_to_project_bbox
 )
 from db_migrations import run_database_migrations
 from models import ProjectSpecification, UpdateStartingOrientation
@@ -226,6 +227,13 @@ async def get_greenery_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
+
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'greenery'
+    )
+
     return "gg"
 
 
@@ -503,6 +511,17 @@ async def get_driving_lane_from_osm_api(project_spec: ProjectSpecification):
     )
     persist_driving_lane_polygon(db_pool, service_road_polygons)
 
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'driving_lane'
+    )
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'driving_lane_polygon'
+    )
+
     return "true"
 
 
@@ -649,33 +668,12 @@ async def get_water_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
-
-    connection = connect()
-    cursor = connection.cursor()
-
-    limit_geom_to_bbox = """
-         with projectbbox as 
-            (   select 
-                    (bbox -> 'xmax')::float xmax,
-                    (bbox -> 'xmin')::float xmin,
-                    (bbox -> 'ymax')::float ymax,
-                    (bbox -> 'ymin')::float ymin 
-                from project
-                where project_id=%s
-            )
-        UPDATE water w
-        SET geom = ST_Intersection(w.geom, ST_MakeEnvelope (
-                p.xmin, p.ymin,
-                p.xmax, p.ymax,
-                4326))
-        FROM projectbbox p where project_id=%s;        
-     """
-
-    cursor.execute(limit_geom_to_bbox, (projectId,projectId))
-
-    connection.commit()
-    cursor.close()
-    connection.close()
+    
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'water'
+    )
 
     return "gg"
 
@@ -740,6 +738,12 @@ async def get_tram_lines_from_osm_api(request: Request):
     cursor.close()
     connection.close()
 
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'tram_line'
+    )
+
     connection = connect()
     cursor = connection.cursor()
 
@@ -760,35 +764,6 @@ async def get_tram_lines_from_osm_api(request: Request):
     """
 
     cursor.execute(delete_station_geometries_query)
-
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-    connection = connect()
-    cursor = connection.cursor()
-
-    limit_geom_to_bbox = f"""
-         with projectbbox as 
-            (   select 
-                    (bbox -> 'xmax')::float xmax,
-                    (bbox -> 'xmin')::float xmin,
-                    (bbox -> 'ymax')::float ymax,
-                    (bbox -> 'ymin')::float ymin 
-                from project
-                where project_id='{projectId}'
-            )
-        UPDATE tram_line t
-        SET geom = ST_Intersection(t.geom, ST_MakeEnvelope (
-                p.xmin, p.ymin,
-                p.xmax, p.ymax,
-                4326))
-        FROM projectbbox p where project_id='{projectId}';
-
-        delete from tram_line where st_geometrytype(geom) = 'ST_LineString' and project_id='{projectId}'
-     """
-
-    cursor.execute(limit_geom_to_bbox)
 
     connection.commit()
     cursor.close()
@@ -857,7 +832,7 @@ async def get_side_walk_from_osm_api(request: Request):
     connection = connect()
     cursor = connection.cursor()
 
-    insert_query_driving_lane_polygon = """
+    insert_query_sidewalk_polygon = """
         
         INSERT INTO sidewalk_polygon(project_id, geom)
         SELECT project_id, st_buffer(
@@ -866,11 +841,17 @@ async def get_side_walk_from_osm_api(request: Request):
             'endcap=round join=round quad_segs=2')::geometry FROM sidewalk where project_id=%s;
     """
 
-    cursor.execute(insert_query_driving_lane_polygon, (projectId,))
+    cursor.execute(insert_query_sidewalk_polygon, (projectId,))
 
     connection.commit()
     cursor.close()
     connection.close()
+
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'sidewalk_polygon'
+    )
 
     return "okk"
 
@@ -934,7 +915,11 @@ async def get_bike_from_osm_api(request: Request):
     connection.commit()
     cursor.close()
     connection.close()
-
+    limit_features_to_project_bbox(
+        db_pool,
+        projectId,
+        'bike'
+    )
     connection = connect()
     cursor = connection.cursor()
 
@@ -1163,7 +1148,13 @@ async def get_rails_from_osm_api(project_spec: ProjectSpecification):
         project_spec.projectId, rails_data_geojson
     )
     persist_rails(db_pool, rail_geometries)
-    refine_rails(db_pool, project_spec.projectId)
+    
+    limit_features_to_project_bbox(
+        db_pool,
+        project_spec.projectId,
+        'rails'
+    )
+    
     return "alright"
 
 @app.post("/get-rails-from-db")

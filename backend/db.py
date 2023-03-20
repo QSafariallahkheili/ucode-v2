@@ -875,3 +875,27 @@ def delete_table_info_for_project(projectId, tableName):
     connection.commit()
     cursor.close()
     connection.close()
+
+def limit_features_to_project_bbox(conn_pool: ConnectionPool, project_id:str, table_name:str) -> None:
+
+    with conn_pool.connection() as connection:
+        with connection.cursor() as cur:
+            query = f"""
+              with projectbbox as 
+                (   select 
+                    (bbox -> 'xmax')::float xmax,
+                    (bbox -> 'xmin')::float xmin,
+                    (bbox -> 'ymax')::float ymax,
+                    (bbox -> 'ymin')::float ymin 
+                    from project
+                    where project_id='{project_id}'
+                )
+                UPDATE {table_name} t
+                SET geom = ST_Intersection(t.geom, ST_MakeEnvelope (
+                        p.xmin, p.ymin,
+                        p.xmax, p.ymax,
+                        4326))
+                FROM projectbbox p where project_id='{project_id}';
+            """
+            cur.execute(query)
+            connection.commit()
